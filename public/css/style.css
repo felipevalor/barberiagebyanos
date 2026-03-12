@@ -645,11 +645,19 @@ footer {
 .footer-credit a {
   color: var(--text);
   text-decoration: none;
-  transition: color 200ms;
+  transition: opacity 200ms;
+  display: inline-flex;
+  align-items: center;
 }
 
 .footer-credit a:hover {
-  color: var(--text);
+  opacity: 0.8;
+}
+
+.footer-credit-logo {
+  height: 60px;
+  width: auto;
+  display: block;
 }
 
 /* Reveal Animations */
