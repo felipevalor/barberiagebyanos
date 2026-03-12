@@ -642,6 +642,11 @@ footer {
   color: var(--muted);
 }
 
+.footer-credit {
+  display: flex;
+  align-items: center;
+}
+
 .footer-credit a {
   color: var(--text);
   text-decoration: none;
@@ -650,14 +655,18 @@ footer {
   align-items: center;
 }
 
-.footer-credit a:hover {
-  opacity: 0.8;
+.footer-credit img,
+.footer-vs-logo {
+  height: 140px;
+  width: auto;
+  opacity: 0.7;
+  transition: opacity 250ms;
+  margin-left: 10px;
 }
 
-.footer-credit-logo {
-  height: 60px;
-  width: auto;
-  display: block;
+.footer-credit img:hover,
+.footer-vs-logo:hover {
+  opacity: 1;
 }
 
 /* Reveal Animations */
@@ -746,6 +755,7 @@ footer {
     scroll-behavior: auto !important;
   }
 }
+
 /* --- Reservas & Barberos (Premium Design) --- */
 .reservar-sub {
   color: var(--muted) !important;
@@ -828,8 +838,8 @@ footer {
 }
 
 @media (max-width: 630px) {
-  .barberos-grid { 
-    grid-template-columns: repeat(2, 1fr) !important; 
+  .barberos-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
   }
 }
 
