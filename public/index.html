@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>El Filo | Barbería de Barrio, Nivel de Autor</title>
+    <title>Gebyanos | Barbería de Barrio, Nivel de Autor</title>
     <meta name="description"
         content="Barbería clásica con estilo moderno en el corazón del barrio. Cortes de autor, afeitados tradicionales y atención personalizada.">
 
@@ -26,7 +26,10 @@
 
     <nav id="navbar">
         <div class="container nav-content">
-            <a href="#" class="logo">Barberia Gebyanos & El Lobo</a>
+            <a href="#" class="nav-logo">
+                <img src="img/logo.jpg" alt="Gebyanos" class="nav-logo-img">
+                <span>Gebyanos</span>
+            </a>
             <div class="nav-links">
                 <a href="#servicios">Servicios</a>
                 <a href="#galeria">Galería</a>
@@ -37,7 +40,7 @@
 
     <main>
         <section id="hero">
-            <div class="grid-bg"></div>
+            <div class="hero-bg"></div>
             <div class="container hero-content">
                 <h1 id="scramble-text" class="reveal">El corte que buscabas.</h1>
                 <p class="subtitle reveal" style="transition-delay: 100ms;">Turnos disponibles de lunes a sábado.</p>
@@ -47,103 +50,179 @@
             </div>
         </section>
 
-        <section id="servicios" class="reveal">
-            <div class="container text-center">
-                <h2 class="section-title">Servicios</h2>
-                <div class="services-grid">
-                    <div class="service-card reveal-stagger">
-                        <span class="service-price">DM Mono: $5.000</span>
-                        <h3>Corte de cabello</h3>
-                        <p>Tijera o máquina, según tu estilo</p>
-                    </div>
-                    <div class="service-card reveal-stagger">
-                        <span class="service-price">$7.500</span>
-                        <h3>Corte + barba</h3>
-                        <p>El combo completo</p>
-                    </div>
-                    <div class="service-card reveal-stagger">
-                        <span class="service-price">$3.500</span>
-                        <h3>Arreglo de barba</h3>
-                        <p>Perfilado y definición</p>
-                    </div>
-                    <div class="service-card reveal-stagger">
-                        <span class="service-price">$4.000</span>
-                        <h3>Afeitado clásico</h3>
-                        <p>Navaja, toalla caliente y aceite</p>
-                    </div>
-                    <div class="service-card reveal-stagger">
-                        <span class="service-price">$3.500</span>
-                        <h3>Corte de niños</h3>
-                        <p>Hasta 12 años</p>
-                    </div>
-                    <div class="service-card reveal-stagger">
-                        <span class="service-price">Desde $8.000</span>
-                        <h3>Coloración</h3>
-                        <p>Consultar disponibilidad</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="galeria" class="reveal">
+        <section id="servicios">
             <div class="container">
-                <h2 class="section-title text-center">Galería</h2>
-                <div class="gallery-grid">
-                    <div class="gallery-item"><span>Foto próximamente</span></div>
-                    <div class="gallery-item"><span>Foto próximamente</span></div>
-                    <div class="gallery-item"><span>Foto próximamente</span></div>
-                    <div class="gallery-item"><span>Foto próximamente</span></div>
-                    <div class="gallery-item"><span>Foto próximamente</span></div>
-                    <div class="gallery-item"><span>Foto próximamente</span></div>
+                <div class="section-label">Servicios</div>
+                <h2>Qué <em>hacemos</em></h2>
+
+                <div class="servicios-grid reveal">
+                    <div class="servicio-card">
+                        <div class="servicio-nombre">Corte</div>
+                        <div class="servicio-incluye">Tijera o máquina · Perfilado de cejas · Café o bebida</div>
+                        <div class="servicio-precio">$20.000</div>
+                    </div>
+                    <div class="servicio-card">
+                        <div class="servicio-nombre">Corte + Barba</div>
+                        <div class="servicio-incluye">El combo completo · Perfilado de cejas · Café o bebida</div>
+                        <div class="servicio-precio">$25.000</div>
+                    </div>
+                    <div class="servicio-card">
+                        <div class="servicio-nombre">Barba</div>
+                        <div class="servicio-incluye">Perfilado y definición · Café o bebida</div>
+                        <div class="servicio-precio">$8.000</div>
+                    </div>
+                    <div class="servicio-card">
+                        <div class="servicio-nombre">Afeitado</div>
+                        <div class="servicio-incluye">Navaja · Toalla caliente · Café o bebida</div>
+                        <div class="servicio-precio">$6.000</div>
+                    </div>
+                    <div class="servicio-card">
+                        <div class="servicio-nombre">Niños (10–13 años)</div>
+                        <div class="servicio-incluye">Perfilado de cejas · Café o bebida</div>
+                        <div class="servicio-precio">$17.000</div>
+                    </div>
+                    <div class="servicio-card">
+                        <div class="servicio-nombre">Niños (0–9 años)</div>
+                        <div class="servicio-incluye">Perfilado de cejas · Café o bebida</div>
+                        <div class="servicio-precio">$15.000</div>
+                    </div>
+                </div>
+
+                <!-- Promos -->
+                <div class="promos-wrapper reveal">
+                    <div class="section-label" style="margin-top: 4rem;">Promos</div>
+                    <div class="promos-grid">
+                        <div class="promo-card">
+                            <div class="promo-nombre">2 o 3 cortes</div>
+                            <div class="promo-precio">$18.000 <span>c/u</span></div>
+                            <div class="promo-nota">Se abona al primer corte · No incluye barba</div>
+                        </div>
+                        <div class="promo-card">
+                            <div class="promo-nombre">4 cortes</div>
+                            <div class="promo-precio">$68.000</div>
+                            <div class="promo-nota">Se abona al primer corte · No incluye barba</div>
+                        </div>
+                        <div class="promo-card promo-especial">
+                            <div class="promo-badge">Especial</div>
+                            <div class="promo-nombre">Fuerzas Gebyanas</div>
+                            <div class="promo-precio">$15.000</div>
+                            <div class="promo-nota">Policía · Gendarmería · Prefectura · Perfilado + bebida incluidos
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="galeria">
+            <div class="container">
+                <div class="section-label">Galería</div>
+                <h2>El <em>ambiente</em></h2>
+                <div class="galeria-grid reveal">
+                    <div class="galeria-item">
+                        <img src="img/foto-3.jpg" alt="Barbero en acción" loading="lazy">
+                    </div>
+                    <div class="galeria-item">
+                        <img src="img/foto-2.jpg" alt="Equipo Gebyanos" loading="lazy">
+                    </div>
+                    <div class="galeria-item">
+                        <img src="img/foto-1.jpg" alt="Interior del local" loading="lazy">
+                    </div>
+                    <div class="galeria-item">
+                        <img src="img/foto-4.jpg" alt="El local" loading="lazy">
+                    </div>
                 </div>
             </div>
         </section>
 
-        <section id="reservar" class="reveal">
-            <div class="container max-w-sm">
-                <h2 class="section-title text-center">Reservar</h2>
-                <form id="reserva-form" class="reveal">
-                    <div class="form-group">
-                        <label for="nombre">Nombre</label>
-                        <input type="text" id="nombre" name="nombre" required placeholder="Tu nombre">
-                    </div>
-                    <div class="form-group">
-                        <label for="telefono">Teléfono</label>
-                        <input type="tel" id="telefono" name="telefono" required placeholder="Tu número de contacto">
-                    </div>
-                    <div class="form-group">
-                        <label for="servicio">Servicio</label>
-                        <select id="servicio" name="servicio" required>
-                            <option value="" disabled selected>Seleccioná un servicio</option>
-                            <option value="Corte de cabello">Corte de cabello ($5.000)</option>
-                            <option value="Corte + barba">Corte + barba ($7.500)</option>
-                            <option value="Arreglo de barba">Arreglo de barba ($3.500)</option>
-                            <option value="Afeitado clásico">Afeitado clásico ($4.000)</option>
-                            <option value="Corte de niños">Corte de niños ($3.500)</option>
-                            <option value="Coloración">Coloración (Desde $8.000)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="mensaje">Mensaje (Opcional)</label>
-                        <textarea id="mensaje" name="mensaje" placeholder="Alguna nota adicional..."></textarea>
-                    </div>
-                    <button type="submit" class="btn magnetic w-full">Enviar reserva</button>
-                    <div id="form-status" class="form-status"></div>
-                </form>
-            </div>
+        <section id="reservar">
+          <div class="container">
+            <div class="section-label">Reservas</div>
+            <h2>Elegí tu <em>turno</em></h2>
+            <p class="reservar-sub reveal">Seleccioná el servicio y el barbero. Te mandamos directo a su WhatsApp.</p>
+        
+            <form id="reserva-form" class="reserva-form reveal">
+        
+              <div class="form-group">
+                <label>Tu nombre</label>
+                <input type="text" id="reserva-nombre" placeholder="¿Cómo te llamás?" autocomplete="off" required>
+              </div>
+        
+              <div class="form-group">
+                <label>Servicio</label>
+                <div class="custom-select" id="custom-select-servicio">
+                  <div class="custom-select-trigger">
+                    <span id="select-servicio-display">Seleccioná un servicio</span>
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                  </div>
+                  <div class="custom-select-dropdown">
+                    <div class="select-option" data-value="Corte">Corte <span>$20.000</span></div>
+                    <div class="select-option" data-value="Corte + Barba">Corte + Barba <span>$25.000</span></div>
+                    <div class="select-option" data-value="Barba">Barba <span>$8.000</span></div>
+                    <div class="select-option" data-value="Afeitado">Afeitado <span>$6.000</span></div>
+                    <div class="select-option" data-value="Niños 10-13 años">Niños 10–13 años <span>$17.000</span></div>
+                    <div class="select-option" data-value="Niños 0-9 años">Niños 0–9 años <span>$15.000</span></div>
+                    <div class="select-option select-option-divider" data-value="Promo 2-3 cortes">Promo 2–3 cortes <span>$18.000 c/u</span></div>
+                    <div class="select-option" data-value="Promo 4 cortes">Promo 4 cortes <span>$68.000</span></div>
+                    <div class="select-option" data-value="Fuerzas Gebyanas">Fuerzas Gebyanas <span>$15.000</span></div>
+                  </div>
+                </div>
+                <input type="hidden" name="servicio" id="servicio-value" required>
+              </div>
+
+              <div class="form-group">
+                <label>Fecha estimada</label>
+                <input type="date" id="reserva-fecha" required>
+              </div>
+        
+              <div class="form-group">
+                <label>Barbero</label>
+                <div class="barberos-grid" id="barberos-grid"></div>
+              </div>
+        
+              <button type="submit" class="btn magnetic" id="reserva-btn" disabled>
+                Ir al WhatsApp
+              </button>
+        
+            </form>
+          </div>
         </section>
     </main>
 
-    <footer id="footer">
-        <div class="container text-center">
-            <p class="footer-logo">Barberia Gebyanos</p>
-            <p>1 de mayo 1687, Rosario, Argentina</p>
-            <p>Lun a Sáb: 10:00 - 20:00</p>
-            <p class="copyright">&copy; 2025 Barberia Gebyanos</p>
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <img src="img/logo.jpg" alt="Gebyanos" class="footer-logo">
+                    <p class="footer-tagline">A la facha se la ayuda.</p>
+                </div>
+                <div class="footer-col">
+                    <div class="footer-label">Ubicación</div>
+                    <p>1 de Mayo 1687, Rosario</p>
+                </div>
+                <div class="footer-col">
+                    <div class="footer-label">Horarios</div>
+                    <p>Lunes a Viernes · 9:00–20:00</p>
+                    <p>Sábados · 9:00–17:00</p>
+                </div>
+                <div class="footer-col">
+                    <div class="footer-label">Contacto</div>
+                    <a href="tel:3416021009">341 602 1009</a>
+                    <a href="https://instagram.com/gebyanos" target="_blank">@gebyanos</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2025 Barbería Gebyanos</p>
+                <p class="footer-credit">Diseñado y desarrolado con <3 por <a href="https://valor-solutions.pages.dev/"
+                        target="_blank">Valor Solutions</a></p>
+            </div>
         </div>
     </footer>
 
-    <script src="js/main.js"></script>
+    <script src="js/main.js?v=1.1"></script>
 </body>
 
 </html>

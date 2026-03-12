@@ -1,58 +1,65 @@
 /**
- * El Filo - Cloudflare Worker
- * API Endpoint: POST /api/reserva
+ * Barbería Gebyanos - Cloudflare Worker
+ * Guarda reservas en D1 y permite consultar el registro.
  */
 
 export default {
   async fetch(request, env) {
-    const url = new URL(request.url);
-
-    // CORS Headers
     const corsHeaders = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Content-Type': 'application/json'
     };
 
-    // Handle Preflight OPTIONS
-    if (request.method === "OPTIONS") {
-      return new Response(null, { headers: corsHeaders });
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers: corsHeaders });
     }
 
-    // Route: POST /api/reserva
-    if (url.pathname === "/api/reserva" && request.method === "POST") {
-      try {
-        const body = await request.json();
-        const { nombre, telefono, servicio, mensaje } = body;
+    if (request.method !== 'POST') {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Method not allowed' }),
+        { status: 405, headers: corsHeaders }
+      );
+    }
 
-        // Validation
-        if (!nombre || !telefono || !servicio) {
-          return new Response(
-            JSON.stringify({ success: false, error: "Missing required fields" }),
-            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
+    try {
+      const body = await request.json();
+      const { nombre, servicio, barbero, fecha } = body;
 
-        // Insert into D1
-        await env.barberia_db.prepare(
-          "INSERT INTO reservas (nombre, telefono, servicio, mensaje) VALUES (?, ?, ?, ?)"
-        )
-        .bind(nombre, telefono, servicio, mensaje || null)
-        .run();
-
+      // Validación
+      if (!nombre || !servicio || !barbero) {
         return new Response(
-          JSON.stringify({ success: true }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      } catch (err) {
-        return new Response(
-          JSON.stringify({ success: false, error: "Internal Server Error" }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({ success: false, error: 'Faltan campos obligatorios' }),
+          { status: 400, headers: corsHeaders }
         );
       }
-    }
 
-    // Default 404
-    return new Response("Not Found", { status: 404 });
-  },
+      // Guardar en D1
+      await env.barberia_db.prepare(
+        `INSERT INTO reservas (nombre, telefono, servicio, barbero, fecha, mensaje, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+      ).bind(
+        nombre,
+        '',                          // teléfono vacío
+        servicio,
+        barbero,
+        fecha || '',                 // nueva columna fecha
+        '',                          // mensaje vacío
+        new Date().toISOString()
+      ).run();
+
+      return new Response(
+        JSON.stringify({ success: true }),
+        { status: 200, headers: corsHeaders }
+      );
+
+    } catch (error) {
+      console.error('Worker error:', error.message);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Error interno' }),
+        { status: 500, headers: corsHeaders }
+      );
+    }
+  }
 };

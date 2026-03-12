@@ -1,5 +1,5 @@
 /**
- * El Filo - Main JS
+ * Gebyanos - Main JS
  * Premium Motion Design & Interactive Logic
  */
 
@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initScrollReveal();
     initTextScramble();
     initMagneticButtons();
-    initFormHandler();
+    initReservaForm(); // Antes initFormHandler
+    initCustomSelect();
 });
 
 /**
@@ -214,44 +215,150 @@ function initMagneticButtons() {
 }
 
 /**
- * Form Handler
+ * Custom Select Logic
  */
-function initFormHandler() {
-    const form = document.getElementById('reserva-form');
-    const status = document.getElementById('form-status');
+function initCustomSelect() {
+  const select = document.getElementById('custom-select-servicio');
+  const trigger = select?.querySelector('.custom-select-trigger');
+  const dropdown = select?.querySelector('.custom-select-dropdown');
+  const display = document.getElementById('select-servicio-display');
+  const hiddenInput = document.getElementById('servicio-value');
+  if (!select) return;
 
-    if (!form) return;
+  trigger.addEventListener('click', () => {
+    select.classList.toggle('open');
+  });
 
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries());
-        
-        status.textContent = 'Enviando...';
-        status.className = 'form-status';
-        
-        try {
-            const response = await fetch('/api/reserva', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                status.textContent = '¡Reserva recibida! Te contactamos pronto.';
-                status.classList.add('success');
-                form.reset();
-            } else {
-                throw new Error();
-            }
-        } catch (error) {
-            status.textContent = 'Algo salió mal. Intentá de nuevo.';
-            status.classList.add('error');
-        }
+  dropdown.querySelectorAll('.select-option').forEach(option => {
+    option.addEventListener('click', () => {
+      const value = option.getAttribute('data-value');
+      display.textContent = option.childNodes[0].textContent.trim();
+      display.style.color = 'var(--text)';
+      hiddenInput.value = value;
+      
+      // Disparar evento para validación
+      document.dispatchEvent(new Event('servicioSeleccionado'));
+
+      dropdown.querySelectorAll('.select-option').forEach(o => o.classList.remove('selected'));
+      option.classList.add('selected');
+      select.classList.remove('open');
     });
+  });
+
+  // Cerrar al clickear afuera
+  document.addEventListener('click', (e) => {
+    if (!select.contains(e.target)) select.classList.remove('open');
+  });
+}
+
+/**
+ * Reserva Form Logic
+ */
+const BARBEROS = [
+  { id: 'gebyano', nombre: 'Gebyano', tel: '5493416021009', disponible: true },
+  { id: 'lobo',    nombre: 'Lobo',    tel: '5493412754502', disponible: true },
+  { id: 'ns',      nombre: 'NS',      tel: null,            disponible: false },
+  { id: 'bql',     nombre: 'BQL',     tel: null,            disponible: false }
+];
+
+function initReservaForm() {
+  const form = document.getElementById('reserva-form');
+  const grid = document.getElementById('barberos-grid');
+  const btn  = document.getElementById('reserva-btn');
+  if (!form || !grid || !btn) return;
+
+  let barberoSeleccionado = null;
+
+  // Renderizar cards de barberos
+  grid.innerHTML = ''; 
+  BARBEROS.forEach(b => {
+    const card = document.createElement('div');
+    card.className = 'barbero-card' + (!b.disponible ? ' barbero-no-disponible' : '');
+    card.innerHTML = `
+      <span class="barbero-nombre">${b.nombre}</span>
+      ${!b.disponible ? '<span class="barbero-badge">Próximamente</span>' : ''}
+    `;
+
+    if (b.disponible) {
+      card.addEventListener('click', () => {
+        grid.querySelectorAll('.barbero-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        barberoSeleccionado = b;
+        validarFormulario();
+      });
+    }
+
+    grid.appendChild(card);
+  });
+
+  // Validar que nombre + servicio + barbero + fecha estén completos
+  function validarFormulario() {
+    const nombre   = document.getElementById('reserva-nombre')?.value.trim();
+    const servicio = document.getElementById('servicio-value')?.value;
+    const fecha    = document.getElementById('reserva-fecha')?.value;
+    btn.disabled = !(nombre && servicio && barberoSeleccionado && fecha);
+  }
+
+  document.getElementById('reserva-nombre')
+    ?.addEventListener('input', validarFormulario);
+  
+  document.getElementById('reserva-fecha')
+    ?.addEventListener('change', validarFormulario);
+
+  // Escuchar cambios en el select custom
+  document.addEventListener('servicioSeleccionado', validarFormulario);
+
+  // Submit del formulario
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const nombre   = document.getElementById('reserva-nombre').value.trim();
+    const servicio = document.getElementById('servicio-value').value;
+    const fecha    = document.getElementById('reserva-fecha').value;
+    
+    if (!nombre || !servicio || !barberoSeleccionado || !fecha) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    // Formatear fecha para el mensaje (de YYYY-MM-DD a DD/MM/YYYY opcionalmente)
+    const [y, m, d] = fecha.split('-');
+    const fechaFormateada = `${d}/${m}/${y}`;
+
+    // 1. Guardar en D1 (fire and forget)
+    fetch('/api/reserva', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        nombre, 
+        servicio, 
+        barbero: barberoSeleccionado.nombre,
+        fecha: fechaFormateada 
+      })
+    }).catch(() => {});
+
+    // 2. Armar mensaje perfecto y abrir WhatsApp
+    const mensaje = encodeURIComponent(
+      `Hola ${barberoSeleccionado.nombre}! Soy ${nombre}. ` +
+      `Quisiera reservar un turno para *${servicio}* el día *${fechaFormateada}*. ` +
+      `¿Tenés disponibilidad?`
+    );
+
+    const waUrl = `https://wa.me/${barberoSeleccionado.tel}?text=${mensaje}`;
+    
+    // Abrir en nueva pestaña
+    window.open(waUrl, '_blank');
+
+    // Feedback visual y limpieza
+    btn.textContent = '¡Redirigido!';
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = 'Ir al WhatsApp';
+      form.reset();
+      // Limpiar también el selector custom
+      document.getElementById('select-servicio-display').textContent = 'Seleccioná un servicio';
+      document.getElementById('servicio-value').value = '';
+      validarFormulario();
+    }, 2000);
+  });
 }
