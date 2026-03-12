@@ -1,0 +1,9 @@
+name = "barberia"
+main = "worker/index.js"
+compatibility_date = "2024-01-01"
+# pages_build_output_dir = "./public" # Not strictly needed if deploying via wrangler pages deploy
+
+[[d1_databases]]
+binding = "barberia_db"
+database_name = "barberia-db"
+database_id = "8c67f102-6108-4833-8177-d46be8e9454a"
