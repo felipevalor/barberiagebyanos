@@ -187,13 +187,18 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Fecha estimada</label>
-                        <input type="date" id="reserva-fecha" required>
-                    </div>
-
-                    <div class="form-group">
                         <label>Barbero</label>
                         <div class="barberos-grid" id="barberos-grid"></div>
+                    </div>
+
+                    <div class="form-group" id="day-picker-wrapper">
+                        <label>Día</label>
+                        <div id="day-picker" style="display:none;"></div>
+                    </div>
+
+                    <div class="form-group" id="slot-picker-wrapper">
+                        <label>Horario</label>
+                        <div id="slot-picker" style="display:none;"></div>
                     </div>
 
                     <button type="submit" class="btn magnetic" id="reserva-btn" disabled>
@@ -223,12 +228,22 @@
                 </div>
                 <div class="footer-col">
                     <div class="footer-label">Contacto</div>
-                    <a href="tel:3416021009">341 602 1009</a>
                     <a href="https://instagram.com/gebyanos" target="_blank">@gebyanos</a>
+                    <div class="footer-barberos">
+                        <div class="footer-barbero-label">Barberos</div>
+                        <a href="https://wa.me/5493416021009" target="_blank" class="footer-barbero-link">
+                            Gebyano <span>341 602 1009</span>
+                        </a>
+                        <a href="https://wa.me/5493412754502" target="_blank" class="footer-barbero-link">
+                            Lobo <span>341 275 4502</span>
+                        </a>
+                        <span class="footer-barbero-link footer-barbero-muted">NS <span>Próximamente</span></span>
+                        <span class="footer-barbero-link footer-barbero-muted">BQL <span>Próximamente</span></span>
+                    </div>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>© 2025 Barbería Gebyanos</p>
+                <p>© 2026 Barbería Gebyanos</p>
                 <span class="footer-credit">
                     Diseñado y desarrollado con ♥ por
                     <a href="https://valor-solutions.pages.dev" target="_blank">

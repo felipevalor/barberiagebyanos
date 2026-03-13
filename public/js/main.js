@@ -9,8 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
     initScrollReveal();
     initTextScramble();
     initMagneticButtons();
-    initReservaForm(); // Antes initFormHandler
+    initReservaForm();
     initCustomSelect();
+    initCalendarPicker();
 });
 
 /**
@@ -252,6 +253,24 @@ function initCustomSelect() {
 }
 
 /**
+ * Google Calendar Config
+ */
+const GOOGLE_CALENDAR_CONFIG = {
+  apiKey: 'AIzaSyCt8-oaJu57_A73I7bVtCAupY9xA9rZ6aQ',
+  calendarId: 'felipevalor7@gmail.com',
+  timezone: 'America/Argentina/Buenos_Aires',
+  schedule: {
+    1: { start: 9, end: 20 },
+    2: { start: 9, end: 20 },
+    3: { start: 9, end: 20 },
+    4: { start: 9, end: 20 },
+    5: { start: 9, end: 20 },
+    6: { start: 9, end: 17 },
+  },
+  slotDuration: 30,
+};
+
+/**
  * Reserva Form Logic
  */
 const BARBEROS = [
@@ -267,10 +286,8 @@ function initReservaForm() {
   const btn  = document.getElementById('reserva-btn');
   if (!form || !grid || !btn) return;
 
-  let barberoSeleccionado = null;
-
   // Renderizar cards de barberos
-  grid.innerHTML = ''; 
+  grid.innerHTML = '';
   BARBEROS.forEach(b => {
     const card = document.createElement('div');
     card.className = 'barbero-card' + (!b.disponible ? ' barbero-no-disponible' : '');
@@ -283,82 +300,217 @@ function initReservaForm() {
       card.addEventListener('click', () => {
         grid.querySelectorAll('.barbero-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
-        barberoSeleccionado = b;
-        validarFormulario();
+        // Disparar evento para el calendar picker
+        document.dispatchEvent(new CustomEvent('barberoSeleccionado', { detail: b }));
       });
     }
 
     grid.appendChild(card);
   });
 
-  // Validar que nombre + servicio + barbero + fecha estén completos
-  function validarFormulario() {
+  // El botón submit es manejado por initCalendarPicker()
+  // Prevenir submit nativo del form
+  form.addEventListener('submit', (e) => e.preventDefault());
+}
+
+/**
+ * Google Calendar Picker
+ */
+async function initCalendarPicker() {
+  const dayPicker  = document.getElementById('day-picker');
+  const slotPicker = document.getElementById('slot-picker');
+  const btn        = document.getElementById('reserva-btn');
+  if (!dayPicker) return;
+
+  let selectedBarbero = null;
+  let selectedDay     = null;
+  let selectedSlot    = null;
+
+  // Escuchar selección de barbero
+  document.addEventListener('barberoSeleccionado', async (e) => {
+    selectedBarbero = e.detail;
+    selectedDay = null;
+    selectedSlot = null;
+    slotPicker.innerHTML = '';
+    slotPicker.style.display = 'none';
+    validar();
+    await renderDays();
+  });
+
+  async function renderDays() {
+    dayPicker.innerHTML = '<div class="calendar-loading">Cargando disponibilidad...</div>';
+    dayPicker.style.display = 'block';
+
+    const today = new Date();
+    const days = [];
+
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      const dow = d.getDay();
+      if (GOOGLE_CALENDAR_CONFIG.schedule[dow]) {
+        days.push(d);
+      }
+    }
+
+    dayPicker.innerHTML = '';
+    const grid = document.createElement('div');
+    grid.className = 'day-grid';
+
+    for (const day of days) {
+      const dayBtn = document.createElement('button');
+      dayBtn.className = 'day-btn';
+      dayBtn.type = 'button';
+      dayBtn.innerHTML = `
+        <span class="day-name">${day.toLocaleDateString('es-AR', { weekday: 'short' })}</span>
+        <span class="day-num">${day.getDate()}</span>
+        <span class="day-month">${day.toLocaleDateString('es-AR', { month: 'short' })}</span>
+      `;
+      dayBtn.addEventListener('click', () => {
+        document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('selected'));
+        dayBtn.classList.add('selected');
+        selectedDay = day;
+        selectedSlot = null;
+        validar();
+        renderSlots(day);
+      });
+      grid.appendChild(dayBtn);
+    }
+
+    dayPicker.appendChild(grid);
+  }
+
+  async function renderSlots(day) {
+    slotPicker.innerHTML = '<div class="calendar-loading">Cargando horarios...</div>';
+    slotPicker.style.display = 'block';
+
+    const busySlots = await fetchBusySlots(day);
+
+    const dow = day.getDay();
+    const { start, end } = GOOGLE_CALENDAR_CONFIG.schedule[dow];
+    const duration = GOOGLE_CALENDAR_CONFIG.slotDuration;
+
+    const slots = [];
+    for (let h = start; h < end; h++) {
+      for (let m = 0; m < 60; m += duration) {
+        slots.push({ h, m });
+      }
+    }
+
+    slotPicker.innerHTML = '';
+    const grid = document.createElement('div');
+    grid.className = 'slot-grid';
+
+    const now = new Date();
+
+    for (const { h, m } of slots) {
+      const slotDate = new Date(day);
+      slotDate.setHours(h, m, 0, 0);
+
+      if (slotDate <= now) continue;
+
+      const timeStr = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+      const isBusy = busySlots.some(b => {
+        const bStart = new Date(b.start);
+        const bEnd   = new Date(b.end);
+        return slotDate >= bStart && slotDate < bEnd;
+      });
+
+      const slotBtn = document.createElement('button');
+      slotBtn.className = 'slot-btn' + (isBusy ? ' slot-busy' : '');
+      slotBtn.textContent = timeStr;
+      slotBtn.disabled = isBusy;
+      slotBtn.type = 'button';
+
+      if (!isBusy) {
+        slotBtn.addEventListener('click', () => {
+          document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+          slotBtn.classList.add('selected');
+          selectedSlot = timeStr;
+          validar();
+        });
+      }
+
+      grid.appendChild(slotBtn);
+    }
+
+    slotPicker.appendChild(grid);
+  }
+
+  async function fetchBusySlots(day) {
+    const timeMin = new Date(day);
+    timeMin.setHours(0, 0, 0, 0);
+    const timeMax = new Date(day);
+    timeMax.setHours(23, 59, 59, 999);
+
+    const calId = encodeURIComponent(GOOGLE_CALENDAR_CONFIG.calendarId);
+    const url = `https://www.googleapis.com/calendar/v3/calendars/${calId}/events?` +
+      `key=${GOOGLE_CALENDAR_CONFIG.apiKey}` +
+      `&timeMin=${timeMin.toISOString()}` +
+      `&timeMax=${timeMax.toISOString()}` +
+      `&singleEvents=true` +
+      `&orderBy=startTime`;
+
+    try {
+      const res  = await fetch(url);
+      const data = await res.json();
+      return (data.items || [])
+        .filter(e => e.status !== 'cancelled')
+        .map(e => ({ start: e.start.dateTime, end: e.end.dateTime }))
+        .filter(e => e.start && e.end);
+    } catch {
+      return [];
+    }
+  }
+
+  function validar() {
     const nombre   = document.getElementById('reserva-nombre')?.value.trim();
     const servicio = document.getElementById('servicio-value')?.value;
-    const fecha    = document.getElementById('reserva-fecha')?.value;
-    btn.disabled = !(nombre && servicio && barberoSeleccionado && fecha);
+    btn.disabled = !(nombre && servicio && selectedBarbero && selectedDay && selectedSlot);
   }
 
   document.getElementById('reserva-nombre')
-    ?.addEventListener('input', validarFormulario);
-  
-  document.getElementById('reserva-fecha')
-    ?.addEventListener('change', validarFormulario);
+    ?.addEventListener('input', validar);
+  document.addEventListener('servicioSeleccionado', validar);
 
-  // Escuchar cambios en el select custom
-  document.addEventListener('servicioSeleccionado', validarFormulario);
-
-  // Submit del formulario
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
+  // Click en botón — armar mensaje con fecha/hora y abrir WA
+  btn.addEventListener('click', async () => {
     const nombre   = document.getElementById('reserva-nombre').value.trim();
     const servicio = document.getElementById('servicio-value').value;
-    const fecha    = document.getElementById('reserva-fecha').value;
-    
-    if (!nombre || !servicio || !barberoSeleccionado || !fecha) return;
+    if (!nombre || !servicio || !selectedBarbero || !selectedDay || !selectedSlot) return;
 
     btn.disabled = true;
     btn.textContent = 'Enviando...';
 
-    // Formatear fecha para el mensaje (de YYYY-MM-DD a DD/MM/YYYY opcionalmente)
-    const [y, m, d] = fecha.split('-');
-    const fechaFormateada = `${d}/${m}/${y}`;
-
-    // 1. Guardar en D1 (fire and forget)
+    // Guardar en D1 (fire and forget)
     fetch('/api/reserva', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        nombre, 
-        servicio, 
-        barbero: barberoSeleccionado.nombre,
-        fecha: fechaFormateada 
+      body: JSON.stringify({
+        nombre,
+        servicio,
+        barbero: selectedBarbero.nombre,
+        fecha: selectedDay.toLocaleDateString('es-AR'),
+        hora: selectedSlot,
       })
     }).catch(() => {});
 
-    // 2. Armar mensaje perfecto y abrir WhatsApp
+    // Armar mensaje WA con fecha y hora
+    const fechaStr = selectedDay.toLocaleDateString('es-AR', {
+      weekday: 'long', day: 'numeric', month: 'long'
+    });
+
     const mensaje = encodeURIComponent(
-      `Hola ${barberoSeleccionado.nombre}! Soy ${nombre}. ` +
-      `Quisiera reservar un turno para *${servicio}* el día *${fechaFormateada}*. ` +
-      `¿Tenés disponibilidad?`
+      `Hola ${selectedBarbero.nombre}! Soy ${nombre}.\n` +
+      `Quiero reservar un turno para: *${servicio}*.\n` +
+      `Fecha: *${fechaStr} a las ${selectedSlot}hs*.\n` +
+      `¿Confirmás el turno?`
     );
 
-    const waUrl = `https://wa.me/${barberoSeleccionado.tel}?text=${mensaje}`;
-    
-    // Abrir en nueva pestaña
-    window.open(waUrl, '_blank');
-
-    // Feedback visual y limpieza
-    btn.textContent = '¡Redirigido!';
     setTimeout(() => {
+      window.open(`https://wa.me/${selectedBarbero.tel}?text=${mensaje}`, '_blank');
       btn.disabled = false;
       btn.textContent = 'Ir al WhatsApp';
-      form.reset();
-      // Limpiar también el selector custom
-      document.getElementById('select-servicio-display').textContent = 'Seleccioná un servicio';
-      document.getElementById('servicio-value').value = '';
-      validarFormulario();
-    }, 2000);
+    }, 400);
   });
 }

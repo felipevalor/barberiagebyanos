@@ -25,7 +25,7 @@ export default {
 
     try {
       const body = await request.json();
-      const { nombre, servicio, barbero, fecha } = body;
+      const { nombre, servicio, barbero, fecha, hora } = body;
 
       // Validación
       if (!nombre || !servicio || !barbero) {
@@ -41,11 +41,11 @@ export default {
          VALUES (?, ?, ?, ?, ?, ?, ?)`
       ).bind(
         nombre,
-        '',                          // teléfono vacío
+        '',                                           // teléfono vacío
         servicio,
         barbero,
-        fecha || '',                 // nueva columna fecha
-        '',                          // mensaje vacío
+        fecha || '',                                  // fecha del turno
+        fecha && hora ? `${fecha} ${hora}` : '',      // fecha + hora combinadas en mensaje
         new Date().toISOString()
       ).run();
 
