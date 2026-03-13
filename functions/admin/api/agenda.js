@@ -1,5 +1,5 @@
 import { getToken } from './auth.js';
-import { BARBEROS_CONFIG, SLOT_DURATION, generateSlots, getGoogleAccessToken, getCalendarEvents } from './_gcal.js';
+import { BARBEROS_CONFIG, SERVICIOS, SLOT_DURATION, generateSlots, getGoogleAccessToken, getCalendarEvents } from './_gcal.js';
 
 export async function onRequestGet({ request, env }) {
   const token = getToken(request);
@@ -35,9 +35,16 @@ export async function onRequestGet({ request, env }) {
   ).bind(`${fecha} %`, cfg.nombre).all();
 
   const reservasByHora = {};
+  // Ventanas de duración: { startMin, endMin, nombre, servicio }
+  const reservaWindows = [];
   for (const r of reservas) {
     const hora = r.mensaje?.split(' ')[1];
-    if (hora) reservasByHora[hora] = r;
+    if (!hora) continue;
+    reservasByHora[hora] = r;
+    const [h, min] = hora.split(':').map(Number);
+    const startMin = h * 60 + min;
+    const duracion = SERVICIOS[r.servicio] ?? SLOT_DURATION;
+    reservaWindows.push({ startMin, endMin: startMin + duracion, nombre: r.nombre, servicio: r.servicio });
   }
 
   // Eventos de Google Calendar
@@ -54,6 +61,10 @@ export async function onRequestGet({ request, env }) {
 
   // Construir lista de slots con estado
   const slots = slotHours.map(hora => {
+    const [h, min] = hora.split(':').map(Number);
+    const slotMin = h * 60 + min;
+
+    // 1. Reserva exacta en este horario
     if (reservasByHora[hora]) {
       const r = reservasByHora[hora];
       return {
@@ -66,8 +77,14 @@ export async function onRequestGet({ request, env }) {
       };
     }
 
+    // 2. Slot cubierto por la duración de una reserva anterior (ej: 15:00 bloqueado por Corte+Barba de 14:30)
+    const cubierto = reservaWindows.find(w => slotMin > w.startMin && slotMin < w.endMin);
+    if (cubierto) {
+      return { hora, status: 'ocupado', nombre: cubierto.nombre, servicio: cubierto.servicio };
+    }
+
+    // 3. Evento de Google Calendar no-turno (bloqueo manual)
     if (calendarEvents.length > 0) {
-      const [h, min] = hora.split(':').map(Number);
       const slotStart = new Date(`${y}-${pad(m)}-${pad(d)}T${pad(h)}:${pad(min)}:00-03:00`);
       const slotEnd   = new Date(slotStart.getTime() + SLOT_DURATION * 60 * 1000);
 

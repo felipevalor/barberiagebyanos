@@ -18,6 +18,26 @@ export async function onRequestPost({ request, env }) {
 
   const duracion = SERVICIOS[servicio] ?? SLOT_DURATION;
 
+  // Validar overlap con reservas existentes del mismo día y barbero
+  const [hNew, minNew] = hora.split(':').map(Number);
+  const newStart = hNew * 60 + minNew;
+  const newEnd   = newStart + duracion;
+
+  const { results: existentes } = await env.barberia_db.prepare(
+    'SELECT mensaje, servicio FROM reservas WHERE mensaje LIKE ? AND barbero = ?'
+  ).bind(`${fecha} %`, cfg.nombre).all();
+
+  for (const r of existentes) {
+    const rHora = r.mensaje?.split(' ')[1];
+    if (!rHora) continue;
+    const [rh, rm] = rHora.split(':').map(Number);
+    const rStart = rh * 60 + rm;
+    const rEnd   = rStart + (SERVICIOS[r.servicio] ?? SLOT_DURATION);
+    if (newStart < rEnd && newEnd > rStart) {
+      return json({ error: `Ese horario se superpone con un turno existente (${rHora} · ${r.servicio})` }, 409);
+    }
+  }
+
   // Crear evento en Google Calendar (best-effort)
   let calendarEventId = null;
   if (cfg.calendarId && env.GOOGLE_SERVICE_ACCOUNT) {
