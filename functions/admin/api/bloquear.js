@@ -1,56 +1,59 @@
 import { getToken } from './auth.js';
-import { BARBEROS_CONFIG, SLOT_DURATION, getGoogleAccessToken } from './_gcal.js';
+import { BARBEROS_CONFIG, SLOT_DURATION, getGoogleAccessToken, createCalendarEvent, deleteCalendarEvent } from './_gcal.js';
 
+// ── Bloquear slot libre ───────────────────────────────────────────────────────
 export async function onRequestPost({ request, env }) {
-  const token = getToken(request);
-  if (!token) return json({ error: 'No autorizado' }, 401);
-
-  const session = await env.barberia_db.prepare(
-    "SELECT barbero_id, role FROM admin_sessions WHERE token = ? AND expires_at > datetime('now')"
-  ).bind(token).first();
-  if (!session) return json({ error: 'Sesión inválida' }, 401);
+  const session = await getSession(request, env);
+  if (!session) return json({ error: 'No autorizado' }, 401);
 
   const { barbero_id, fecha, hora } = await request.json();
   const bId = session.role === 'owner' ? barbero_id : session.barbero_id;
   const cfg  = BARBEROS_CONFIG[bId];
 
   if (!cfg) return json({ error: 'Barbero no encontrado' }, 404);
-
-  if (!cfg.calendarId) {
-    return json({ error: 'Este barbero no tiene calendario configurado todavía' }, 400);
-  }
+  if (!cfg.calendarId) return json({ error: 'Este barbero no tiene calendario configurado todavía' }, 400);
 
   try {
-    const sa          = JSON.parse(env.GOOGLE_SERVICE_ACCOUNT);
-    const accessToken = await getGoogleAccessToken(sa);
-
-    const [d, m, y] = fecha.split('/').map(Number);
-    const [h, min]  = hora.split(':').map(Number);
-    const pad = n => String(n).padStart(2, '0');
-    const ds  = `${y}-${pad(m)}-${pad(d)}`;
-    const startISO = `${ds}T${pad(h)}:${pad(min)}:00-03:00`;
-    const total    = h * 60 + min + SLOT_DURATION;
-    const endISO   = `${ds}T${pad(Math.floor(total / 60))}:${pad(total % 60)}:00-03:00`;
-
-    const res = await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(cfg.calendarId)}/events`,
-      {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          summary: '🔒 Bloqueado — Gebyanos Admin',
-          start: { dateTime: startISO, timeZone: 'America/Argentina/Buenos_Aires' },
-          end:   { dateTime: endISO,   timeZone: 'America/Argentina/Buenos_Aires' },
-        }),
-      }
-    );
-
-    if (!res.ok) throw new Error(JSON.stringify(await res.json()));
+    const sa = JSON.parse(env.GOOGLE_SERVICE_ACCOUNT);
+    const tk = await getGoogleAccessToken(sa);
+    await createCalendarEvent(cfg.calendarId, '🔒 Bloqueado — Gebyanos Admin', fecha, hora, SLOT_DURATION, tk);
     return json({ success: true });
   } catch (e) {
     console.error('Bloquear error:', e);
     return json({ error: 'Error al bloquear el turno' }, 500);
   }
+}
+
+// ── Desbloquear slot (eliminar evento de Calendar) ────────────────────────────
+export async function onRequestDelete({ request, env }) {
+  const session = await getSession(request, env);
+  if (!session) return json({ error: 'No autorizado' }, 401);
+
+  const { barbero_id, calendarEventId } = await request.json();
+  const bId = session.role === 'owner' ? barbero_id : session.barbero_id;
+  const cfg  = BARBEROS_CONFIG[bId];
+
+  if (!cfg)            return json({ error: 'Barbero no encontrado' }, 404);
+  if (!cfg.calendarId) return json({ error: 'Sin calendario configurado' }, 400);
+  if (!calendarEventId) return json({ error: 'Falta calendarEventId' }, 400);
+
+  try {
+    const sa = JSON.parse(env.GOOGLE_SERVICE_ACCOUNT);
+    const tk = await getGoogleAccessToken(sa);
+    await deleteCalendarEvent(cfg.calendarId, calendarEventId, tk);
+    return json({ success: true });
+  } catch (e) {
+    console.error('Desbloquear error:', e);
+    return json({ error: 'Error al desbloquear el turno' }, 500);
+  }
+}
+
+async function getSession(request, env) {
+  const token = getToken(request);
+  if (!token) return null;
+  return env.barberia_db.prepare(
+    "SELECT barbero_id, role FROM admin_sessions WHERE token = ? AND expires_at > datetime('now')"
+  ).bind(token).first();
 }
 
 function json(data, status = 200) {

@@ -14,6 +14,8 @@
       --gold:    #c9a84c;
       --text:    #e8dcc8;
       --muted:   #6b6055;
+      --red:     #e57373;
+      --green:   #6dbf7e;
       --font-serif: 'Playfair Display', serif;
       --font-mono:  'DM Mono', monospace;
     }
@@ -38,7 +40,7 @@
       padding: 0.35rem 0.875rem; border-radius: 4px;
       transition: color 200ms, background 200ms;
     }
-    .nav-tab:hover { color: var(--text); background: var(--border); }
+    .nav-tab:hover  { color: var(--text); background: var(--border); }
     .nav-tab.active { color: var(--gold); background: rgba(201,168,76,0.08); }
     .nav-right { display: flex; align-items: center; gap: 1rem; }
     .nav-user  { font-size: 0.8rem; color: var(--gold); letter-spacing: 0.08em; text-transform: uppercase; }
@@ -88,47 +90,92 @@
       align-items: center; gap: 1rem;
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 8px; padding: 0.75rem 1.125rem;
-      transition: border-color 200ms;
+      cursor: pointer;
+      transition: border-color 200ms, background 200ms;
     }
-    .slot-row:hover { border-color: var(--muted); }
-    .slot-row.reservado { border-color: rgba(201,168,76,0.25); }
-    .slot-row.bloqueado { opacity: 0.5; }
+    .slot-row:hover       { border-color: var(--muted); background: #1a1814; }
+    .slot-row.reservado   { border-color: rgba(201,168,76,0.25); }
+    .slot-row.reservado:hover { border-color: rgba(201,168,76,0.5); }
+    .slot-row.bloqueado   { opacity: 0.6; }
+    .slot-row.bloqueado:hover { opacity: 0.9; border-color: var(--red); }
+    .slot-row.libre:hover { border-color: var(--green); }
 
-    .slot-hora {
-      font-size: 0.95rem; font-weight: 500; color: var(--gold);
-    }
+    .slot-hora  { font-size: 0.95rem; font-weight: 500; color: var(--gold); }
     .slot-badge {
       font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase;
-      padding: 0.2rem 0.6rem; border-radius: 20px;
-      border: 1px solid currentColor;
+      padding: 0.2rem 0.6rem; border-radius: 20px; border: 1px solid currentColor;
     }
-    .badge-libre    { color: #6dbf7e; }
-    .badge-reservado{ color: var(--gold); }
-    .badge-bloqueado{ color: var(--muted); }
+    .badge-libre     { color: var(--green); }
+    .badge-reservado { color: var(--gold); }
+    .badge-bloqueado { color: var(--muted); }
 
     .slot-info { font-size: 0.85rem; color: var(--text); }
     .slot-info .servicio { color: var(--muted); font-size: 0.78rem; margin-left: 0.5rem; }
 
-    .btn-bloquear {
-      background: none; border: 1px solid var(--border); border-radius: 5px;
-      color: var(--muted); font-family: var(--font-mono); font-size: 0.7rem;
-      letter-spacing: 0.08em; text-transform: uppercase;
-      padding: 0.3rem 0.7rem; cursor: pointer; transition: all 200ms; white-space: nowrap;
-    }
-    .btn-bloquear:hover:not(:disabled) { color: #e57373; border-color: #e57373; }
-    .btn-bloquear:disabled { opacity: 0.35; cursor: default; }
-    .btn-bloquear.loading { opacity: 0.6; }
-
-    .no-calendar-note {
+    .slot-hint {
       font-size: 0.7rem; color: var(--muted); text-align: right; white-space: nowrap;
     }
+    .slot-row.libre    .slot-hint { color: var(--green); opacity: 0.6; }
+    .slot-row.bloqueado .slot-hint { color: var(--red); opacity: 0.6; }
+    .no-cal-note { font-size: 0.7rem; color: var(--muted); text-align: right; white-space: nowrap; }
 
     .empty, .loading { text-align: center; color: var(--muted); font-size: 0.875rem; padding: 3rem 0; }
+
+    /* MODAL */
+    dialog {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      color: var(--text); font-family: var(--font-mono);
+      padding: 0; width: 100%; max-width: 400px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    }
+    dialog::backdrop { background: rgba(0,0,0,0.7); }
+    .modal-header {
+      padding: 1.25rem 1.5rem 0;
+      display: flex; align-items: flex-start; justify-content: space-between;
+    }
+    .modal-title { font-family: var(--font-serif); font-size: 1.1rem; }
+    .modal-subtitle { font-size: 0.75rem; color: var(--gold); margin-top: 0.2rem; }
+    .modal-close {
+      background: none; border: none; color: var(--muted); font-size: 1.2rem;
+      cursor: pointer; padding: 0 0.25rem; line-height: 1;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal-body { padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+    .field { display: flex; flex-direction: column; gap: 0.4rem; }
+    .field label { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .field input, .field select {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-family: var(--font-mono); font-size: 0.9rem;
+      padding: 0.6rem 0.875rem; outline: none; transition: border-color 200ms;
+      width: 100%;
+    }
+    .field input:focus, .field select:focus { border-color: var(--gold); }
+    .field select option { background: var(--surface); }
+    .modal-confirm-text { font-size: 0.875rem; color: var(--muted); line-height: 1.5; }
+    .modal-footer {
+      padding: 0 1.5rem 1.5rem;
+      display: flex; gap: 0.75rem; justify-content: flex-end;
+    }
+    .modal-footer.space-between { justify-content: space-between; }
+    .btn {
+      font-family: var(--font-mono); font-size: 0.75rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.5rem 1.125rem; border-radius: 6px; cursor: pointer;
+      border: 1px solid; transition: all 200ms;
+    }
+    .btn-cancel  { background: none; border-color: var(--border); color: var(--muted); }
+    .btn-cancel:hover { border-color: var(--muted); color: var(--text); }
+    .btn-primary { background: var(--gold); border-color: var(--gold); color: var(--bg); font-weight: 500; }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-danger  { background: none; border-color: var(--red); color: var(--red); }
+    .btn-danger:hover { background: rgba(229,115,115,0.1); }
+    .btn:disabled { opacity: 0.4; cursor: default; }
 
     @media (max-width: 540px) {
       .slot-row { grid-template-columns: 50px 90px 1fr; grid-template-rows: auto auto; }
       .slot-row > :last-child { grid-column: 1 / -1; }
       .nav-tabs { display: none; }
+      dialog { margin: auto 1rem; max-width: calc(100% - 2rem); }
     }
   </style>
 </head>
@@ -165,11 +212,27 @@
     <div id="content"><div class="loading">Cargando...</div></div>
   </main>
 
+  <!-- Modal único reutilizable -->
+  <dialog id="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modal-title"></div>
+        <div class="modal-subtitle" id="modal-subtitle"></div>
+      </div>
+      <button class="modal-close" id="modal-close">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </dialog>
+
   <script>
-    let role            = null;
-    let sessionBarbero  = null;
-    let currentDate     = new Date();
-    let calendarConfig  = false;
+    const SERVICIOS = ['Corte', 'Corte + Barba', 'Barba', 'Afeitado', 'Niños'];
+
+    let role           = null;
+    let sessionBarbero = null;
+    let currentDate    = new Date();
+    let calendarConfig = false;
+    let slotsData      = [];
 
     // ── Auth ──────────────────────────────────────────────
     async function init() {
@@ -181,10 +244,7 @@
       document.getElementById('nav-user').textContent = cap(barbero_id);
 
       const sel = document.getElementById('barbero-select');
-      if (role === 'owner') {
-        sel.style.display = 'block';
-        sel.value = 'gebyano';
-      }
+      if (role === 'owner') { sel.style.display = 'block'; sel.value = 'gebyano'; }
       await load();
     }
 
@@ -193,8 +253,8 @@
       document.getElementById('date-label').textContent = formatLabel(currentDate);
       document.getElementById('content').innerHTML = '<div class="loading">Cargando...</div>';
 
-      const bId   = getSelectedBarbero();
-      const fecha = formatFecha(currentDate);
+      const bId    = getSelectedBarbero();
+      const fecha  = formatFecha(currentDate);
       const params = new URLSearchParams({ fecha, barbero: bId });
 
       const res = await fetch(`/admin/api/agenda?${params}`);
@@ -202,12 +262,13 @@
 
       const data = await res.json();
       calendarConfig = data.calendarConfigured;
+      slotsData      = data.slots || [];
 
       if (data.diaNoLaboral) {
         document.getElementById('content').innerHTML = '<p class="empty">Día no laborable.</p>';
         return;
       }
-      render(data.slots, data.calendarConfigured);
+      render(slotsData, calendarConfig);
     }
 
     function render(slots, hasCalendar) {
@@ -217,64 +278,234 @@
       }
 
       const rows = slots.map(s => {
-        let badge, info, action;
+        let badge, info, hint;
 
         if (s.status === 'reservado') {
-          badge  = `<span class="slot-badge badge-reservado">Reservado</span>`;
-          info   = `<span class="slot-info">${s.nombre}<span class="servicio">${s.servicio}</span></span>`;
-          action = '';
+          badge = `<span class="slot-badge badge-reservado">Reservado</span>`;
+          info  = `<span class="slot-info">${esc(s.nombre)}<span class="servicio">${esc(s.servicio)}</span></span>`;
+          hint  = `<span class="slot-hint">Editar</span>`;
         } else if (s.status === 'bloqueado') {
-          badge  = `<span class="slot-badge badge-bloqueado">Bloqueado</span>`;
-          info   = `<span class="slot-info"></span>`;
-          action = '';
+          badge = `<span class="slot-badge badge-bloqueado">Bloqueado</span>`;
+          info  = `<span class="slot-info"></span>`;
+          hint  = `<span class="slot-hint">Desbloquear</span>`;
         } else {
-          badge  = `<span class="slot-badge badge-libre">Disponible</span>`;
-          info   = `<span class="slot-info"></span>`;
+          badge = `<span class="slot-badge badge-libre">Disponible</span>`;
+          info  = `<span class="slot-info"></span>`;
           if (hasCalendar) {
-            action = `<button class="btn-bloquear" data-hora="${s.hora}" onclick="bloquear(this)">Bloquear</button>`;
+            hint = `<span class="slot-hint">+ Agregar</span>`;
           } else {
-            action = `<span class="no-calendar-note" title="Sin calendario configurado">Sin calendario</span>`;
+            hint = `<span class="no-cal-note" title="Sin calendario configurado">Sin cal.</span>`;
           }
         }
 
         return `
-          <div class="slot-row ${s.status}">
+          <div class="slot-row ${s.status}" data-hora="${s.hora}" onclick="handleSlotClick('${s.hora}')">
             <span class="slot-hora">${s.hora}</span>
             ${badge}
             ${info}
-            <div>${action}</div>
+            <div>${hint}</div>
           </div>`;
       }).join('');
 
       document.getElementById('content').innerHTML = `<div class="slots">${rows}</div>`;
     }
 
-    // ── Bloquear ──────────────────────────────────────────
-    async function bloquear(btn) {
-      const hora = btn.dataset.hora;
-      btn.classList.add('loading');
-      btn.disabled = true;
-      btn.textContent = '...';
+    // ── Slot click dispatcher ─────────────────────────────
+    function handleSlotClick(hora) {
+      const slot = slotsData.find(s => s.hora === hora);
+      if (!slot) return;
+      if (slot.status === 'libre')      openModalAgregar(slot);
+      if (slot.status === 'reservado')  openModalEditar(slot);
+      if (slot.status === 'bloqueado')  openModalDesbloquear(slot);
+    }
 
-      const res = await fetch('/admin/api/bloquear', {
+    // ── Modal: Agregar turno ──────────────────────────────
+    function openModalAgregar(slot) {
+      setModalHeader(`Agregar turno`, `${slot.hora} · ${formatLabel(currentDate)}`);
+
+      document.getElementById('modal-body').innerHTML = `
+        <div class="field">
+          <label>Nombre del cliente</label>
+          <input id="m-nombre" type="text" placeholder="Juan García" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Servicio</label>
+          <select id="m-servicio">
+            ${SERVICIOS.map(s => `<option value="${s}">${s}</option>`).join('')}
+          </select>
+        </div>`;
+
+      document.getElementById('modal-footer').className = 'modal-footer';
+      document.getElementById('modal-footer').innerHTML = `
+        <button class="btn btn-cancel" onclick="closeModal()">Cancelar</button>
+        <button class="btn btn-primary" id="btn-confirm">Confirmar</button>`;
+
+      document.getElementById('btn-confirm').onclick = () => confirmarAgregar(slot.hora);
+      document.getElementById('m-nombre').addEventListener('keydown', e => { if (e.key === 'Enter') confirmarAgregar(slot.hora); });
+
+      openModal();
+      setTimeout(() => document.getElementById('m-nombre')?.focus(), 50);
+    }
+
+    async function confirmarAgregar(hora) {
+      const nombre   = document.getElementById('m-nombre').value.trim();
+      const servicio = document.getElementById('m-servicio').value;
+      if (!nombre) { document.getElementById('m-nombre').focus(); return; }
+
+      setBusy(true);
+      const res = await fetch('/admin/api/turno', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           barbero_id: getSelectedBarbero(),
           fecha: formatFecha(currentDate),
-          hora,
+          hora, nombre, servicio,
         }),
       });
 
       if (res.ok) {
-        await load(); // refrescar
+        closeModal();
+        await load();
       } else {
         const { error } = await res.json();
-        alert(error || 'Error al bloquear');
-        btn.classList.remove('loading');
-        btn.disabled = false;
-        btn.textContent = 'Bloquear';
+        alert(error || 'Error al guardar');
+        setBusy(false);
       }
+    }
+
+    // ── Modal: Editar / Eliminar turno ───────────────────
+    function openModalEditar(slot) {
+      setModalHeader(`Turno ${slot.hora}`, formatLabel(currentDate));
+
+      document.getElementById('modal-body').innerHTML = `
+        <div class="field">
+          <label>Nombre del cliente</label>
+          <input id="m-nombre" type="text" value="${esc(slot.nombre)}" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Servicio</label>
+          <select id="m-servicio">
+            ${SERVICIOS.map(s => `<option value="${s}" ${s === slot.servicio ? 'selected' : ''}>${s}</option>`).join('')}
+          </select>
+        </div>`;
+
+      document.getElementById('modal-footer').className = 'modal-footer space-between';
+      document.getElementById('modal-footer').innerHTML = `
+        <button class="btn btn-danger"  id="btn-eliminar">Eliminar</button>
+        <div style="display:flex;gap:0.75rem">
+          <button class="btn btn-cancel" onclick="closeModal()">Cancelar</button>
+          <button class="btn btn-primary" id="btn-confirm">Guardar</button>
+        </div>`;
+
+      document.getElementById('btn-confirm').onclick  = () => confirmarEditar(slot.id);
+      document.getElementById('btn-eliminar').onclick = () => confirmarEliminar(slot);
+
+      openModal();
+      setTimeout(() => {
+        const el = document.getElementById('m-nombre');
+        if (el) { el.focus(); el.select(); }
+      }, 50);
+    }
+
+    async function confirmarEditar(id) {
+      const nombre   = document.getElementById('m-nombre').value.trim();
+      const servicio = document.getElementById('m-servicio').value;
+      if (!nombre) { document.getElementById('m-nombre').focus(); return; }
+
+      setBusy(true);
+      const res = await fetch('/admin/api/turno', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, nombre, servicio }),
+      });
+
+      if (res.ok) {
+        closeModal();
+        await load();
+      } else {
+        const { error } = await res.json();
+        alert(error || 'Error al guardar');
+        setBusy(false);
+      }
+    }
+
+    async function confirmarEliminar(slot) {
+      // Cambiar modal a confirmación de eliminación
+      setModalHeader(`Eliminar turno`, `${slot.hora} · ${esc(slot.nombre)}`);
+      document.getElementById('modal-body').innerHTML = `
+        <p class="modal-confirm-text">
+          ¿Eliminar el turno de <strong>${esc(slot.nombre)}</strong> (${esc(slot.servicio)}) a las ${slot.hora}?<br>
+          Esta acción no se puede deshacer.
+        </p>`;
+      document.getElementById('modal-footer').className = 'modal-footer';
+      document.getElementById('modal-footer').innerHTML = `
+        <button class="btn btn-cancel" onclick="closeModal()">Cancelar</button>
+        <button class="btn btn-danger" id="btn-confirm-delete">Eliminar</button>`;
+
+      document.getElementById('btn-confirm-delete').onclick = async () => {
+        setBusy(true);
+        const res = await fetch('/admin/api/turno', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: slot.id }),
+        });
+        if (res.ok) {
+          closeModal();
+          await load();
+        } else {
+          const { error } = await res.json();
+          alert(error || 'Error al eliminar');
+          setBusy(false);
+        }
+      };
+    }
+
+    // ── Modal: Desbloquear ────────────────────────────────
+    function openModalDesbloquear(slot) {
+      if (!slot.calendarEventId) {
+        alert('No se puede desbloquear: ID de evento no disponible.');
+        return;
+      }
+      setModalHeader(`Slot bloqueado`, `${slot.hora} · ${formatLabel(currentDate)}`);
+      document.getElementById('modal-body').innerHTML = `
+        <p class="modal-confirm-text">¿Desbloquear este horario y dejarlo disponible?</p>`;
+      document.getElementById('modal-footer').className = 'modal-footer';
+      document.getElementById('modal-footer').innerHTML = `
+        <button class="btn btn-cancel" onclick="closeModal()">Cancelar</button>
+        <button class="btn btn-primary" id="btn-confirm">Desbloquear</button>`;
+
+      document.getElementById('btn-confirm').onclick = async () => {
+        setBusy(true);
+        const res = await fetch('/admin/api/bloquear', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            barbero_id: getSelectedBarbero(),
+            calendarEventId: slot.calendarEventId,
+          }),
+        });
+        if (res.ok) {
+          closeModal();
+          await load();
+        } else {
+          const { error } = await res.json();
+          alert(error || 'Error al desbloquear');
+          setBusy(false);
+        }
+      };
+
+      openModal();
+    }
+
+    // ── Modal helpers ─────────────────────────────────────
+    function setModalHeader(title, subtitle) {
+      document.getElementById('modal-title').textContent    = title;
+      document.getElementById('modal-subtitle').textContent = subtitle;
+    }
+    function openModal()  { document.getElementById('modal').showModal(); }
+    function closeModal() { document.getElementById('modal').close(); }
+    function setBusy(busy) {
+      document.querySelectorAll('#modal .btn').forEach(b => b.disabled = busy);
     }
 
     // ── Navegación ────────────────────────────────────────
@@ -282,6 +513,8 @@
     document.getElementById('next-btn').addEventListener('click', () => { currentDate.setDate(currentDate.getDate() + 1); load(); });
     document.getElementById('today-btn').addEventListener('click', () => { currentDate = new Date(); load(); });
     document.getElementById('barbero-select').addEventListener('change', load);
+    document.getElementById('modal-close').addEventListener('click', closeModal);
+    document.getElementById('modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
 
     // ── Logout ────────────────────────────────────────────
     document.getElementById('logout-btn').addEventListener('click', async () => {
@@ -295,9 +528,10 @@
         ? document.getElementById('barbero-select').value
         : sessionBarbero;
     }
-    function formatFecha(d) { return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`; }
-    function formatLabel(d) { return d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }); }
-    function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+    function formatFecha(d)  { return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`; }
+    function formatLabel(d)  { return d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }); }
+    function cap(s)          { return s.charAt(0).toUpperCase() + s.slice(1); }
+    function esc(s)          { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
     init();
   </script>

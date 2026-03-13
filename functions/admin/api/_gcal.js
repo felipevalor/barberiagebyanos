@@ -17,6 +17,14 @@ export const BARBEROS_CONFIG = {
 
 export const SLOT_DURATION = 30;
 
+export const SERVICIOS = {
+  'Corte':          30,
+  'Corte + Barba':  45,
+  'Barba':          15,
+  'Afeitado':       15,
+  'Niños':          30,
+};
+
 export function generateSlots(schedule, dow) {
   const s = schedule[dow];
   if (!s) return [];
@@ -80,4 +88,60 @@ export async function getCalendarEvents(calendarId, fecha, accessToken) {
   return (data.items || [])
     .filter(e => e.status !== 'cancelled' && e.start?.dateTime && e.end?.dateTime)
     .map(e => ({ id: e.id, summary: e.summary || '', start: e.start.dateTime, end: e.end.dateTime }));
+}
+
+export function buildEventTimes(fecha, hora, duracionMin) {
+  const [d, m, y] = fecha.split('/').map(Number);
+  const [h, min]  = hora.split(':').map(Number);
+  const pad = n => String(n).padStart(2, '0');
+  const ds  = `${y}-${pad(m)}-${pad(d)}`;
+  const startISO = `${ds}T${pad(h)}:${pad(min)}:00-03:00`;
+  const total    = h * 60 + min + duracionMin;
+  const endISO   = `${ds}T${pad(Math.floor(total / 60))}:${pad(total % 60)}:00-03:00`;
+  return { startISO, endISO };
+}
+
+export async function createCalendarEvent(calendarId, summary, fecha, hora, duracionMin, accessToken) {
+  const { startISO, endISO } = buildEventTimes(fecha, hora, duracionMin);
+  const res = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`,
+    {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        summary,
+        start: { dateTime: startISO, timeZone: 'America/Argentina/Buenos_Aires' },
+        end:   { dateTime: endISO,   timeZone: 'America/Argentina/Buenos_Aires' },
+      }),
+    }
+  );
+  if (!res.ok) throw new Error(JSON.stringify(await res.json()));
+  const data = await res.json();
+  return data.id;
+}
+
+export async function updateCalendarEvent(calendarId, eventId, summary, accessToken) {
+  const res = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/${eventId}`,
+    {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ summary }),
+    }
+  );
+  // 404/410 = el evento ya no existe, no es error crítico
+  if (!res.ok && res.status !== 404 && res.status !== 410) {
+    throw new Error(JSON.stringify(await res.json()));
+  }
+}
+
+export async function deleteCalendarEvent(calendarId, eventId, accessToken) {
+  const res = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/${eventId}`,
+    { method: 'DELETE', headers: { 'Authorization': `Bearer ${accessToken}` } }
+  );
+  // 404/410 = ya no existe, se ignora
+  if (!res.ok && res.status !== 404 && res.status !== 410) {
+    throw new Error(`Calendar delete failed: ${res.status}`);
+  }
 }

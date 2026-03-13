@@ -10,9 +10,9 @@ export async function onRequestGet({ request, env }) {
   ).bind(token).first();
   if (!session) return json({ error: 'Sesión inválida' }, 401);
 
-  const url     = new URL(request.url);
-  const fecha   = url.searchParams.get('fecha');
-  const bId     = session.role === 'owner' ? url.searchParams.get('barbero') : session.barbero_id;
+  const url   = new URL(request.url);
+  const fecha = url.searchParams.get('fecha');
+  const bId   = session.role === 'owner' ? url.searchParams.get('barbero') : session.barbero_id;
 
   if (!fecha) return json({ error: 'Falta fecha' }, 400);
   if (!bId)   return json({ error: 'Falta barbero' }, 400);
@@ -20,7 +20,6 @@ export async function onRequestGet({ request, env }) {
   const cfg = BARBEROS_CONFIG[bId];
   if (!cfg) return json({ error: 'Barbero no encontrado' }, 404);
 
-  // Día de la semana (evitar problemas de timezone con UTC noon)
   const [d, m, y] = fecha.split('/').map(Number);
   const pad = n => String(n).padStart(2, '0');
   const dow = new Date(`${y}-${pad(m)}-${pad(d)}T12:00:00Z`).getUTCDay();
@@ -30,9 +29,9 @@ export async function onRequestGet({ request, env }) {
     return json({ slots: [], calendarConfigured: !!cfg.calendarId, diaNoLaboral: true });
   }
 
-  // Reservas del día desde D1
+  // Reservas del día desde D1 — incluimos id y calendar_event_id
   const { results: reservas } = await env.barberia_db.prepare(
-    'SELECT nombre, servicio, mensaje FROM reservas WHERE mensaje LIKE ? AND barbero = ? ORDER BY mensaje ASC'
+    'SELECT id, nombre, servicio, mensaje, calendar_event_id FROM reservas WHERE mensaje LIKE ? AND barbero = ? ORDER BY mensaje ASC'
   ).bind(`${fecha} %`, cfg.nombre).all();
 
   const reservasByHora = {};
@@ -57,7 +56,14 @@ export async function onRequestGet({ request, env }) {
   const slots = slotHours.map(hora => {
     if (reservasByHora[hora]) {
       const r = reservasByHora[hora];
-      return { hora, status: 'reservado', nombre: r.nombre, servicio: r.servicio };
+      return {
+        hora,
+        status: 'reservado',
+        id: r.id,
+        nombre: r.nombre,
+        servicio: r.servicio,
+        calendar_event_id: r.calendar_event_id || null,
+      };
     }
 
     if (calendarEvents.length > 0) {
@@ -65,11 +71,11 @@ export async function onRequestGet({ request, env }) {
       const slotStart = new Date(`${y}-${pad(m)}-${pad(d)}T${pad(h)}:${pad(min)}:00-03:00`);
       const slotEnd   = new Date(slotStart.getTime() + SLOT_DURATION * 60 * 1000);
 
-      const bloqueado = calendarEvents.some(ev => {
+      const bloqueoEv = calendarEvents.find(ev => {
         if (ev.summary.startsWith('Turno —')) return false;
         return slotStart < new Date(ev.end) && slotEnd > new Date(ev.start);
       });
-      if (bloqueado) return { hora, status: 'bloqueado' };
+      if (bloqueoEv) return { hora, status: 'bloqueado', calendarEventId: bloqueoEv.id };
     }
 
     return { hora, status: 'libre' };

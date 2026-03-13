@@ -17,27 +17,30 @@ export async function onRequestPost({ request, env }) {
       );
     }
 
+    let calendarEventId = null;
+    if (calendarId && env.GOOGLE_SERVICE_ACCOUNT) {
+      try {
+        const serviceAccount = JSON.parse(env.GOOGLE_SERVICE_ACCOUNT);
+        const accessToken = await getGoogleAccessToken(serviceAccount);
+        calendarEventId = await createCalendarEvent(calendarId, nombre, servicio, fecha, hora, duracion || 30, accessToken);
+      } catch (calError) {
+        console.error('Calendar error:', calError);
+      }
+    }
+
     await env.barberia_db.prepare(
-      `INSERT INTO reservas (nombre, telefono, servicio, barbero, mensaje, created_at)
-       VALUES (?, ?, ?, ?, ?, ?)`
+      `INSERT INTO reservas (nombre, telefono, servicio, barbero, fecha, mensaje, calendar_event_id, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       nombre,
       '',
       servicio,
       barbero || '',
+      fecha || '',
       fecha && hora ? `${fecha} ${hora}` : '',
+      calendarEventId,
       new Date().toISOString()
     ).run();
-
-    if (calendarId && env.GOOGLE_SERVICE_ACCOUNT) {
-      try {
-        const serviceAccount = JSON.parse(env.GOOGLE_SERVICE_ACCOUNT);
-        const accessToken = await getGoogleAccessToken(serviceAccount);
-        await createCalendarEvent(calendarId, nombre, servicio, fecha, hora, duracion || 30, accessToken);
-      } catch (calError) {
-        console.error('Calendar error:', calError);
-      }
-    }
 
     return new Response(
       JSON.stringify({ success: true }),
@@ -151,4 +154,6 @@ async function createCalendarEvent(calendarId, nombre, servicio, fecha, hora, du
     const err = await res.json();
     throw new Error(JSON.stringify(err));
   }
+  const data = await res.json();
+  return data.id;
 }
