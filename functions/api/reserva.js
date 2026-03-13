@@ -8,7 +8,7 @@ export async function onRequestPost({ request, env }) {
 
   try {
     const body = await request.json();
-    const { nombre, servicio, barbero, fecha, hora, calendarId } = body;
+    const { nombre, servicio, barbero, fecha, hora, calendarId, duracion } = body;
 
     if (!nombre || !servicio || !barbero) {
       return new Response(
@@ -33,7 +33,7 @@ export async function onRequestPost({ request, env }) {
       try {
         const serviceAccount = JSON.parse(env.GOOGLE_SERVICE_ACCOUNT);
         const accessToken = await getGoogleAccessToken(serviceAccount);
-        await createCalendarEvent(calendarId, nombre, servicio, fecha, hora, accessToken);
+        await createCalendarEvent(calendarId, nombre, servicio, fecha, hora, duracion || 30, accessToken);
       } catch (calError) {
         console.error('Calendar error:', calError);
       }
@@ -44,9 +44,10 @@ export async function onRequestPost({ request, env }) {
       { status: 200, headers: corsHeaders }
     );
   } catch (error) {
+    const isDoubleBooking = error?.message?.includes('UNIQUE constraint failed');
     return new Response(
-      JSON.stringify({ success: false, error: 'Error interno' }),
-      { status: 500, headers: corsHeaders }
+      JSON.stringify({ success: false, error: isDoubleBooking ? 'Turno ya reservado' : 'Error interno' }),
+      { status: isDoubleBooking ? 409 : 500, headers: corsHeaders }
     );
   }
 }
@@ -119,7 +120,7 @@ async function getGoogleAccessToken(serviceAccount) {
   return access_token;
 }
 
-async function createCalendarEvent(calendarId, nombre, servicio, fecha, hora, accessToken) {
+async function createCalendarEvent(calendarId, nombre, servicio, fecha, hora, duracion, accessToken) {
   const [day, month, year] = fecha.split('/').map(Number);
   const [h, m] = hora.split(':').map(Number);
 
@@ -127,7 +128,7 @@ async function createCalendarEvent(calendarId, nombre, servicio, fecha, hora, ac
   const dateStr  = `${year}-${pad(month)}-${pad(day)}`;
   const startISO = `${dateStr}T${pad(h)}:${pad(m)}:00-03:00`;
 
-  const totalMin = h * 60 + m + 30;
+  const totalMin = h * 60 + m + duracion;
   const endISO   = `${dateStr}T${pad(Math.floor(totalMin / 60))}:${pad(totalMin % 60)}:00-03:00`;
 
   const res = await fetch(

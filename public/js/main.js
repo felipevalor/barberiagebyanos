@@ -270,6 +270,18 @@ const DEFAULT_SCHEDULE = {
   6: { start: 9, end: 17 },
 };
 
+const SERVICIOS = {
+  'Corte':             { duracion: 30 },
+  'Corte + Barba':     { duracion: 45 },
+  'Barba':             { duracion: 15 },
+  'Afeitado':          { duracion: 15 },
+  'Niños 10-13 años':  { duracion: 30 },
+  'Niños 0-9 años':    { duracion: 30 },
+  'Promo 2-3 cortes':  { duracion: 30 },
+  'Promo 4 cortes':    { duracion: 30 },
+  'Fuerzas Gebyanas':  { duracion: 30 },
+};
+
 /**
  * Reserva Form Logic
  */
@@ -323,19 +335,32 @@ async function initCalendarPicker() {
   const btn        = document.getElementById('reserva-btn');
   if (!dayPicker) return;
 
-  let selectedBarbero = null;
-  let selectedDay     = null;
-  let selectedSlot    = null;
+  let selectedBarbero  = null;
+  let selectedServicio = null;
+  let selectedDay      = null;
+  let selectedSlot     = null;
 
   // Escuchar selección de barbero
   document.addEventListener('barberoSeleccionado', async (e) => {
     selectedBarbero = e.detail;
-    selectedDay = null;
+    selectedDay  = null;
     selectedSlot = null;
     slotPicker.innerHTML = '';
     slotPicker.style.display = 'none';
     validar();
-    await renderDays();
+    if (selectedServicio) await renderDays();
+  });
+
+  // Escuchar selección de servicio
+  document.addEventListener('servicioSeleccionado', async () => {
+    selectedServicio = document.getElementById('servicio-value')?.value;
+    selectedSlot = null;
+    validar();
+    if (selectedBarbero && selectedDay) {
+      await renderSlots(selectedDay);
+    } else if (selectedBarbero) {
+      await renderDays();
+    }
   });
 
   async function renderDays() {
@@ -403,6 +428,10 @@ async function initCalendarPicker() {
     grid.className = 'slot-grid';
 
     const now = new Date();
+    const duracionServicio = SERVICIOS[selectedServicio]?.duracion || GOOGLE_CALENDAR_CONFIG.slotDuration;
+
+    const scheduleEnd = new Date(day);
+    scheduleEnd.setHours(end, 0, 0, 0);
 
     for (const { h, m } of slots) {
       const slotDate = new Date(day);
@@ -411,10 +440,13 @@ async function initCalendarPicker() {
       if (slotDate <= now) continue;
 
       const timeStr = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+      const slotEnd = new Date(slotDate.getTime() + duracionServicio * 60 * 1000);
+
+      if (slotEnd > scheduleEnd) continue;
       const isBusy = busySlots.some(b => {
         const bStart = new Date(b.start);
         const bEnd   = new Date(b.end);
-        return slotDate >= bStart && slotDate < bEnd;
+        return slotDate < bEnd && slotEnd > bStart;
       });
 
       const slotBtn = document.createElement('button');
@@ -474,7 +506,6 @@ async function initCalendarPicker() {
 
   document.getElementById('reserva-nombre')
     ?.addEventListener('input', validar);
-  document.addEventListener('servicioSeleccionado', validar);
 
   // Click en botón — armar mensaje con fecha/hora y abrir WA
   btn.addEventListener('click', async () => {
@@ -496,6 +527,7 @@ async function initCalendarPicker() {
         fecha: selectedDay.toLocaleDateString('es-AR'),
         hora: selectedSlot,
         calendarId: selectedBarbero.calendarId || null,
+        duracion: SERVICIOS[servicio]?.duracion || 30,
       })
     }).catch(() => {});
 
