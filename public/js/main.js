@@ -257,27 +257,28 @@ function initCustomSelect() {
  */
 const GOOGLE_CALENDAR_CONFIG = {
   apiKey: 'AIzaSyCt8-oaJu57_A73I7bVtCAupY9xA9rZ6aQ',
-  calendarId: 'felipevalor7@gmail.com',
   timezone: 'America/Argentina/Buenos_Aires',
-  schedule: {
-    1: { start: 9, end: 20 },
-    2: { start: 9, end: 20 },
-    3: { start: 9, end: 20 },
-    4: { start: 9, end: 20 },
-    5: { start: 9, end: 20 },
-    6: { start: 9, end: 17 },
-  },
   slotDuration: 30,
+};
+
+const DEFAULT_SCHEDULE = {
+  1: { start: 9, end: 20 },
+  2: { start: 9, end: 20 },
+  3: { start: 9, end: 20 },
+  4: { start: 9, end: 20 },
+  5: { start: 9, end: 20 },
+  6: { start: 9, end: 17 },
 };
 
 /**
  * Reserva Form Logic
  */
 const BARBEROS = [
-  { id: 'gebyano', nombre: 'Gebyano', tel: '5493416021009', disponible: true },
-  { id: 'lobo',    nombre: 'Lobo',    tel: '5493412754502', disponible: true },
-  { id: 'ns',      nombre: 'NS',      tel: null,            disponible: false },
-  { id: 'bql',     nombre: 'BQL',     tel: null,            disponible: false }
+  { id: 'gebyano', nombre: 'Gebyano', tel: '5493416021009', disponible: true,  calendarId: null,                      schedule: DEFAULT_SCHEDULE },
+  { id: 'lobo',    nombre: 'Lobo',    tel: '5493412754502', disponible: true,  calendarId: null,                      schedule: DEFAULT_SCHEDULE },
+  { id: 'felipe',  nombre: 'Felipe',  tel: '5493416513207', disponible: true,  calendarId: 'felipevalor7@gmail.com',  schedule: DEFAULT_SCHEDULE },
+  { id: 'ns',      nombre: 'NS',      tel: null,            disponible: false, calendarId: null,                      schedule: null },
+  { id: 'bql',     nombre: 'BQL',     tel: null,            disponible: false, calendarId: null,                      schedule: null }
 ];
 
 function initReservaForm() {
@@ -348,7 +349,7 @@ async function initCalendarPicker() {
       const d = new Date(today);
       d.setDate(today.getDate() + i);
       const dow = d.getDay();
-      if (GOOGLE_CALENDAR_CONFIG.schedule[dow]) {
+      if (selectedBarbero.schedule[dow]) {
         days.push(d);
       }
     }
@@ -384,10 +385,10 @@ async function initCalendarPicker() {
     slotPicker.innerHTML = '<div class="calendar-loading">Cargando horarios...</div>';
     slotPicker.style.display = 'block';
 
-    const busySlots = await fetchBusySlots(day);
+    const busySlots = await fetchBusySlots(day, selectedBarbero);
 
     const dow = day.getDay();
-    const { start, end } = GOOGLE_CALENDAR_CONFIG.schedule[dow];
+    const { start, end } = selectedBarbero.schedule[dow];
     const duration = GOOGLE_CALENDAR_CONFIG.slotDuration;
 
     const slots = [];
@@ -437,13 +438,15 @@ async function initCalendarPicker() {
     slotPicker.appendChild(grid);
   }
 
-  async function fetchBusySlots(day) {
+  async function fetchBusySlots(day, barbero) {
+    if (!barbero.calendarId) return [];
+
     const timeMin = new Date(day);
     timeMin.setHours(0, 0, 0, 0);
     const timeMax = new Date(day);
     timeMax.setHours(23, 59, 59, 999);
 
-    const calId = encodeURIComponent(GOOGLE_CALENDAR_CONFIG.calendarId);
+    const calId = encodeURIComponent(barbero.calendarId);
     const url = `https://www.googleapis.com/calendar/v3/calendars/${calId}/events?` +
       `key=${GOOGLE_CALENDAR_CONFIG.apiKey}` +
       `&timeMin=${timeMin.toISOString()}` +
@@ -492,6 +495,7 @@ async function initCalendarPicker() {
         barbero: selectedBarbero.nombre,
         fecha: selectedDay.toLocaleDateString('es-AR'),
         hora: selectedSlot,
+        calendarId: selectedBarbero.calendarId || null,
       })
     }).catch(() => {});
 
@@ -502,13 +506,14 @@ async function initCalendarPicker() {
 
     const mensaje = encodeURIComponent(
       `Hola ${selectedBarbero.nombre}! Soy ${nombre}.\n` +
-      `Quiero reservar un turno para: *${servicio}*.\n` +
+      `Quiero reservar un turno de: *${servicio}*.\n` +
       `Fecha: *${fechaStr} a las ${selectedSlot}hs*.\n` +
-      `¿Confirmás el turno?`
+      `¿Tendrás lugar?`
     );
 
+    window.open(`https://wa.me/${selectedBarbero.tel}?text=${mensaje}`, '_blank');
+
     setTimeout(() => {
-      window.open(`https://wa.me/${selectedBarbero.tel}?text=${mensaje}`, '_blank');
       btn.disabled = false;
       btn.textContent = 'Ir al WhatsApp';
     }, 400);
