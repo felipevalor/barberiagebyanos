@@ -18,210 +18,105 @@
       --font-mono:  'DM Mono', monospace;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font-mono);
-      min-height: 100vh;
-    }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-mono); min-height: 100vh; }
 
-    /* NAV */
+    /* ── NAV ── */
     .nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 2rem;
-      height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.5rem 1.5rem;
       border-bottom: 1px solid var(--border);
       background: var(--surface);
-      position: sticky;
-      top: 0;
-      z-index: 10;
+      position: sticky; top: 0; z-index: 10;
+      min-height: 64px;
     }
-    .nav-brand {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-    .nav-logo {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-    }
-    .nav-title {
-      font-family: var(--font-serif);
-      font-size: 1rem;
-      letter-spacing: 0.02em;
-    }
-    .nav-x    { color: var(--muted); font-size: 0.85rem; }
-    .nav-vs   { height: 22px; opacity: 0.75; }
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-    .nav-user {
-      font-size: 0.8rem;
-      color: var(--gold);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-    .nav-logout {
-      background: none;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      color: var(--muted);
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 0.35rem 0.75rem;
-      cursor: pointer;
-      transition: color 200ms, border-color 200ms;
-    }
-    .nav-logout:hover { color: var(--text); border-color: var(--muted); }
-    .nav-tabs { display: flex; gap: 0.25rem; }
+    .nav-brand { display: flex; align-items: center; gap: 0.75rem; }
+    .nav-logo  { width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; }
+    .nav-title { font-family: var(--font-serif); font-size: 1rem; white-space: nowrap; }
+    .nav-x     { color: var(--muted); font-size: 0.9rem; flex-shrink: 0; }
+    .nav-vs    { height: 96px; opacity: 0.9; flex-shrink: 0; }
+
+    .nav-tabs  { display: flex; gap: 0.25rem; }
     .nav-tab {
       color: var(--muted); text-decoration: none;
       font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;
-      padding: 0.35rem 0.875rem; border-radius: 4px;
+      padding: 0.5rem 1rem; border-radius: 4px;
       transition: color 200ms, background 200ms;
     }
-    .nav-tab:hover { color: var(--text); background: var(--border); }
+    .nav-tab:hover  { color: var(--text); background: var(--border); }
     .nav-tab.active { color: var(--gold); background: rgba(201,168,76,0.08); }
-    @media (max-width: 540px) { .nav-tabs { display: none; } }
 
-    /* MAIN */
-    .main {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 2rem 1.5rem;
+    .nav-right  { display: flex; align-items: center; gap: 0.75rem; }
+    .nav-user   { font-size: 0.8rem; color: var(--gold); letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+    .nav-logout {
+      background: none; border: 1px solid var(--border); border-radius: 4px;
+      color: var(--muted); font-family: var(--font-mono); font-size: 0.7rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.45rem 0.75rem; cursor: pointer; transition: color 200ms, border-color 200ms;
+      white-space: nowrap;
     }
+    .nav-logout:hover { color: var(--text); border-color: var(--muted); }
 
-    /* DATE NAV */
+    /* ── MAIN ── */
+    .main { max-width: 760px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+    /* ── DATE NAV ── */
     .date-nav {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 1.75rem;
+      display: flex; align-items: center; gap: 0.5rem;
+      margin-bottom: 1.5rem;
     }
-    .date-label {
-      font-family: var(--font-serif);
-      font-size: 1.3rem;
-      flex: 1;
-      text-transform: capitalize;
-    }
+    .date-label { font-family: var(--font-serif); font-size: 1.2rem; flex: 1; text-transform: capitalize; }
     .date-btn {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      padding: 0.4rem 0.75rem;
-      cursor: pointer;
-      transition: border-color 200ms;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-family: var(--font-mono); font-size: 0.9rem;
+      padding: 0.5rem 0.875rem; cursor: pointer; transition: border-color 200ms;
+      min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center;
     }
     .date-btn:hover { border-color: var(--muted); }
     .date-btn.today {
-      color: var(--gold);
-      border-color: var(--gold);
-      font-size: 0.7rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+      color: var(--gold); border-color: var(--gold);
+      font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase;
     }
 
-    /* FILTER BARBEROS */
-    .filter-row {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1.5rem;
-      flex-wrap: wrap;
-    }
+    /* ── FILTER BARBEROS ── */
+    .filter-row { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
     .filter-btn {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      color: var(--muted);
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 0.35rem 0.875rem;
-      cursor: pointer;
-      transition: all 200ms;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+      color: var(--muted); font-family: var(--font-mono); font-size: 0.75rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.45rem 1rem; cursor: pointer; transition: all 200ms;
+      min-height: 40px;
     }
-    .filter-btn:hover { color: var(--text); border-color: var(--muted); }
+    .filter-btn:hover  { color: var(--text); border-color: var(--muted); }
     .filter-btn.active { background: var(--gold); border-color: var(--gold); color: var(--bg); }
 
-    /* RESERVAS */
-    .count {
-      font-size: 0.75rem;
-      color: var(--muted);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-bottom: 0.875rem;
-    }
-    .reservas-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-    .reserva-row {
-      display: grid;
-      grid-template-columns: 60px 1fr 1fr auto;
-      align-items: center;
-      gap: 1rem;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 0.875rem 1.25rem;
-      transition: border-color 200ms;
-    }
-    .reserva-row:hover { border-color: var(--muted); }
-    .reserva-row.owner-view {
-      grid-template-columns: 60px 1fr 1fr 100px;
-    }
-    .reserva-hora {
-      font-size: 1rem;
-      color: var(--gold);
-      font-weight: 500;
-    }
-    .reserva-nombre {
-      font-size: 0.95rem;
-    }
-    .reserva-servicio {
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
-    .reserva-barbero {
-      font-size: 0.75rem;
-      color: var(--muted);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      text-align: right;
-    }
-    .empty {
-      text-align: center;
-      color: var(--muted);
-      font-size: 0.9rem;
-      padding: 3rem 0;
-    }
-    .loading {
-      text-align: center;
-      color: var(--muted);
-      font-size: 0.85rem;
-      padding: 3rem 0;
-    }
+    /* ── RESERVAS ── */
+    .count { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.75rem; }
+    .reservas-list { display: flex; flex-direction: column; gap: 0.5rem; }
 
-    @media (max-width: 500px) {
-      .reserva-row, .reserva-row.owner-view {
-        grid-template-columns: 50px 1fr;
-        grid-template-rows: auto auto;
-      }
-      .reserva-servicio { grid-column: 2; }
-      .reserva-barbero  { grid-column: 1 / -1; text-align: left; }
-      .nav { padding: 0 1rem; }
+    .reserva-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 1rem 1.125rem; transition: border-color 200ms;
+    }
+    .reserva-card:hover { border-color: rgba(201,168,76,0.3); }
+    .reserva-top { display: flex; align-items: center; gap: 0.875rem; margin-bottom: 0.3rem; }
+    .reserva-hora    { font-size: 1.05rem; color: var(--gold); font-weight: 500; white-space: nowrap; }
+    .reserva-nombre  { font-size: 0.95rem; font-weight: 500; }
+    .reserva-bottom  { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+    .reserva-servicio { font-size: 0.8rem; color: var(--muted); }
+    .reserva-barbero  { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+
+    .empty   { text-align: center; color: var(--muted); font-size: 0.9rem; padding: 3rem 0; }
+    .loading { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 3rem 0; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 540px) {
+      .nav-tabs  { display: none; }
+      .nav-title { display: none; }
+      .nav-vs    { height: 64px; }
+      .nav-logo  { width: 36px; height: 36px; }
+      .nav { padding: 0.5rem 1rem; }
+      .date-label { font-size: 1rem; }
+      .main { padding: 1.25rem 0.875rem 4rem; }
     }
   </style>
 </head>
@@ -265,11 +160,10 @@
   </main>
 
   <script>
-    let role         = null;
-    let currentDate  = new Date();
-    let filtro       = 'todos';
+    let role        = null;
+    let currentDate = new Date();
+    let filtro      = 'todos';
 
-    // ── Auth ──────────────────────────────────────────────
     async function init() {
       const res = await fetch('/admin/api/me');
       if (!res.ok) { location.href = '/admin/'; return; }
@@ -280,7 +174,6 @@
       await load();
     }
 
-    // ── Data ──────────────────────────────────────────────
     async function load() {
       document.getElementById('date-label').textContent = formatLabel(currentDate);
       document.getElementById('content').innerHTML = '<div class="loading">Cargando...</div>';
@@ -297,44 +190,36 @@
 
     function render(reservas) {
       const el = document.getElementById('content');
-
       if (!reservas.length) {
         el.innerHTML = '<p class="empty">Sin reservas para este día.</p>';
         return;
       }
 
       const isOwner = role === 'owner';
-      const rows = reservas.map(r => {
+      const cards = reservas.map(r => {
         const hora = r.mensaje?.split(' ')[1] || '—';
         return `
-          <div class="reserva-row ${isOwner ? 'owner-view' : ''}">
-            <span class="reserva-hora">${hora}</span>
-            <span class="reserva-nombre">${r.nombre}</span>
-            <span class="reserva-servicio">${r.servicio}</span>
-            ${isOwner ? `<span class="reserva-barbero">${r.barbero}</span>` : ''}
+          <div class="reserva-card">
+            <div class="reserva-top">
+              <span class="reserva-hora">${hora}</span>
+              <span class="reserva-nombre">${r.nombre}</span>
+            </div>
+            <div class="reserva-bottom">
+              <span class="reserva-servicio">${r.servicio}</span>
+              ${isOwner ? `<span class="reserva-barbero">${r.barbero}</span>` : ''}
+            </div>
           </div>`;
       }).join('');
 
       el.innerHTML = `
         <p class="count">${reservas.length} turno${reservas.length !== 1 ? 's' : ''}</p>
-        <div class="reservas-list">${rows}</div>`;
+        <div class="reservas-list">${cards}</div>`;
     }
 
-    // ── Navegación de fecha ───────────────────────────────
-    document.getElementById('prev-btn').addEventListener('click', () => {
-      currentDate.setDate(currentDate.getDate() - 1);
-      load();
-    });
-    document.getElementById('next-btn').addEventListener('click', () => {
-      currentDate.setDate(currentDate.getDate() + 1);
-      load();
-    });
-    document.getElementById('today-btn').addEventListener('click', () => {
-      currentDate = new Date();
-      load();
-    });
+    document.getElementById('prev-btn').addEventListener('click', () => { currentDate.setDate(currentDate.getDate() - 1); load(); });
+    document.getElementById('next-btn').addEventListener('click', () => { currentDate.setDate(currentDate.getDate() + 1); load(); });
+    document.getElementById('today-btn').addEventListener('click', () => { currentDate = new Date(); load(); });
 
-    // ── Filtro barbero ────────────────────────────────────
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -344,22 +229,14 @@
       });
     });
 
-    // ── Logout ────────────────────────────────────────────
     document.getElementById('logout-btn').addEventListener('click', async () => {
       await fetch('/admin/api/auth', { method: 'DELETE' });
       location.href = '/admin/';
     });
 
-    // ── Utils ─────────────────────────────────────────────
-    function formatFecha(d) {
-      return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
-    }
-    function formatLabel(d) {
-      return d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
-    }
-    function cap(s) {
-      return s.charAt(0).toUpperCase() + s.slice(1);
-    }
+    function formatFecha(d) { return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`; }
+    function formatLabel(d) { return d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }); }
+    function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
     init();
   </script>
