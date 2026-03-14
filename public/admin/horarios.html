@@ -149,6 +149,70 @@
 
     .loading { text-align: center; color: var(--muted); padding: 3rem 0; font-size: 0.875rem; }
 
+    /* ── FERIADOS ── */
+    .feriados-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.5rem 1.5rem 0.75rem;
+      margin-top: 2.5rem;
+    }
+    .feriados-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 0.375rem;
+    }
+    .feriados-title {
+      font-family: var(--font-serif); font-size: 1.15rem; font-weight: 600;
+    }
+    .feriados-sub { font-size: 0.8rem; color: var(--muted); margin-bottom: 1.25rem; }
+
+    .year-select {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-family: var(--font-mono); font-size: 0.85rem;
+      padding: 0.4rem 0.75rem; outline: none; cursor: pointer;
+      transition: border-color 200ms; appearance: none;
+      min-height: 38px; padding-right: 1.75rem;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b6055' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 0.5rem center;
+    }
+    .year-select:focus { border-color: var(--gold); }
+    .year-select option { background: var(--surface); }
+
+    .feriado-list { display: flex; flex-direction: column; }
+    .feriado-row {
+      display: flex; align-items: center; justify-content: space-between;
+      border-top: 1px solid var(--border);
+      padding: 1rem 0;
+      gap: 1rem;
+    }
+    .feriado-left { display: flex; flex-direction: column; gap: 0.2rem; }
+    .feriado-dia   { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+    .feriado-nombre { font-size: 0.82rem; color: var(--muted); }
+
+    .toggle-wrap { display: flex; align-items: center; gap: 0.625rem; flex-shrink: 0; }
+    .toggle-label {
+      font-size: 0.8rem; color: var(--muted); white-space: nowrap;
+      transition: color 200ms;
+    }
+    .toggle-label.trabaja { color: var(--green); font-weight: 500; }
+
+    .toggle {
+      position: relative; width: 44px; height: 24px; flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-track {
+      position: absolute; inset: 0; border-radius: 12px;
+      background: var(--border); cursor: pointer;
+      transition: background 200ms;
+    }
+    .toggle input:checked + .toggle-track { background: var(--green); }
+    .toggle-track::after {
+      content: ''; position: absolute;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--text); top: 3px; left: 3px;
+      transition: transform 200ms;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+    .toggle input:checked + .toggle-track::after { transform: translateX(20px); }
+
     /* ── BOTTOM NAV (mobile) ── */
     .bottom-nav {
       display: none;
@@ -238,6 +302,21 @@
       <span class="feedback" id="feedback"></span>
     </div>
 
+    <!-- ── FERIADOS ── -->
+    <div class="feriados-card">
+      <div class="feriados-header">
+        <div>
+          <h2 class="feriados-title">Feriados argentinos</h2>
+        </div>
+        <select class="year-select" id="year-select" onchange="onYearChange()">
+          <option value="2026">2026</option>
+          <option value="2027">2027</option>
+        </select>
+      </div>
+      <p class="feriados-sub">Por defecto no se generan turnos en feriados. Podés marcarlos como laborables.</p>
+      <div id="feriados-content"><div class="loading">Cargando...</div></div>
+    </div>
+
   </main>
 
   <script>
@@ -275,6 +354,7 @@
       scheduleData = schedule;
       render(schedule);
       document.getElementById('actions').style.display = 'flex';
+      await loadFeriados();
     }
 
     function render(schedule) {
@@ -358,6 +438,78 @@
 
     function getSelectedBarbero() {
       return role === 'owner' ? document.getElementById('barbero-select').value : sessionBarbero;
+    }
+
+    // ── FERIADOS ──────────────────────────────────────────────────────────────
+
+    let allFeriados = [];
+
+    async function loadFeriados() {
+      document.getElementById('feriados-content').innerHTML = '<div class="loading">Cargando...</div>';
+      const bId = getSelectedBarbero();
+      const res = await fetch(`/admin/api/feriados?barbero=${bId}`);
+      if (!res.ok) return;
+      const { feriados } = await res.json();
+      allFeriados = feriados;
+      renderFeriados();
+    }
+
+    function onYearChange() { renderFeriados(); }
+
+    function renderFeriados() {
+      const year = Number(document.getElementById('year-select').value);
+      const lista = allFeriados.filter(f => f.year === year);
+
+      const DIAS  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+      const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+      const rows = lista.map(f => {
+        const [d, m, y] = f.fecha.split('/').map(Number);
+        const dt  = new Date(y, m - 1, d);
+        const dia = `${DIAS[dt.getDay()]}, ${d} ${MESES[m - 1]}`;
+        const key = f.fecha.replace(/\//g, '-');
+        return `
+          <div class="feriado-row" id="frow-${key}">
+            <div class="feriado-left">
+              <span class="feriado-dia">${dia}</span>
+              <span class="feriado-nombre">${f.nombre}</span>
+            </div>
+            <div class="toggle-wrap">
+              <span class="toggle-label ${f.trabaja ? 'trabaja' : ''}" id="lbl-${key}">
+                ${f.trabaja ? 'Se trabaja' : 'No laborable'}
+              </span>
+              <label class="toggle">
+                <input type="checkbox" ${f.trabaja ? 'checked' : ''}
+                       onchange="toggleFeriado('${f.fecha}', this.checked)">
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+          </div>`;
+      }).join('');
+
+      document.getElementById('feriados-content').innerHTML =
+        `<div class="feriado-list">${rows}</div>`;
+    }
+
+    async function toggleFeriado(fecha, trabaja) {
+      const bId = getSelectedBarbero();
+      const res = await fetch('/admin/api/feriados', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ barbero_id: bId, fecha, trabaja: trabaja ? 1 : 0 }),
+      });
+      if (!res.ok) { await loadFeriados(); return; }
+
+      // Actualizar estado local y UI sin re-fetch
+      const f = allFeriados.find(x => x.fecha === fecha);
+      if (f) f.trabaja = trabaja ? 1 : 0;
+
+      const key = fecha.replace(/\//g, '-');
+      const lbl = document.getElementById(`lbl-${key}`);
+      if (lbl) {
+        lbl.textContent = trabaja ? 'Se trabaja' : 'No laborable';
+        lbl.classList.toggle('trabaja', trabaja);
+      }
     }
 
     document.getElementById('logout-btn').addEventListener('click', async () => {

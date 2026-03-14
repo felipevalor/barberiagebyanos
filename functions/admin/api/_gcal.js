@@ -25,6 +25,63 @@ export const SERVICIOS = {
   'Niños':          30,
 };
 
+// ── Feriados argentinos ───────────────────────────────────────────────────────
+export const FERIADOS = {
+  2026: [
+    { fecha: '1/1/2026',   nombre: 'Año Nuevo' },
+    { fecha: '16/2/2026',  nombre: 'Carnaval' },
+    { fecha: '17/2/2026',  nombre: 'Carnaval' },
+    { fecha: '24/3/2026',  nombre: 'Día Nacional de la Memoria por la Verdad y la Justicia' },
+    { fecha: '2/4/2026',   nombre: 'Día del Veterano y de los Caídos en la Guerra de Malvinas' },
+    { fecha: '3/4/2026',   nombre: 'Viernes Santo' },
+    { fecha: '1/5/2026',   nombre: 'Día del Trabajador' },
+    { fecha: '25/5/2026',  nombre: 'Revolución de Mayo' },
+    { fecha: '15/6/2026',  nombre: 'Feriado puente' },
+    { fecha: '20/6/2026',  nombre: 'Paso a la Inmortalidad del Gral. Manuel Belgrano' },
+    { fecha: '9/7/2026',   nombre: 'Día de la Independencia' },
+    { fecha: '17/8/2026',  nombre: 'Paso a la Inmortalidad del Gral. José de San Martín' },
+    { fecha: '12/10/2026', nombre: 'Día del Respeto a la Diversidad Cultural' },
+    { fecha: '20/11/2026', nombre: 'Día de la Soberanía Nacional' },
+    { fecha: '8/12/2026',  nombre: 'Inmaculada Concepción de María' },
+    { fecha: '25/12/2026', nombre: 'Navidad' },
+  ],
+  2027: [
+    { fecha: '1/1/2027',   nombre: 'Año Nuevo' },
+    { fecha: '15/2/2027',  nombre: 'Carnaval' },
+    { fecha: '16/2/2027',  nombre: 'Carnaval' },
+    { fecha: '24/3/2027',  nombre: 'Día Nacional de la Memoria por la Verdad y la Justicia' },
+    { fecha: '2/4/2027',   nombre: 'Día del Veterano y de los Caídos en la Guerra de Malvinas' },
+    { fecha: '26/3/2027',  nombre: 'Viernes Santo' },
+    { fecha: '1/5/2027',   nombre: 'Día del Trabajador' },
+    { fecha: '25/5/2027',  nombre: 'Revolución de Mayo' },
+    { fecha: '21/6/2027',  nombre: 'Paso a la Inmortalidad del Gral. Manuel Belgrano' },
+    { fecha: '9/7/2027',   nombre: 'Día de la Independencia' },
+    { fecha: '16/8/2027',  nombre: 'Paso a la Inmortalidad del Gral. José de San Martín' },
+    { fecha: '11/10/2027', nombre: 'Día del Respeto a la Diversidad Cultural' },
+    { fecha: '22/11/2027', nombre: 'Día de la Soberanía Nacional' },
+    { fecha: '8/12/2027',  nombre: 'Inmaculada Concepción de María' },
+    { fecha: '25/12/2027', nombre: 'Navidad' },
+  ],
+};
+
+// Devuelve true si la fecha es feriado no trabajado para ese barbero
+export async function checkFeriado(fecha, barbero_id, env) {
+  const [d, m, y] = fecha.split('/').map(Number);
+  const lista = FERIADOS[y] || [];
+  const esFeriado = lista.some(f => f.fecha === fecha);
+  if (!esFeriado) return false;
+
+  try {
+    const override = await env.barberia_db.prepare(
+      'SELECT trabaja FROM feriados_override WHERE barbero_id = ? AND fecha = ?'
+    ).bind(barbero_id, fecha).first();
+    // Si hay override y trabaja=1 → no es feriado bloqueante
+    if (override && override.trabaja === 1) return false;
+  } catch { /* si falla la tabla, tratar como feriado */ }
+
+  return true;
+}
+
 // Lee horario de D1; si no hay filas usa DEFAULT_SCHEDULE
 export async function getSchedule(barbero_id, env) {
   try {

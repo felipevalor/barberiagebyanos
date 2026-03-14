@@ -348,11 +348,18 @@ async function initCalendarPicker() {
     slotPicker.innerHTML = '';
     slotPicker.style.display = 'none';
     validar();
-    // Cargar horario dinámico desde D1
+    // Cargar horario dinámico y feriados desde D1
     try {
       const r = await fetch(`/api/horarios?barbero=${selectedBarbero.id}`);
       if (r.ok) selectedBarbero.schedule = await r.json();
     } catch { /* usa schedule hardcodeado del BARBEROS array */ }
+    try {
+      const rf = await fetch(`/api/feriados?barbero=${selectedBarbero.id}`);
+      if (rf.ok) {
+        const { feriados } = await rf.json();
+        selectedBarbero.feriados = new Set(feriados);
+      }
+    } catch { selectedBarbero.feriados = new Set(); }
     if (selectedServicio) await renderDays();
   });
 
@@ -379,9 +386,11 @@ async function initCalendarPicker() {
       const d = new Date(today);
       d.setDate(today.getDate() + i);
       const dow = d.getDay();
-      if (selectedBarbero.schedule[dow]) {
-        days.push(d);
-      }
+      if (!selectedBarbero.schedule[dow]) continue;
+      // Filtrar feriados no trabajados
+      const fechaStr = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+      if (selectedBarbero.feriados && selectedBarbero.feriados.has(fechaStr)) continue;
+      days.push(d);
     }
 
     dayPicker.innerHTML = '';

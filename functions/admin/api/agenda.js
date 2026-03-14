@@ -1,5 +1,5 @@
 import { getToken } from './auth.js';
-import { BARBEROS_CONFIG, SERVICIOS, SLOT_DURATION, generateSlots, getSchedule, getGoogleAccessToken, getCalendarEvents } from './_gcal.js';
+import { BARBEROS_CONFIG, SERVICIOS, SLOT_DURATION, generateSlots, getSchedule, checkFeriado, getGoogleAccessToken, getCalendarEvents } from './_gcal.js';
 
 export async function onRequestGet({ request, env }) {
   const token = getToken(request);
@@ -28,6 +28,11 @@ export async function onRequestGet({ request, env }) {
   const slotHours = generateSlots(schedule, dow);
   if (slotHours.length === 0) {
     return json({ slots: [], calendarConfigured: !!cfg.calendarId, diaNoLaboral: true });
+  }
+
+  // Verificar si es feriado no trabajado
+  if (await checkFeriado(fecha, bId, env)) {
+    return json({ slots: [], calendarConfigured: !!cfg.calendarId, diaNoLaboral: true, esFeriado: true });
   }
 
   // Reservas del día desde D1 — incluimos id y calendar_event_id
