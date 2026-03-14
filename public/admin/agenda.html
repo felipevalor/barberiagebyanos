@@ -186,6 +186,23 @@
     .btn-danger:hover { background: rgba(229,115,115,0.1); }
     .btn:disabled { opacity: 0.4; cursor: default; }
 
+    /* ── BOTTOM NAV (mobile) ── */
+    .bottom-nav {
+      display: none;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--surface); border-top: 1px solid var(--border);
+      z-index: 20;
+    }
+    .bottom-nav a {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      gap: 0.25rem; padding: 0.75rem 0.5rem 0.875rem;
+      text-decoration: none; color: var(--muted);
+      font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase;
+      transition: color 200ms;
+    }
+    .bottom-nav a.active { color: var(--gold); }
+    .bottom-nav a svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+
     /* ── RESPONSIVE ── */
     @media (max-width: 540px) {
       .nav-tabs  { display: none; }
@@ -203,11 +220,23 @@
       .slot-row > :last-child { grid-column: 1 / -1; justify-self: start; }
 
       .toolbar { padding: 1rem 0.875rem 0; }
-      .main    { padding: 0.875rem 0.875rem 4rem; }
+      .main    { padding: 0.875rem 0.875rem 5.5rem; }
+      .bottom-nav { display: flex; }
     }
   </style>
 </head>
 <body>
+
+  <nav class="bottom-nav">
+    <a href="/admin/dashboard">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Reservas
+    </a>
+    <a href="/admin/agenda" class="active">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+      Agenda
+    </a>
+  </nav>
 
   <nav class="nav">
     <div class="nav-brand">
