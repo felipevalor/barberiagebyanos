@@ -291,6 +291,13 @@ const BARBEROS = [
 ];
 
 function initReservaForm() {
+  // Pre-completar nombre desde cookie si existe
+  const cookieMatch = document.cookie.match(/gb_nombre=([^;]+)/);
+  if (cookieMatch) {
+    const input = document.getElementById('reserva-nombre');
+    if (input && !input.value) input.value = decodeURIComponent(cookieMatch[1]);
+  }
+
   const form = document.getElementById('reserva-form');
   const grid = document.getElementById('barberos-grid');
   const btn  = document.getElementById('reserva-btn');
@@ -336,6 +343,7 @@ async function initCalendarPicker() {
   let selectedServicio = null;
   let selectedDay      = null;
   let selectedSlot     = null;
+  const slotsCache     = {}; // { "calendarId_dd/mm/yyyy": [...eventos] }
 
   // Escuchar selección de barbero
   document.addEventListener('barberoSeleccionado', async (e) => {
@@ -357,6 +365,8 @@ async function initCalendarPicker() {
         selectedBarbero.feriados = new Set(feriados);
       }
     } catch { selectedBarbero.feriados = new Set(); }
+    // Prefetch de disponibilidad para los próximos 14 días (1 sola llamada a Google Calendar)
+    prefetchBusySlots(selectedBarbero);
     if (selectedServicio) await renderDays();
   });
 
@@ -481,29 +491,74 @@ async function initCalendarPicker() {
     slotPicker.appendChild(grid);
   }
 
-  async function fetchBusySlots(day, barbero) {
-    if (!barbero.calendarId) return [];
+  // Prefetch: 1 sola llamada para todos los días visibles al seleccionar barbero
+  async function prefetchBusySlots(barbero) {
+    if (!barbero.calendarId) return;
 
-    const timeMin = new Date(day);
-    timeMin.setHours(0, 0, 0, 0);
-    const timeMax = new Date(day);
-    timeMax.setHours(23, 59, 59, 999);
+    const today   = new Date();
+    const timeMin = new Date(today); timeMin.setHours(0, 0, 0, 0);
+    const timeMax = new Date(today); timeMax.setDate(today.getDate() + 14); timeMax.setHours(23, 59, 59, 999);
 
     const calId = encodeURIComponent(barbero.calendarId);
     const url = `https://www.googleapis.com/calendar/v3/calendars/${calId}/events?` +
       `key=${GOOGLE_CALENDAR_CONFIG.apiKey}` +
       `&timeMin=${timeMin.toISOString()}` +
       `&timeMax=${timeMax.toISOString()}` +
-      `&singleEvents=true` +
-      `&orderBy=startTime`;
+      `&singleEvents=true&orderBy=startTime`;
+
+    try {
+      let items = [];
+      let pageToken = '';
+      do {
+        const res  = await fetch(url + (pageToken ? `&pageToken=${pageToken}` : ''));
+        const data = await res.json();
+        items = items.concat(data.items || []);
+        pageToken = data.nextPageToken || '';
+      } while (pageToken);
+
+      // Distribuir eventos por fecha en la caché
+      const eventos = items
+        .filter(e => e.status !== 'cancelled' && e.start?.dateTime && e.end?.dateTime)
+        .map(e => ({ start: e.start.dateTime, end: e.end.dateTime }));
+
+      for (let i = 0; i < 15; i++) {
+        const d = new Date(today);
+        d.setDate(today.getDate() + i);
+        const key   = `${barbero.calendarId}_${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+        const dayStart = new Date(d); dayStart.setHours(0, 0, 0, 0);
+        const dayEnd   = new Date(d); dayEnd.setHours(23, 59, 59, 999);
+        slotsCache[key] = eventos.filter(e =>
+          new Date(e.start) < dayEnd && new Date(e.end) > dayStart
+        );
+      }
+    } catch { /* fallback a fetch individual por día */ }
+  }
+
+  async function fetchBusySlots(day, barbero) {
+    if (!barbero.calendarId) return [];
+
+    const key = `${barbero.calendarId}_${day.getDate()}/${day.getMonth() + 1}/${day.getFullYear()}`;
+    if (slotsCache[key]) return slotsCache[key];
+
+    // Fallback: fetch individual si el prefetch no llegó a tiempo
+    const timeMin = new Date(day); timeMin.setHours(0, 0, 0, 0);
+    const timeMax = new Date(day); timeMax.setHours(23, 59, 59, 999);
+
+    const calId = encodeURIComponent(barbero.calendarId);
+    const url = `https://www.googleapis.com/calendar/v3/calendars/${calId}/events?` +
+      `key=${GOOGLE_CALENDAR_CONFIG.apiKey}` +
+      `&timeMin=${timeMin.toISOString()}` +
+      `&timeMax=${timeMax.toISOString()}` +
+      `&singleEvents=true&orderBy=startTime`;
 
     try {
       const res  = await fetch(url);
       const data = await res.json();
-      return (data.items || [])
-        .filter(e => e.status !== 'cancelled')
-        .map(e => ({ start: e.start.dateTime, end: e.end.dateTime }))
-        .filter(e => e.start && e.end);
+      const result = (data.items || [])
+        .filter(e => e.status !== 'cancelled' && e.start?.dateTime && e.end?.dateTime)
+        .map(e => ({ start: e.start.dateTime, end: e.end.dateTime }));
+      slotsCache[key] = result;
+      return result;
     } catch {
       return [];
     }
@@ -565,6 +620,9 @@ async function initCalendarPicker() {
   });
 
   function showConfirmacion(turno) {
+    // Guardar nombre en cookie (90 días)
+    document.cookie = `gb_nombre=${encodeURIComponent(turno.nombre)}; max-age=${60*60*24*90}; SameSite=Lax; Path=/`;
+
     // Ocultar form, mostrar confirmación
     document.getElementById('reserva-form').style.display = 'none';
     const confirmDiv = document.getElementById('reserva-confirmacion');
