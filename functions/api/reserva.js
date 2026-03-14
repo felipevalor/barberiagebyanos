@@ -1,159 +1,98 @@
-export async function onRequestPost({ request, env }) {
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json'
-  };
+import { BARBEROS_CONFIG, SERVICIOS, sendWhatsAppNotification, getServicios, getGoogleAccessToken, createCalendarEvent } from '../admin/api/_gcal.js';
 
+const CORS = {
+  'Access-Control-Allow-Origin':  '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Content-Type':                 'application/json',
+};
+
+export async function onRequestPost({ request, env }) {
   try {
     const body = await request.json();
-    const { nombre, servicio, barbero, fecha, hora, calendarId, duracion } = body;
+    const { nombre, servicio, barberoId, barbero: barberoNombre, fecha, hora, calendarId, duracion } = body;
 
-    if (!nombre || !servicio || !barbero) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Faltan campos obligatorios' }),
-        { status: 400, headers: corsHeaders }
-      );
+    if (!nombre?.trim() || !servicio || !fecha || !hora) {
+      return res({ success: false, error: 'Faltan campos obligatorios' }, 400);
     }
 
-    let calendarEventId = null;
-    if (calendarId && env.GOOGLE_SERVICE_ACCOUNT) {
-      try {
-        const serviceAccount = JSON.parse(env.GOOGLE_SERVICE_ACCOUNT);
-        const accessToken = await getGoogleAccessToken(serviceAccount);
-        calendarEventId = await createCalendarEvent(calendarId, nombre, servicio, fecha, hora, duracion || 30, accessToken);
-      } catch (calError) {
-        console.error('Calendar error:', calError);
+    // Resolver barberoId desde nombre si no viene
+    const bId = barberoId || Object.keys(BARBEROS_CONFIG).find(
+      k => BARBEROS_CONFIG[k].nombre === barberoNombre
+    );
+    const cfg = bId ? BARBEROS_CONFIG[bId] : null;
+
+    // ── Validar disponibilidad (overlap) ─────────────────────────────────────
+    const serviciosMap = bId ? await getServicios(env, bId) : { ...SERVICIOS };
+    const durMin       = duracion ?? serviciosMap[servicio] ?? 30;
+
+    const [hNew, mNew] = hora.split(':').map(Number);
+    const newStart = hNew * 60 + mNew;
+    const newEnd   = newStart + durMin;
+
+    const nombreBarbero = cfg?.nombre || barberoNombre || '';
+    const { results: existentes } = await env.barberia_db.prepare(
+      'SELECT mensaje, servicio FROM reservas WHERE mensaje LIKE ? AND barbero = ?'
+    ).bind(`${fecha} %`, nombreBarbero).all();
+
+    for (const r of existentes) {
+      const rHora = r.mensaje?.split(' ')[1];
+      if (!rHora) continue;
+      const [rh, rm] = rHora.split(':').map(Number);
+      const rStart = rh * 60 + rm;
+      const rEnd   = rStart + (serviciosMap[r.servicio] ?? 30);
+      if (newStart < rEnd && newEnd > rStart) {
+        return res({ success: false, error: 'Ese horario ya fue tomado. Elegí otro.' }, 409);
       }
     }
 
+    // ── Crear evento en Google Calendar (best-effort) ─────────────────────────
+    let calendarEventId = null;
+    const calId = calendarId || cfg?.calendarId;
+    if (calId && env.GOOGLE_SERVICE_ACCOUNT) {
+      try {
+        const sa  = JSON.parse(env.GOOGLE_SERVICE_ACCOUNT);
+        const tk  = await getGoogleAccessToken(sa);
+        calendarEventId = await createCalendarEvent(calId, `Turno — ${nombre.trim()} (${servicio})`, fecha, hora, durMin, tk);
+      } catch (e) {
+        console.error('Calendar error:', e);
+      }
+    }
+
+    // ── Guardar en D1 ─────────────────────────────────────────────────────────
     await env.barberia_db.prepare(
       `INSERT INTO reservas (nombre, telefono, servicio, barbero, fecha, mensaje, calendar_event_id, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+       VALUES (?, '', ?, ?, ?, ?, ?, ?)`
     ).bind(
-      nombre,
-      '',
+      nombre.trim(),
       servicio,
-      barbero || '',
-      fecha || '',
-      fecha && hora ? `${fecha} ${hora}` : '',
+      nombreBarbero,
+      fecha,
+      `${fecha} ${hora}`,
       calendarEventId,
       new Date().toISOString()
     ).run();
 
-    return new Response(
-      JSON.stringify({ success: true }),
-      { status: 200, headers: corsHeaders }
-    );
+    // ── Notificar al barbero por WA (best-effort) ─────────────────────────────
+    if (bId) {
+      await sendWhatsAppNotification(bId, { nombre: nombre.trim(), servicio, fecha, hora }, env);
+    }
+
+    return res({ success: true, turno: { nombre: nombre.trim(), servicio, barbero: nombreBarbero, fecha, hora } });
+
   } catch (error) {
-    const isDoubleBooking = error?.message?.includes('UNIQUE constraint failed');
-    return new Response(
-      JSON.stringify({ success: false, error: isDoubleBooking ? 'Turno ya reservado' : 'Error interno' }),
-      { status: isDoubleBooking ? 409 : 500, headers: corsHeaders }
+    const isDouble = error?.message?.includes('UNIQUE constraint failed');
+    return res(
+      { success: false, error: isDouble ? 'Ese horario ya fue tomado. Elegí otro.' : 'Error interno' },
+      isDouble ? 409 : 500
     );
   }
 }
 
 export async function onRequestOptions() {
-  return new Response(null, {
-    status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    }
-  });
+  return new Response(null, { status: 204, headers: CORS });
 }
 
-function base64url(str) {
-  return btoa(str).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-}
-
-function base64urlFromBase64(b64) {
-  return b64.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-}
-
-async function getGoogleAccessToken(serviceAccount) {
-  const now = Math.floor(Date.now() / 1000);
-
-  const header  = base64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
-  const payload = base64url(JSON.stringify({
-    iss:   serviceAccount.client_email,
-    scope: 'https://www.googleapis.com/auth/calendar.events',
-    aud:   'https://oauth2.googleapis.com/token',
-    exp:   now + 3600,
-    iat:   now,
-  }));
-
-  const signingInput = `${header}.${payload}`;
-
-  const pemBody = serviceAccount.private_key
-    .replace('-----BEGIN PRIVATE KEY-----', '')
-    .replace('-----END PRIVATE KEY-----', '')
-    .replace(/\n/g, '');
-
-  const binaryKey = Uint8Array.from(atob(pemBody), c => c.charCodeAt(0));
-
-  const cryptoKey = await crypto.subtle.importKey(
-    'pkcs8',
-    binaryKey,
-    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
-
-  const signature = await crypto.subtle.sign(
-    'RSASSA-PKCS1-v1_5',
-    cryptoKey,
-    new TextEncoder().encode(signingInput)
-  );
-
-  const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature)));
-  const jwt = `${signingInput}.${base64urlFromBase64(signatureB64)}`;
-
-  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`,
-  });
-
-  const { access_token } = await tokenRes.json();
-  if (!access_token) throw new Error('No access token received');
-  return access_token;
-}
-
-async function createCalendarEvent(calendarId, nombre, servicio, fecha, hora, duracion, accessToken) {
-  const [day, month, year] = fecha.split('/').map(Number);
-  const [h, m] = hora.split(':').map(Number);
-
-  const pad = n => String(n).padStart(2, '0');
-  const dateStr  = `${year}-${pad(month)}-${pad(day)}`;
-  const startISO = `${dateStr}T${pad(h)}:${pad(m)}:00-03:00`;
-
-  const totalMin = h * 60 + m + duracion;
-  const endISO   = `${dateStr}T${pad(Math.floor(totalMin / 60))}:${pad(totalMin % 60)}:00-03:00`;
-
-  const res = await fetch(
-    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`,
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        summary: `Turno — ${nombre} (${servicio})`,
-        start: { dateTime: startISO, timeZone: 'America/Argentina/Buenos_Aires' },
-        end:   { dateTime: endISO,   timeZone: 'America/Argentina/Buenos_Aires' },
-      }),
-    }
-  );
-
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(JSON.stringify(err));
-  }
-  const data = await res.json();
-  return data.id;
+function res(data, status = 200) {
+  return new Response(JSON.stringify(data), { status, headers: CORS });
 }

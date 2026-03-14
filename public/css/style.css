@@ -586,7 +586,7 @@ textarea {
 footer {
   margin-top: 0;
   padding-top: 3rem;
-  padding-bottom: 5rem;
+  padding-bottom: 2rem;
   border-top: 1px solid var(--border);
 }
 
@@ -944,6 +944,99 @@ footer {
   padding: 1rem 0;
 }
 
+/* --- Confirmación de reserva --- */
+#reserva-confirmacion {
+  max-width: 580px;
+  margin: 0 auto;
+}
+.confirm-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+.confirm-icon {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: rgba(201,168,76,0.12);
+  border: 1px solid rgba(201,168,76,0.3);
+  color: var(--gold);
+  font-size: 1.75rem;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1.25rem;
+}
+.confirm-title {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  color: var(--text);
+  margin-bottom: 1.5rem;
+}
+.confirm-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  font-family: var(--font-mono);
+}
+.confirm-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+.confirm-row:last-child { border-bottom: none; }
+.confirm-row-label { color: var(--muted); font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.confirm-row-value { color: var(--text); font-weight: 500; }
+
+.confirm-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+}
+.btn-confirm-cal {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  background: var(--gold);
+  color: var(--bg);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 0.875rem 2rem;
+  border-radius: 8px;
+  transition: opacity 200ms;
+  min-height: 52px;
+}
+.btn-confirm-cal svg { width: 18px; height: 18px; flex-shrink: 0; }
+.btn-confirm-cal:hover { opacity: 0.85; }
+
+.btn-confirm-new {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.625rem 1.5rem;
+  cursor: pointer;
+  transition: color 200ms, border-color 200ms;
+  min-height: 44px;
+}
+.btn-confirm-new:hover { color: var(--text); border-color: var(--muted); }
+
+@media (max-width: 480px) {
+  .confirm-wrap { padding: 2.5rem 1.5rem; }
+  .btn-confirm-cal { width: 100%; justify-content: center; }
+  .btn-confirm-new { width: 100%; }
+}
+
 /* --- Footer Barberos --- */
 .footer-barberos {
   margin-top: 1.25rem;
@@ -965,6 +1058,7 @@ footer {
   font-size: 1.3rem;
   color: var(--muted);
   text-decoration: none;
+  white-space: nowrap;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -979,7 +1073,7 @@ footer {
 .footer-barbero-link span {
   font-family: var(--font-mono);
   font-size: 0.9rem;
-  color: var(--border);
+  color: var(--muted);
   transition: color 200ms;
 }
 

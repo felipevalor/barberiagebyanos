@@ -1,5 +1,5 @@
 import { getToken } from './auth.js';
-import { BARBEROS_CONFIG, SERVICIOS, SLOT_DURATION, generateSlots, getSchedule, checkFeriado, getGoogleAccessToken, getCalendarEvents } from './_gcal.js';
+import { BARBEROS_CONFIG, SLOT_DURATION, generateSlots, getSchedule, getServicios, checkFeriado, getGoogleAccessToken, getCalendarEvents } from './_gcal.js';
 
 export async function onRequestGet({ request, env }) {
   const token = getToken(request);
@@ -24,7 +24,10 @@ export async function onRequestGet({ request, env }) {
   const pad = n => String(n).padStart(2, '0');
   const dow = new Date(`${y}-${pad(m)}-${pad(d)}T12:00:00Z`).getUTCDay();
 
-  const schedule  = await getSchedule(bId, env);
+  const [schedule, serviciosMap] = await Promise.all([
+    getSchedule(bId, env),
+    getServicios(env, bId),
+  ]);
   const slotHours = generateSlots(schedule, dow);
   if (slotHours.length === 0) {
     return json({ slots: [], calendarConfigured: !!cfg.calendarId, diaNoLaboral: true });
@@ -49,7 +52,7 @@ export async function onRequestGet({ request, env }) {
     reservasByHora[hora] = r;
     const [h, min] = hora.split(':').map(Number);
     const startMin = h * 60 + min;
-    const duracion = SERVICIOS[r.servicio] ?? SLOT_DURATION;
+    const duracion = serviciosMap[r.servicio] ?? SLOT_DURATION;
     reservaWindows.push({ startMin, endMin: startMin + duracion, nombre: r.nombre, servicio: r.servicio });
   }
 

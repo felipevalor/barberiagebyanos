@@ -277,9 +277,6 @@ const SERVICIOS = {
   'Afeitado':          { duracion: 15 },
   'Niños 10-13 años':  { duracion: 30 },
   'Niños 0-9 años':    { duracion: 30 },
-  'Promo 2-3 cortes':  { duracion: 30 },
-  'Promo 4 cortes':    { duracion: 30 },
-  'Fuerzas Gebyanas':  { duracion: 30 },
 };
 
 /**
@@ -521,47 +518,115 @@ async function initCalendarPicker() {
   document.getElementById('reserva-nombre')
     ?.addEventListener('input', validar);
 
-  // Click en botón — armar mensaje con fecha/hora y abrir WA
+  // Click en botón — confirmar turno directamente in-app
   btn.addEventListener('click', async () => {
     const nombre   = document.getElementById('reserva-nombre').value.trim();
     const servicio = document.getElementById('servicio-value').value;
     if (!nombre || !servicio || !selectedBarbero || !selectedDay || !selectedSlot) return;
 
-    btn.disabled = true;
-    btn.textContent = 'Enviando...';
+    btn.disabled    = true;
+    btn.textContent = 'Confirmando...';
 
-    // Guardar en D1 (fire and forget)
-    fetch('/api/reserva', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        nombre,
-        servicio,
-        barbero: selectedBarbero.nombre,
-        fecha: selectedDay.toLocaleDateString('es-AR'),
-        hora: selectedSlot,
-        calendarId: selectedBarbero.calendarId || null,
-        duracion: SERVICIOS[servicio]?.duracion || 30,
-      })
-    }).catch(() => {});
+    const fecha = selectedDay.toLocaleDateString('es-AR');
 
-    // Armar mensaje WA con fecha y hora
-    const fechaStr = selectedDay.toLocaleDateString('es-AR', {
-      weekday: 'long', day: 'numeric', month: 'long'
-    });
+    try {
+      const res = await fetch('/api/reserva', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre,
+          servicio,
+          barberoId:  selectedBarbero.id,
+          barbero:    selectedBarbero.nombre,
+          fecha,
+          hora:       selectedSlot,
+          calendarId: selectedBarbero.calendarId || null,
+          duracion:   SERVICIOS[servicio]?.duracion || 30,
+        }),
+      });
 
-    const mensaje = encodeURIComponent(
-      `Hola ${selectedBarbero.nombre}! Soy ${nombre}.\n` +
-      `Quiero reservar un turno de: *${servicio}*.\n` +
-      `Fecha: *${fechaStr} a las ${selectedSlot}hs*.\n` +
-      `¿Tendrás lugar?`
-    );
+      const data = await res.json();
 
-    window.open(`https://wa.me/${selectedBarbero.tel}?text=${mensaje}`, '_blank');
+      if (!res.ok || !data.success) {
+        alert(data.error || 'No se pudo confirmar el turno. Intentá de nuevo.');
+        btn.disabled    = false;
+        btn.textContent = 'Confirmar turno';
+        return;
+      }
 
-    setTimeout(() => {
-      btn.disabled = false;
-      btn.textContent = 'Ir al WhatsApp';
-    }, 400);
+      // Mostrar pantalla de confirmación
+      showConfirmacion(data.turno || { nombre, servicio, barbero: selectedBarbero.nombre, fecha, hora: selectedSlot });
+
+    } catch {
+      alert('Error de red. Verificá tu conexión e intentá de nuevo.');
+      btn.disabled    = false;
+      btn.textContent = 'Confirmar turno';
+    }
+  });
+
+  function showConfirmacion(turno) {
+    // Ocultar form, mostrar confirmación
+    document.getElementById('reserva-form').style.display = 'none';
+    const confirmDiv = document.getElementById('reserva-confirmacion');
+    confirmDiv.style.display = 'block';
+
+    // Armar detalles
+    const DIAS  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+    const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    const [d, m, y] = turno.fecha.split('/').map(Number);
+    const dt       = new Date(y, m - 1, d);
+    const fechaLabel = `${DIAS[dt.getDay()]} ${d} de ${MESES[m - 1]}`;
+
+    document.getElementById('confirm-details').innerHTML = `
+      <div class="confirm-row">
+        <span class="confirm-row-label">Barbero</span>
+        <span class="confirm-row-value">${turno.barbero}</span>
+      </div>
+      <div class="confirm-row">
+        <span class="confirm-row-label">Servicio</span>
+        <span class="confirm-row-value">${turno.servicio}</span>
+      </div>
+      <div class="confirm-row">
+        <span class="confirm-row-label">Día</span>
+        <span class="confirm-row-value">${fechaLabel}</span>
+      </div>
+      <div class="confirm-row">
+        <span class="confirm-row-label">Hora</span>
+        <span class="confirm-row-value">${turno.hora}</span>
+      </div>`;
+
+    // Armar link Google Calendar
+    const pad2  = n => String(n).padStart(2, '0');
+    const [h, min] = turno.hora.split(':').map(Number);
+    const dur   = SERVICIOS[turno.servicio]?.duracion || 30;
+    const endMin = h * 60 + min + dur;
+    const dtStr = `${y}${pad2(m)}${pad2(d)}`;
+    const start = `${dtStr}T${pad2(h)}${pad2(min)}00`;
+    const end   = `${dtStr}T${pad2(Math.floor(endMin / 60))}${pad2(endMin % 60)}00`;
+    const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE`
+      + `&text=${encodeURIComponent('Turno Gebyanos — ' + turno.servicio)}`
+      + `&dates=${start}/${end}`
+      + `&details=${encodeURIComponent('Barbero: ' + turno.barbero + '\nGebyanos — 1 de Mayo 1687, Rosario')}`;
+
+    document.getElementById('btn-gcal').href = gcalUrl;
+
+    // Scroll suave a la confirmación
+    confirmDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  document.getElementById('btn-nueva-reserva')?.addEventListener('click', () => {
+    // Resetear form
+    document.getElementById('reserva-form').style.display = '';
+    document.getElementById('reserva-confirmacion').style.display = 'none';
+    document.getElementById('reserva-nombre').value = '';
+    document.getElementById('servicio-value').value = '';
+    btn.disabled    = true;
+    btn.textContent = 'Confirmar turno';
+    selectedBarbero = null; selectedDay = null; selectedSlot = null;
+    // Limpiar pickers (se re-renderizan al seleccionar de nuevo)
+    const dayPicker  = document.getElementById('day-picker');
+    const slotPicker = document.getElementById('slot-picker');
+    if (dayPicker)  { dayPicker.innerHTML = '';  dayPicker.style.display  = 'none'; }
+    if (slotPicker) { slotPicker.innerHTML = ''; slotPicker.style.display = 'none'; }
   });
 }

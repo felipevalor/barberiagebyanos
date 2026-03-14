@@ -213,6 +213,45 @@
     }
     .toggle input:checked + .toggle-track::after { transform: translateX(20px); }
 
+    /* ── SERVICIOS ── */
+    .servicios-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.5rem 1.5rem 1rem;
+      margin-top: 1.5rem;
+    }
+    .servicios-title {
+      font-family: var(--font-serif); font-size: 1.15rem; font-weight: 600;
+      margin-bottom: 0.375rem;
+    }
+    .servicios-sub { font-size: 0.8rem; color: var(--muted); margin-bottom: 1.25rem; }
+
+    .servicio-list { display: flex; flex-direction: column; }
+    .servicio-row {
+      display: flex; align-items: center; justify-content: space-between;
+      border-top: 1px solid var(--border); padding: 0.875rem 0; gap: 1rem;
+    }
+    .servicio-nombre { font-size: 0.95rem; font-weight: 500; }
+    .duracion-select {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-family: var(--font-mono); font-size: 0.85rem;
+      padding: 0.4rem 0.6rem; outline: none; cursor: pointer;
+      transition: border-color 200ms; appearance: none;
+      min-height: 40px; min-width: 90px; text-align: right;
+    }
+    .duracion-select:focus { border-color: var(--gold); }
+    .duracion-select option { background: var(--surface); }
+
+    .servicios-actions { display: flex; align-items: center; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; }
+    .btn-save-servicios {
+      background: var(--gold); border: none; border-radius: 8px;
+      color: var(--bg); font-family: var(--font-mono); font-size: 0.8rem;
+      font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.75rem 2rem; cursor: pointer; transition: opacity 200ms;
+      min-height: 48px;
+    }
+    .btn-save-servicios:hover    { opacity: 0.85; }
+    .btn-save-servicios:disabled { opacity: 0.4; cursor: default; }
+
     /* ── BOTTOM NAV (mobile) ── */
     .bottom-nav {
       display: none;
@@ -317,6 +356,17 @@
       <div id="feriados-content"><div class="loading">Cargando...</div></div>
     </div>
 
+    <!-- ── SERVICIOS (owner only) ── -->
+    <div class="servicios-card" id="servicios-card" style="display:none">
+      <h2 class="servicios-title">Duración de servicios</h2>
+      <p class="servicios-sub">Cuánto tiempo ocupa cada servicio en la agenda.</p>
+      <div id="servicios-content"><div class="loading">Cargando...</div></div>
+      <div class="servicios-actions">
+        <button class="btn-save-servicios" id="btn-save-servicios">Guardar duraciones</button>
+        <span class="feedback" id="feedback-servicios"></span>
+      </div>
+    </div>
+
   </main>
 
   <script>
@@ -337,6 +387,10 @@
       if (role === 'owner') {
         document.getElementById('barbero-row').style.display = 'flex';
         document.getElementById('barbero-select').addEventListener('change', load);
+        document.getElementById('servicios-card').style.display = 'block';
+      } else {
+        // barbero: también puede editar sus propias duraciones
+        document.getElementById('servicios-card').style.display = 'block';
       }
 
       await load();
@@ -355,6 +409,7 @@
       render(schedule);
       document.getElementById('actions').style.display = 'flex';
       await loadFeriados();
+      await loadServicios();
     }
 
     function render(schedule) {
@@ -425,16 +480,8 @@
       }
     });
 
-    function showFeedback(msg, type) {
-      const el = document.getElementById('feedback');
-      el.textContent = msg;
-      el.className = `feedback ${type}`;
-      el.style.display = 'inline-block';
-      setTimeout(hideFeedback, 4000);
-    }
-    function hideFeedback() {
-      document.getElementById('feedback').style.display = 'none';
-    }
+    function showFeedback(msg, type) { showFeedbackEl('feedback', msg, type); }
+    function hideFeedback() { document.getElementById('feedback').style.display = 'none'; }
 
     function getSelectedBarbero() {
       return role === 'owner' ? document.getElementById('barbero-select').value : sessionBarbero;
@@ -510,6 +557,69 @@
         lbl.textContent = trabaja ? 'Se trabaja' : 'No laborable';
         lbl.classList.toggle('trabaja', trabaja);
       }
+    }
+
+    // ── SERVICIOS ─────────────────────────────────────────────────────────────
+
+    let serviciosData = [];
+    const DURACIONES = [15, 30, 45, 60, 75, 90, 120];
+
+    async function loadServicios() {
+      document.getElementById('servicios-content').innerHTML = '<div class="loading">Cargando...</div>';
+      const res = await fetch(`/admin/api/servicios?barbero=${getSelectedBarbero()}`);
+      if (!res.ok) return;
+      const { servicios } = await res.json();
+      serviciosData = servicios;
+      renderServicios(servicios);
+    }
+
+    function renderServicios(servicios) {
+      const rows = servicios.map(s => {
+        const opts = DURACIONES.map(d =>
+          `<option value="${d}" ${d === s.duracion_min ? 'selected' : ''}>${d} min</option>`
+        ).join('');
+        return `
+          <div class="servicio-row">
+            <span class="servicio-nombre">${s.nombre}</span>
+            <select class="duracion-select" data-nombre="${s.nombre}" onchange="updateServicio('${s.nombre}', this.value)">
+              ${opts}
+            </select>
+          </div>`;
+      }).join('');
+      document.getElementById('servicios-content').innerHTML =
+        `<div class="servicio-list">${rows}</div>`;
+    }
+
+    function updateServicio(nombre, value) {
+      const s = serviciosData.find(x => x.nombre === nombre);
+      if (s) s.duracion_min = Number(value);
+    }
+
+    document.getElementById('btn-save-servicios').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-save-servicios');
+      btn.disabled = true; btn.textContent = 'Guardando...';
+
+      const res = await fetch('/admin/api/servicios', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ servicios: serviciosData }),
+      });
+
+      btn.disabled = false; btn.textContent = 'Guardar duraciones';
+      const data = await res.json();
+      if (res.ok) {
+        showFeedbackEl('feedback-servicios', 'Duraciones guardadas', 'ok');
+      } else {
+        showFeedbackEl('feedback-servicios', data.error || 'Error al guardar', 'err');
+      }
+    });
+
+    function showFeedbackEl(id, msg, type) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.className = `feedback ${type}`;
+      el.style.display = 'inline-block';
+      setTimeout(() => { el.style.display = 'none'; }, 4000);
     }
 
     document.getElementById('logout-btn').addEventListener('click', async () => {

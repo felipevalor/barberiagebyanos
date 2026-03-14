@@ -1,5 +1,5 @@
 import { getToken } from './auth.js';
-import { BARBEROS_CONFIG, SERVICIOS, SLOT_DURATION, getGoogleAccessToken, createCalendarEvent, updateCalendarEvent, deleteCalendarEvent } from './_gcal.js';
+import { BARBEROS_CONFIG, SLOT_DURATION, getServicios, getGoogleAccessToken, createCalendarEvent, updateCalendarEvent, deleteCalendarEvent } from './_gcal.js';
 
 // ── Crear turno manual ────────────────────────────────────────────────────────
 export async function onRequestPost({ request, env }) {
@@ -16,7 +16,8 @@ export async function onRequestPost({ request, env }) {
   const cfg = BARBEROS_CONFIG[bId];
   if (!cfg) return json({ error: 'Barbero no encontrado' }, 404);
 
-  const duracion = SERVICIOS[servicio] ?? SLOT_DURATION;
+  const serviciosMap = await getServicios(env, bId);
+  const duracion = serviciosMap[servicio] ?? SLOT_DURATION;
 
   // Validar overlap con reservas existentes del mismo día y barbero
   const [hNew, minNew] = hora.split(':').map(Number);
@@ -32,7 +33,7 @@ export async function onRequestPost({ request, env }) {
     if (!rHora) continue;
     const [rh, rm] = rHora.split(':').map(Number);
     const rStart = rh * 60 + rm;
-    const rEnd   = rStart + (SERVICIOS[r.servicio] ?? SLOT_DURATION);
+    const rEnd   = rStart + (serviciosMap[r.servicio] ?? SLOT_DURATION);
     if (newStart < rEnd && newEnd > rStart) {
       return json({ error: `Ese horario se superpone con un turno existente (${rHora} · ${r.servicio})` }, 409);
     }

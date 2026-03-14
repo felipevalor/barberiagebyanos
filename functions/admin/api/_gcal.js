@@ -10,9 +10,9 @@ export const DEFAULT_SCHEDULE = {
 };
 
 export const BARBEROS_CONFIG = {
-  gebyano: { nombre: 'Gebyano', calendarId: null,                     schedule: DEFAULT_SCHEDULE },
-  lobo:    { nombre: 'Lobo',    calendarId: null,                     schedule: DEFAULT_SCHEDULE },
-  felipe:  { nombre: 'Felipe',  calendarId: 'felipevalor7@gmail.com', schedule: DEFAULT_SCHEDULE },
+  gebyano: { nombre: 'Gebyano', tel: '+5493416021009', calendarId: null,                     schedule: DEFAULT_SCHEDULE },
+  lobo:    { nombre: 'Lobo',    tel: '+5493412754502', calendarId: null,                     schedule: DEFAULT_SCHEDULE },
+  felipe:  { nombre: 'Felipe',  tel: '+5493416513207',  calendarId: 'felipevalor7@gmail.com', schedule: DEFAULT_SCHEDULE },
 };
 
 export const SLOT_DURATION = 30;
@@ -80,6 +80,39 @@ export async function checkFeriado(fecha, barbero_id, env) {
   } catch { /* si falla la tabla, tratar como feriado */ }
 
   return true;
+}
+
+// Envía notificación WA al barbero via CallMeBot (best-effort, nunca bloquea)
+export async function sendWhatsAppNotification(barberoId, turno, env) {
+  try {
+    const keys   = JSON.parse(env.CALLMEBOT_KEYS || '{}');
+    const apiKey = keys[barberoId];
+    if (!apiKey) return;
+
+    const cfg = BARBEROS_CONFIG[barberoId];
+    if (!cfg?.tel) return;
+
+    const { nombre, servicio, fecha, hora } = turno;
+    const texto = `🔔 Nuevo turno\n👤 ${nombre}\n✂️ ${servicio}\n📅 ${fecha} a las ${hora}`;
+    const url   = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(cfg.tel)}&text=${encodeURIComponent(texto)}&apikey=${apiKey}`;
+
+    await fetch(url).catch(() => {});
+  } catch { /* nunca bloquea la reserva */ }
+}
+
+// Lee duraciones de servicios de D1 para un barbero específico; fallback a SERVICIOS hardcoded
+export async function getServicios(env, barbero_id) {
+  try {
+    const { results } = await env.barberia_db.prepare(
+      'SELECT nombre, duracion_min FROM servicios_config WHERE barbero_id = ?'
+    ).bind(barbero_id).all();
+    if (!results.length) return { ...SERVICIOS };
+    const map = { ...SERVICIOS };
+    for (const r of results) map[r.nombre] = r.duracion_min;
+    return map;
+  } catch {
+    return { ...SERVICIOS };
+  }
 }
 
 // Lee horario de D1; si no hay filas usa DEFAULT_SCHEDULE

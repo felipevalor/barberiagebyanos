@@ -27,7 +27,8 @@ export async function onRequestPost({ request, env }) {
     });
   }
 
-  const role  = barbero_id === 'gebyano' ? 'owner' : 'barbero';
+  const OWNERS = ['gebyano', 'felipe'];
+  const role  = OWNERS.includes(barbero_id) ? 'owner' : 'barbero';
   const token = crypto.randomUUID();
   const expiresAt = new Date(Date.now() + MAX_AGE * 1000).toISOString();
 

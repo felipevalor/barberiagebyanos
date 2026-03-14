@@ -307,7 +307,7 @@
       document.getElementById('nav-user').textContent = cap(barbero_id);
 
       const sel = document.getElementById('barbero-select');
-      if (role === 'owner') { sel.style.display = 'block'; sel.value = 'gebyano'; }
+      if (role === 'owner') { sel.style.display = 'block'; sel.value = sessionBarbero || 'gebyano'; }
       await load();
     }
 
