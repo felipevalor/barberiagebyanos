@@ -33,6 +33,7 @@
             <div class="nav-links">
                 <a href="#servicios">Servicios</a>
                 <a href="#galeria">Galería</a>
+                <a href="#mi-turno">Mi turno</a>
                 <a href="#reservar" class="btn-nav">Reservar</a>
             </div>
         </div>
@@ -146,8 +147,8 @@
                 <form id="reserva-form" class="reserva-form reveal">
 
                     <div class="form-group">
-                        <label>Tu nombre</label>
-                        <input type="text" id="reserva-nombre" placeholder="¿Cómo te llamás?" autocomplete="off"
+                        <label>Nombre y apellido</label>
+                        <input type="text" id="reserva-nombre" placeholder="Juan García" autocomplete="off"
                             required>
                     </div>
 
@@ -215,6 +216,20 @@
                   </div>
                 </div>
             </div>
+        </section>
+
+        <!-- ── Consultar mi turno ── -->
+        <section id="mi-turno">
+          <div class="container">
+            <div class="mi-turno-wrap">
+              <div class="mi-turno-label">¿Tenés un turno?</div>
+              <div class="mi-turno-row">
+                <input type="text" id="mi-turno-input" placeholder="Juan García" autocomplete="off">
+                <button id="mi-turno-btn">Consultar</button>
+              </div>
+              <div id="mi-turno-result"></div>
+            </div>
+          </div>
         </section>
     </main>
 

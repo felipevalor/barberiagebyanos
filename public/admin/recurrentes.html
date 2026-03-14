@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gebyanos — Recurrentes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:      #0c0b09;
+      --surface: #141210;
+      --border:  #2a2620;
+      --gold:    #c9a84c;
+      --text:    #e8dcc8;
+      --muted:   #6b6055;
+      --green:   #6dbf7e;
+      --red:     #e57373;
+      --font-serif: 'Playfair Display', serif;
+      --font-mono:  'DM Mono', monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-mono); min-height: 100vh; }
+
+    /* ── NAV ── */
+    .nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.5rem 1.5rem; border-bottom: 1px solid var(--border);
+      background: var(--surface); position: sticky; top: 0; z-index: 10; min-height: 64px;
+    }
+    .nav-brand { display: flex; align-items: center; gap: 0.75rem; }
+    .nav-logo  { width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; }
+    .nav-title { font-family: var(--font-serif); font-size: 1rem; white-space: nowrap; }
+    .nav-x     { color: var(--muted); font-size: 0.9rem; flex-shrink: 0; }
+    .nav-vs    { height: 96px; opacity: 0.9; flex-shrink: 0; }
+    .nav-tabs  { display: flex; gap: 0.25rem; }
+    .nav-tab {
+      color: var(--muted); text-decoration: none;
+      font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 0.5rem 1rem; border-radius: 4px; transition: color 200ms, background 200ms;
+    }
+    .nav-tab:hover  { color: var(--text); background: var(--border); }
+    .nav-tab.active { color: var(--gold); background: rgba(201,168,76,0.08); }
+    .nav-right { display: flex; align-items: center; gap: 0.75rem; }
+    .nav-user  { font-size: 0.8rem; color: var(--gold); letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+    .nav-logout {
+      background: none; border: 1px solid var(--border); border-radius: 4px;
+      color: var(--muted); font-family: var(--font-mono); font-size: 0.7rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.45rem 0.75rem; cursor: pointer; transition: color 200ms, border-color 200ms; white-space: nowrap;
+    }
+    .nav-logout:hover { color: var(--text); border-color: var(--muted); }
+
+    /* ── MAIN ── */
+    .main { max-width: 700px; margin: 0 auto; padding: 1.5rem 1rem 5.5rem; }
+
+    /* ── TOOLBAR ── */
+    .toolbar {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .toolbar-title { font-family: var(--font-serif); font-size: 1.2rem; flex: 1; }
+    .barbero-select {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-family: var(--font-mono); font-size: 0.875rem;
+      padding: 0.5rem 0.875rem; outline: none; cursor: pointer; transition: border-color 200ms;
+      appearance: none; min-height: 44px;
+    }
+    .barbero-select:focus { border-color: var(--gold); }
+    .barbero-select option { background: var(--surface); }
+
+    .btn-add {
+      background: var(--gold); border: none; border-radius: 8px;
+      color: var(--bg); font-family: var(--font-mono); font-size: 0.75rem;
+      font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.625rem 1.25rem; cursor: pointer; transition: opacity 200ms;
+      min-height: 44px; white-space: nowrap;
+    }
+    .btn-add:hover { opacity: 0.85; }
+
+    /* ── CARDS ── */
+    .count  { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.75rem; }
+    .list   { display: flex; flex-direction: column; gap: 0.5rem; }
+    .empty  { text-align: center; color: var(--muted); font-size: 0.9rem; padding: 3rem 0; }
+    .loading { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 3rem 0; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 1rem 1.125rem; transition: border-color 200ms;
+    }
+    .card:hover { border-color: rgba(201,168,76,0.25); }
+
+    .card-top {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 0.75rem; margin-bottom: 0.5rem;
+    }
+    .card-nombre  { font-size: 1rem; font-weight: 500; }
+    .card-servicio { font-size: 0.82rem; color: var(--muted); margin-top: 0.15rem; }
+
+    .card-meta {
+      display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem;
+    }
+    .badge {
+      font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 0.25rem 0.625rem; border-radius: 20px;
+      border: 1px solid var(--border); color: var(--muted);
+    }
+    .badge.frecuencia { color: var(--gold); border-color: rgba(201,168,76,0.3); background: rgba(201,168,76,0.06); }
+    .badge.precio     { color: var(--green); border-color: rgba(109,191,126,0.3); background: rgba(109,191,126,0.06); }
+    .badge.hora       { color: var(--text); }
+
+    .card-proximo {
+      font-size: 0.78rem; color: var(--muted); margin-bottom: 0.875rem;
+    }
+    .card-proximo strong { color: var(--text); }
+
+    .card-notas {
+      font-size: 0.78rem; color: var(--muted); font-style: italic;
+      margin-bottom: 0.875rem; padding-top: 0.5rem; border-top: 1px solid var(--border);
+    }
+
+    .card-actions { display: flex; gap: 0.5rem; }
+    .btn-agendar {
+      background: var(--gold); border: none; border-radius: 6px;
+      color: var(--bg); font-family: var(--font-mono); font-size: 0.72rem;
+      font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 0.5rem 1rem; cursor: pointer; transition: opacity 200ms; min-height: 40px;
+    }
+    .btn-agendar:hover { opacity: 0.85; }
+    .btn-edit {
+      background: none; border: 1px solid var(--border); border-radius: 6px;
+      color: var(--muted); font-family: var(--font-mono); font-size: 0.72rem;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 0.5rem 1rem; cursor: pointer; transition: color 200ms, border-color 200ms; min-height: 40px;
+    }
+    .btn-edit:hover { color: var(--text); border-color: var(--muted); }
+    .btn-delete {
+      background: none; border: none; color: var(--muted); font-family: var(--font-mono);
+      font-size: 0.72rem; cursor: pointer; padding: 0.5rem; margin-left: auto;
+      transition: color 200ms; min-height: 40px;
+    }
+    .btn-delete:hover { color: var(--red); }
+
+    /* ── MODAL ── */
+    dialog {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 1.75rem; max-width: 480px; width: calc(100% - 2rem);
+      color: var(--text); font-family: var(--font-mono);
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); margin: 0;
+    }
+    dialog::backdrop { background: rgba(0,0,0,0.7); }
+    .modal-title { font-family: var(--font-serif); font-size: 1.15rem; margin-bottom: 1.25rem; }
+    .modal-close {
+      position: absolute; top: 1rem; right: 1rem;
+      background: none; border: none; color: var(--muted); font-size: 1.2rem;
+      cursor: pointer; padding: 0.25rem 0.5rem; transition: color 200ms;
+    }
+    .modal-close:hover { color: var(--text); }
+
+    .field { margin-bottom: 1rem; }
+    .field label { display: block; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.375rem; }
+    .field input, .field select, .field textarea {
+      width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-family: var(--font-mono); font-size: 0.875rem;
+      padding: 0.625rem 0.875rem; outline: none; transition: border-color 200ms;
+      appearance: none;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--gold); }
+    .field textarea { resize: vertical; min-height: 70px; }
+    .field select option { background: var(--surface); }
+
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+    .modal-actions { display: flex; gap: 0.75rem; margin-top: 1.25rem; flex-wrap: wrap; }
+    .btn-confirm {
+      background: var(--gold); border: none; border-radius: 8px;
+      color: var(--bg); font-family: var(--font-mono); font-size: 0.78rem;
+      font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.75rem 1.75rem; cursor: pointer; transition: opacity 200ms; min-height: 48px;
+    }
+    .btn-confirm:hover    { opacity: 0.85; }
+    .btn-confirm:disabled { opacity: 0.4; cursor: default; }
+    .btn-cancel {
+      background: none; border: 1px solid var(--border); border-radius: 8px;
+      color: var(--muted); font-family: var(--font-mono); font-size: 0.78rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.75rem 1.25rem; cursor: pointer; transition: color 200ms, border-color 200ms; min-height: 48px;
+    }
+    .btn-cancel:hover { color: var(--text); border-color: var(--muted); }
+    .btn-delete-modal {
+      background: none; border: 1px solid rgba(229,115,115,0.3); border-radius: 8px;
+      color: var(--red); font-family: var(--font-mono); font-size: 0.78rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.75rem 1.25rem; cursor: pointer; transition: all 200ms; min-height: 48px; margin-left: auto;
+    }
+    .btn-delete-modal:hover { background: rgba(229,115,115,0.08); border-color: var(--red); }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--surface); border-top: 1px solid var(--border); z-index: 20;
+    }
+    .bottom-nav a {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      gap: 0.2rem; padding: 0.625rem 0.25rem 0.75rem;
+      text-decoration: none; color: var(--muted);
+      font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; transition: color 200ms;
+    }
+    .bottom-nav a.active { color: var(--gold); }
+    .bottom-nav a svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+
+    /* ── MODAL AGENDAR ── */
+    .dias-row {
+      display: flex; gap: 0.375rem; overflow-x: auto; padding-bottom: 0.375rem;
+      scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+    }
+    .dia-chip {
+      flex-shrink: 0; display: flex; flex-direction: column; align-items: center;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 0.5rem 0.625rem; cursor: pointer; transition: all 200ms;
+      font-family: var(--font-mono); color: var(--muted); min-width: 46px;
+    }
+    .dia-chip:hover { border-color: var(--muted); color: var(--text); }
+    .dia-chip.active { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,0.08); }
+    .dia-chip .dia-num { font-size: 1rem; font-weight: 500; line-height: 1; }
+    .dia-chip .dia-nom { font-size: 0.58rem; letter-spacing: 0.06em; text-transform: uppercase; margin-top: 0.2rem; }
+
+    .slots-grid { display: flex; flex-wrap: wrap; gap: 0.375rem; min-height: 44px; align-items: flex-start; }
+    .slots-msg  { font-size: 0.82rem; color: var(--muted); padding: 0.375rem 0; }
+    .slot-chip {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-family: var(--font-mono); font-size: 0.8rem;
+      padding: 0.4rem 0.8rem; cursor: pointer; transition: all 200ms; min-height: 36px;
+    }
+    .slot-chip:hover   { border-color: var(--muted); }
+    .slot-chip.selected { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,0.08); }
+
+    /* toast */
+    .toast {
+      position: fixed; bottom: 5.5rem; left: 50%; transform: translateX(-50%);
+      background: var(--surface); border: 1px solid var(--gold); color: var(--text);
+      font-family: var(--font-mono); font-size: 0.8rem;
+      padding: 0.75rem 1.25rem; border-radius: 8px; z-index: 200;
+      white-space: nowrap; max-width: calc(100vw - 2rem);
+      overflow: hidden; text-overflow: ellipsis;
+      animation: fadeInUp 200ms ease;
+    }
+    @keyframes fadeInUp { from { opacity:0; transform:translate(-50%,8px); } to { opacity:1; transform:translateX(-50%); } }
+
+    @media (max-width: 540px) {
+      .nav-tabs { display: none; }
+      .nav-title { display: none; }
+      .nav-vs { height: 64px; }
+      .nav-logo { width: 36px; height: 36px; }
+      .nav { padding: 0.5rem 1rem; }
+      .bottom-nav { display: flex; }
+      .main { padding: 1.25rem 0.875rem 5.5rem; }
+      .field-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="bottom-nav">
+    <a href="/admin/dashboard">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Reservas
+    </a>
+    <a href="/admin/agenda">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+      Agenda
+    </a>
+    <a href="/admin/horarios">
+      <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/></svg>
+      Horarios
+    </a>
+    <a href="/admin/recurrentes" class="active">
+      <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      Fijos
+    </a>
+  </nav>
+
+  <nav class="nav">
+    <div class="nav-brand">
+      <img src="/img/logo.jpg" alt="Gebyanos" class="nav-logo">
+      <span class="nav-title">Gebyanos</span>
+      <span class="nav-x">×</span>
+      <img src="/img/Valor Solutions-blanca.png" alt="Valor Solutions" class="nav-vs">
+    </div>
+    <div class="nav-tabs">
+      <a href="/admin/dashboard"    class="nav-tab">Reservas</a>
+      <a href="/admin/agenda"       class="nav-tab">Agenda</a>
+      <a href="/admin/horarios"     class="nav-tab">Horarios</a>
+      <a href="/admin/recurrentes"  class="nav-tab active">Fijos</a>
+    </div>
+    <div class="nav-right">
+      <span class="nav-user" id="nav-user"></span>
+      <button class="nav-logout" id="logout-btn">Salir</button>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <div class="toolbar">
+      <span class="toolbar-title">Clientes fijos</span>
+      <select class="barbero-select" id="barbero-select" style="display:none">
+        <option value="gebyano">Gebyano</option>
+        <option value="lobo">Lobo</option>
+        <option value="felipe">Felipe</option>
+      </select>
+      <button class="btn-add" id="btn-add">+ Agregar</button>
+    </div>
+
+    <div id="content"><div class="loading">Cargando...</div></div>
+
+  </main>
+
+  <!-- Modal Agendar -->
+  <dialog id="modal-agendar">
+    <button class="modal-close" id="ma-close">✕</button>
+    <h2 class="modal-title" id="ma-title">Agendar turno</h2>
+
+    <div class="field" style="margin-bottom:0.875rem">
+      <label>Día</label>
+      <div class="dias-row" id="ma-dias"></div>
+    </div>
+
+    <div class="field">
+      <label>Horario disponible</label>
+      <div class="slots-grid" id="ma-slots">
+        <span class="slots-msg">Seleccioná un día</span>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-confirm" id="ma-confirm" disabled>Agendar</button>
+      <button class="btn-cancel"  id="ma-cancel">Cancelar</button>
+    </div>
+  </dialog>
+
+  <!-- Modal -->
+  <dialog id="modal">
+    <button class="modal-close" id="modal-close">✕</button>
+    <h2 class="modal-title" id="modal-title">Agregar cliente fijo</h2>
+
+    <div class="field">
+      <label>Nombre del cliente</label>
+      <input type="text" id="m-nombre" placeholder="Juan García" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Servicio habitual</label>
+      <select id="m-servicio">
+        <option value="">— Elegir —</option>
+        <option>Corte</option>
+        <option>Corte + Barba</option>
+        <option>Barba</option>
+        <option>Afeitado</option>
+        <option>Niños 10-13 años</option>
+        <option>Niños 0-9 años</option>
+      </select>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Frecuencia</label>
+        <select id="m-frecuencia">
+          <option value="7">Cada semana</option>
+          <option value="14" selected>Cada 2 semanas</option>
+          <option value="21">Cada 3 semanas</option>
+          <option value="28">Cada mes</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Hora preferida</label>
+        <input type="text" id="m-hora" placeholder="10:00" maxlength="5">
+      </div>
+    </div>
+    <div class="field">
+      <label>Precio especial (opcional)</label>
+      <input type="text" id="m-precio" placeholder="ej: $18.000, promo 3 cortes">
+    </div>
+    <div class="field">
+      <label>Notas</label>
+      <textarea id="m-notas" placeholder="ej: viene con el hijo, prefiere tarde..."></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-confirm" id="btn-confirm">Guardar</button>
+      <button class="btn-cancel"  id="btn-cancel">Cancelar</button>
+      <button class="btn-delete-modal" id="btn-delete-modal" style="display:none">Eliminar</button>
+    </div>
+  </dialog>
+
+  <script>
+    const SERVICIOS = ['Corte','Corte + Barba','Barba','Afeitado','Niños 10-13 años','Niños 0-9 años'];
+    const FRECUENCIAS = { 7: 'Semanal', 14: 'Quincenal', 21: 'Cada 3 sem.', 28: 'Mensual' };
+
+    let role           = null;
+    let sessionBarbero = null;
+    let editingId      = null;
+
+    async function init() {
+      const res = await fetch('/admin/api/me');
+      if (!res.ok) { location.href = '/admin/'; return; }
+      const { barbero_id, role: r } = await res.json();
+      role = r; sessionBarbero = barbero_id;
+      document.getElementById('nav-user').textContent = cap(barbero_id);
+      if (role === 'owner') {
+        const sel = document.getElementById('barbero-select');
+        sel.style.display = 'block';
+        sel.value = sessionBarbero;
+        sel.addEventListener('change', load);
+      }
+      await load();
+    }
+
+    async function load() {
+      document.getElementById('content').innerHTML = '<div class="loading">Cargando...</div>';
+      const bId = getSelectedBarbero();
+      const res = await fetch(`/admin/api/recurrentes?barbero=${bId}`);
+      if (!res.ok) { location.href = '/admin/'; return; }
+      const { clientes } = await res.json();
+      render(clientes);
+    }
+
+    function render(clientes) {
+      const activos    = clientes.filter(c => c.activo);
+      const archivados = clientes.filter(c => !c.activo);
+      const el = document.getElementById('content');
+
+      if (!activos.length && !archivados.length) {
+        el.innerHTML = '<p class="empty">Sin clientes fijos todavía.<br>Agregá el primero con el botón de arriba.</p>';
+        return;
+      }
+
+      let html = `<p class="count">${activos.length} cliente${activos.length !== 1 ? 's' : ''} fijo${activos.length !== 1 ? 's' : ''}</p>`;
+      html += `<div class="list">${activos.map(cardHTML).join('')}</div>`;
+
+      if (archivados.length) {
+        html += `<details style="margin-top:1.5rem">
+          <summary style="font-size:0.75rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;padding:0.5rem 0">
+            Archivados (${archivados.length})
+          </summary>
+          <div class="list" style="margin-top:0.5rem;opacity:0.6">${archivados.map(cardHTML).join('')}</div>
+        </details>`;
+      }
+
+      el.innerHTML = html;
+
+      // Bind botones
+      el.querySelectorAll('.btn-agendar').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const c = clientes.find(x => x.id === Number(btn.dataset.id));
+          if (c) agendar(c);
+        });
+      });
+      el.querySelectorAll('.btn-edit').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const c = clientes.find(x => x.id === Number(btn.dataset.id));
+          if (c) openModal(c);
+        });
+      });
+    }
+
+    function cardHTML(c) {
+      const freq = FRECUENCIAS[c.frecuencia_dias] || `Cada ${c.frecuencia_dias} días`;
+      return `
+        <div class="card">
+          <div class="card-top">
+            <div>
+              <div class="card-nombre">${c.nombre}</div>
+              <div class="card-servicio">${c.servicio}</div>
+            </div>
+          </div>
+          <div class="card-meta">
+            <span class="badge frecuencia">${freq}</span>
+            ${c.hora_preferida  ? `<span class="badge hora">⏱ ${c.hora_preferida}</span>` : ''}
+            ${c.precio_especial ? `<span class="badge precio">${c.precio_especial}</span>` : ''}
+          </div>
+          <div class="card-proximo">
+            Próximo turno sugerido: <strong>${c.proximo_turno}</strong>
+            ${c.ultimo_turno ? `<span style="color:var(--muted)"> · último: ${c.ultimo_turno}</span>` : '<span style="color:var(--muted)"> · sin historial</span>'}
+          </div>
+          ${c.notas ? `<div class="card-notas">"${c.notas}"</div>` : ''}
+          <div class="card-actions">
+            <button class="btn-agendar" data-id="${c.id}">Agendar</button>
+            <button class="btn-edit"    data-id="${c.id}">Editar</button>
+          </div>
+        </div>`;
+    }
+
+    // ── Modal Agendar ─────────────────────────────────────────────────────────
+    let agendarCliente = null;
+    let agendarFecha   = null;
+    let agendarHora    = null;
+
+    function agendar(c) {
+      agendarCliente = c;
+      agendarFecha   = null;
+      agendarHora    = null;
+
+      document.getElementById('ma-title').textContent = `Agendar — ${c.nombre}`;
+      document.getElementById('ma-confirm').disabled = true;
+
+      const dias = getProximosDias(21);
+      const suggested = c.proximo_turno;
+
+      const diasRow = document.getElementById('ma-dias');
+      diasRow.innerHTML = dias.map(({ fecha, num, nom }) =>
+        `<button class="dia-chip${fecha === suggested ? ' active' : ''}" data-fecha="${fecha}">
+          <span class="dia-num">${num}</span>
+          <span class="dia-nom">${nom}</span>
+        </button>`
+      ).join('');
+
+      diasRow.querySelectorAll('.dia-chip').forEach(btn => {
+        btn.addEventListener('click', () => selectDia(btn.dataset.fecha));
+      });
+
+      document.getElementById('ma-slots').innerHTML = '<span class="slots-msg">Cargando...</span>';
+      document.getElementById('modal-agendar').showModal();
+
+      // Scroll suggested chip into view
+      const activeChip = diasRow.querySelector('.dia-chip.active');
+      if (activeChip) setTimeout(() => activeChip.scrollIntoView({ inline: 'center', behavior: 'smooth', block: 'nearest' }), 50);
+
+      selectDia(suggested);
+    }
+
+    async function selectDia(fecha) {
+      agendarFecha = fecha;
+      agendarHora  = null;
+      document.getElementById('ma-confirm').disabled = true;
+
+      document.querySelectorAll('#ma-dias .dia-chip').forEach(btn =>
+        btn.classList.toggle('active', btn.dataset.fecha === fecha)
+      );
+
+      const bId = getSelectedBarbero();
+      document.getElementById('ma-slots').innerHTML = '<span class="slots-msg">Cargando...</span>';
+
+      const res = await fetch(`/admin/api/agenda?fecha=${encodeURIComponent(fecha)}&barbero=${bId}`);
+      if (!res.ok) {
+        document.getElementById('ma-slots').innerHTML = '<span class="slots-msg">Error al cargar</span>';
+        return;
+      }
+
+      const data = await res.json();
+
+      if (data.diaNoLaboral) {
+        document.getElementById('ma-slots').innerHTML = '<span class="slots-msg">Día no laborable</span>';
+        return;
+      }
+
+      const libres = (data.slots || []).filter(s => s.status === 'libre');
+      if (!libres.length) {
+        document.getElementById('ma-slots').innerHTML = '<span class="slots-msg">Sin turnos disponibles ese día</span>';
+        return;
+      }
+
+      const preferida = agendarCliente?.hora_preferida;
+      document.getElementById('ma-slots').innerHTML = libres.map(s =>
+        `<button class="slot-chip${s.hora === preferida ? ' selected' : ''}" data-hora="${s.hora}">${s.hora}</button>`
+      ).join('');
+
+      if (preferida && libres.find(s => s.hora === preferida)) {
+        agendarHora = preferida;
+        document.getElementById('ma-confirm').disabled = false;
+      }
+
+      document.querySelectorAll('#ma-slots .slot-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('#ma-slots .slot-chip').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          agendarHora = btn.dataset.hora;
+          document.getElementById('ma-confirm').disabled = false;
+        });
+      });
+    }
+
+    function getProximosDias(n) {
+      const DIAS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+      const result = [];
+      const d = new Date();
+      while (result.length < n) {
+        if (d.getDay() !== 0) {
+          result.push({ fecha: `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`, num: d.getDate(), nom: DIAS[d.getDay()] });
+        }
+        d.setDate(d.getDate() + 1);
+      }
+      return result;
+    }
+
+    async function confirmarAgendar() {
+      if (!agendarFecha || !agendarHora || !agendarCliente) return;
+      const btn = document.getElementById('ma-confirm');
+      btn.disabled = true; btn.textContent = 'Agendando...';
+
+      const res = await fetch('/admin/api/turno', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          barbero_id: getSelectedBarbero(),
+          nombre:     agendarCliente.nombre,
+          servicio:   agendarCliente.servicio,
+          fecha:      agendarFecha,
+          hora:       agendarHora,
+        }),
+      });
+
+      btn.disabled = false; btn.textContent = 'Agendar';
+
+      if (res.ok) {
+        document.getElementById('modal-agendar').close();
+        showToast(`✓ ${agendarCliente.nombre} — ${agendarFecha} ${agendarHora}`);
+        await load();
+      } else {
+        const d = await res.json();
+        if (res.status === 409) {
+          // Turno tomado — recargar slots del día
+          await selectDia(agendarFecha);
+        } else {
+          alert(d.error || 'Error al agendar');
+        }
+      }
+    }
+
+    function showToast(msg) {
+      const t = document.createElement('div');
+      t.className = 'toast';
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 3500);
+    }
+
+    document.getElementById('ma-close').addEventListener('click', () => document.getElementById('modal-agendar').close());
+    document.getElementById('ma-cancel').addEventListener('click', () => document.getElementById('modal-agendar').close());
+    document.getElementById('ma-confirm').addEventListener('click', confirmarAgendar);
+    document.getElementById('modal-agendar').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+
+    // ── Modal ─────────────────────────────────────────────────────────────────
+    function openModal(cliente = null) {
+      editingId = cliente?.id || null;
+      document.getElementById('modal-title').textContent = cliente ? 'Editar cliente fijo' : 'Agregar cliente fijo';
+      document.getElementById('m-nombre').value          = cliente?.nombre        || '';
+      document.getElementById('m-servicio').value        = cliente?.servicio      || '';
+      document.getElementById('m-frecuencia').value      = cliente?.frecuencia_dias ?? 14;
+      document.getElementById('m-hora').value            = cliente?.hora_preferida || '';
+      document.getElementById('m-precio').value          = cliente?.precio_especial || '';
+      document.getElementById('m-notas').value           = cliente?.notas          || '';
+      document.getElementById('btn-delete-modal').style.display = cliente ? 'block' : 'none';
+      document.getElementById('modal').showModal();
+    }
+
+    function closeModal() { document.getElementById('modal').close(); }
+
+    document.getElementById('btn-add').addEventListener('click', () => openModal());
+    document.getElementById('modal-close').addEventListener('click', closeModal);
+    document.getElementById('btn-cancel').addEventListener('click', closeModal);
+    document.getElementById('modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+    document.getElementById('btn-confirm').addEventListener('click', async () => {
+      const nombre      = document.getElementById('m-nombre').value.trim();
+      const servicio    = document.getElementById('m-servicio').value;
+      const frecuencia  = Number(document.getElementById('m-frecuencia').value);
+      const hora        = document.getElementById('m-hora').value.trim();
+      const precio      = document.getElementById('m-precio').value.trim();
+      const notas       = document.getElementById('m-notas').value.trim();
+
+      if (!nombre || !servicio) {
+        document.getElementById('m-nombre').focus();
+        return;
+      }
+
+      const btn = document.getElementById('btn-confirm');
+      btn.disabled = true; btn.textContent = 'Guardando...';
+
+      const payload = {
+        barbero_id:      getSelectedBarbero(),
+        nombre, servicio,
+        frecuencia_dias: frecuencia,
+        hora_preferida:  hora || null,
+        precio_especial: precio || null,
+        notas:           notas || null,
+      };
+
+      const method = editingId ? 'PUT' : 'POST';
+      if (editingId) payload.id = editingId;
+
+      const res = await fetch('/admin/api/recurrentes', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      btn.disabled = false; btn.textContent = 'Guardar';
+      if (res.ok) { closeModal(); await load(); }
+      else { const d = await res.json(); alert(d.error || 'Error al guardar'); }
+    });
+
+    document.getElementById('btn-delete-modal').addEventListener('click', async () => {
+      if (!editingId || !confirm('¿Eliminar este cliente fijo?')) return;
+      const res = await fetch('/admin/api/recurrentes', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: editingId }),
+      });
+      if (res.ok) { closeModal(); await load(); }
+      else { const d = await res.json(); alert(d.error || 'Error al eliminar'); }
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await fetch('/admin/api/auth', { method: 'DELETE' });
+      location.href = '/admin/';
+    });
+
+    function getSelectedBarbero() {
+      return role === 'owner' ? document.getElementById('barbero-select').value : sessionBarbero;
+    }
+    function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+    init();
+  </script>
+
+</body>
+</html>

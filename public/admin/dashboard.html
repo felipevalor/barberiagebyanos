@@ -65,6 +65,52 @@
       margin-bottom: 1.5rem;
     }
     .date-label { font-family: var(--font-serif); font-size: 1.2rem; flex: 1; text-transform: capitalize; }
+    .btn-cal {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--muted); cursor: pointer; transition: border-color 200ms, color 200ms;
+      min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center;
+    }
+    .btn-cal:hover, .btn-cal.open { border-color: var(--gold); color: var(--gold); }
+    /* ── CALENDAR POPUP ── */
+    .cal-popup {
+      display: none; position: fixed; z-index: 300;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 1rem; width: 272px; box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+      font-family: var(--font-mono);
+    }
+    .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+    .cal-month-lbl { font-family: var(--font-serif); font-size: 0.95rem; color: var(--text); }
+    .cal-nav {
+      background: none; border: 1px solid var(--border); border-radius: 6px;
+      color: var(--muted); cursor: pointer; width: 30px; height: 30px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; transition: color 150ms, border-color 150ms;
+    }
+    .cal-nav:hover { color: var(--text); border-color: var(--muted); }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+    .cal-dow {
+      text-align: center; font-size: 0.6rem; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--muted); padding: 0.25rem 0 0.5rem;
+    }
+    .cal-day {
+      text-align: center; padding: 0.3rem 0; font-size: 0.78rem;
+      border-radius: 6px; border: 1px solid transparent;
+      cursor: pointer; transition: background 120ms, color 120ms;
+      color: var(--text);
+    }
+    .cal-day:hover { background: var(--border); }
+    .cal-day.other { color: var(--muted); opacity: 0.35; }
+    .cal-day.is-today { border-color: rgba(201,168,76,0.5); color: var(--gold); }
+    .cal-day.is-selected { background: var(--gold); color: var(--bg); font-weight: 600; border-color: transparent; }
+    .cal-day.is-selected:hover { background: var(--gold); }
+    .cal-footer { display: flex; justify-content: flex-end; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border); }
+    .cal-hoy-btn {
+      background: none; border: none; color: var(--gold);
+      font-family: var(--font-mono); font-size: 0.72rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      cursor: pointer; padding: 0.25rem 0.5rem; transition: opacity 150ms;
+    }
+    .cal-hoy-btn:hover { opacity: 0.7; }
     .date-btn {
       background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
       color: var(--text); font-family: var(--font-mono); font-size: 0.9rem;
@@ -153,6 +199,10 @@
       <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/></svg>
       Horarios
     </a>
+    <a href="/admin/recurrentes">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Fijos
+    </a>
   </nav>
 
   <nav class="nav">
@@ -163,9 +213,10 @@
       <img src="/img/Valor Solutions-blanca.png" alt="Valor Solutions" class="nav-vs">
     </div>
     <div class="nav-tabs">
-      <a href="/admin/dashboard" class="nav-tab active">Reservas</a>
-      <a href="/admin/agenda"    class="nav-tab">Agenda</a>
-      <a href="/admin/horarios"  class="nav-tab">Horarios</a>
+      <a href="/admin/dashboard"    class="nav-tab active">Reservas</a>
+      <a href="/admin/agenda"       class="nav-tab">Agenda</a>
+      <a href="/admin/horarios"     class="nav-tab">Horarios</a>
+      <a href="/admin/recurrentes"  class="nav-tab">Fijos</a>
     </div>
     <div class="nav-right">
       <span class="nav-user" id="nav-user"></span>
@@ -178,6 +229,9 @@
     <div class="date-nav">
       <button class="date-btn" id="prev-btn">←</button>
       <span class="date-label" id="date-label"></span>
+    <button class="btn-cal" id="btn-cal" title="Elegir fecha">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    </button>
       <button class="date-btn" id="next-btn">→</button>
       <button class="date-btn today" id="today-btn">Hoy</button>
     </div>
@@ -253,6 +307,60 @@
     document.getElementById('prev-btn').addEventListener('click', () => { currentDate.setDate(currentDate.getDate() - 1); load(); });
     document.getElementById('next-btn').addEventListener('click', () => { currentDate.setDate(currentDate.getDate() + 1); load(); });
     document.getElementById('today-btn').addEventListener('click', () => { currentDate = new Date(); load(); });
+    // ── Calendar Picker ───────────────────────────────────────────────────────
+    const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    let calOpen = false, calY = 0, calM = 0;
+
+    function openCal() {
+      if (calOpen) { closeCal(); return; }
+      calY = currentDate.getFullYear(); calM = currentDate.getMonth();
+      renderCal();
+      const btn = document.getElementById('btn-cal');
+      const rect = btn.getBoundingClientRect();
+      const popup = document.getElementById('cal-popup');
+      popup.style.top  = (rect.bottom + 6) + 'px';
+      popup.style.left = Math.max(8, rect.right - 272) + 'px';
+      popup.style.display = 'block';
+      btn.classList.add('open');
+      calOpen = true;
+    }
+    function closeCal() {
+      document.getElementById('cal-popup').style.display = 'none';
+      document.getElementById('btn-cal').classList.remove('open');
+      calOpen = false;
+    }
+    function renderCal() {
+      const today = new Date();
+      const first = new Date(calY, calM, 1);
+      const lastD = new Date(calY, calM + 1, 0).getDate();
+      const offset = first.getDay() === 0 ? 6 : first.getDay() - 1;
+      const cells = [];
+      for (let i = offset - 1; i >= 0; i--) cells.push({ d: new Date(calY, calM, -i), other: true });
+      for (let i = 1; i <= lastD; i++)       cells.push({ d: new Date(calY, calM, i), other: false });
+      while (cells.length % 7) cells.push({ d: new Date(calY, calM + 1, cells.length - lastD - offset + 1), other: true });
+
+      const same = (a, b) => a.getDate()===b.getDate() && a.getMonth()===b.getMonth() && a.getFullYear()===b.getFullYear();
+      document.getElementById('cal-popup').innerHTML = `
+        <div class="cal-header">
+          <button class="cal-nav" id="cal-prev">←</button>
+          <span class="cal-month-lbl">${MESES[calM]} ${calY}</span>
+          <button class="cal-nav" id="cal-next">→</button>
+        </div>
+        <div class="cal-grid">
+          ${['L','M','M','J','V','S','D'].map(d=>`<div class="cal-dow">${d}</div>`).join('')}
+          ${cells.map(({d,other})=>`<div class="cal-day${other?' other':''}${!other&&same(d,today)&&!same(d,currentDate)?' is-today':''}${same(d,currentDate)?' is-selected':''}" data-ts="${d.getTime()}">${d.getDate()}</div>`).join('')}
+        </div>
+        <div class="cal-footer"><button class="cal-hoy-btn" id="cal-hoy">Hoy</button></div>`;
+
+      document.getElementById('cal-prev').onclick = e => { e.stopPropagation(); calM--; if(calM<0){calM=11;calY--;} renderCal(); };
+      document.getElementById('cal-next').onclick = e => { e.stopPropagation(); calM++; if(calM>11){calM=0;calY++;} renderCal(); };
+      document.getElementById('cal-hoy').onclick  = e => { e.stopPropagation(); currentDate = new Date(); closeCal(); load(); };
+      document.querySelectorAll('#cal-popup .cal-day').forEach(el => {
+        el.onclick = e => { e.stopPropagation(); currentDate = new Date(Number(el.dataset.ts)); closeCal(); load(); };
+      });
+    }
+    document.getElementById('btn-cal').addEventListener('click', e => { e.stopPropagation(); openCal(); });
+    document.addEventListener('click', () => { if (calOpen) closeCal(); });
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -275,5 +383,6 @@
     init();
   </script>
 
+  <div class="cal-popup" id="cal-popup"></div>
 </body>
 </html>
