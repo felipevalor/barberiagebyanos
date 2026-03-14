@@ -25,6 +25,25 @@ export const SERVICIOS = {
   'Niños':          30,
 };
 
+// Lee horario de D1; si no hay filas usa DEFAULT_SCHEDULE
+export async function getSchedule(barbero_id, env) {
+  try {
+    const { results } = await env.barberia_db.prepare(
+      'SELECT dow, activo, hora_inicio, hora_fin FROM barbero_horarios WHERE barbero_id = ?'
+    ).bind(barbero_id).all();
+
+    if (!results.length) return DEFAULT_SCHEDULE;
+
+    const schedule = {};
+    for (const row of results) {
+      if (row.activo) schedule[row.dow] = { start: row.hora_inicio, end: row.hora_fin };
+    }
+    return schedule;
+  } catch {
+    return DEFAULT_SCHEDULE;
+  }
+}
+
 export function generateSlots(schedule, dow) {
   const s = schedule[dow];
   if (!s) return [];

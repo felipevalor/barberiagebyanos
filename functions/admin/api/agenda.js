@@ -1,5 +1,5 @@
 import { getToken } from './auth.js';
-import { BARBEROS_CONFIG, SERVICIOS, SLOT_DURATION, generateSlots, getGoogleAccessToken, getCalendarEvents } from './_gcal.js';
+import { BARBEROS_CONFIG, SERVICIOS, SLOT_DURATION, generateSlots, getSchedule, getGoogleAccessToken, getCalendarEvents } from './_gcal.js';
 
 export async function onRequestGet({ request, env }) {
   const token = getToken(request);
@@ -24,7 +24,8 @@ export async function onRequestGet({ request, env }) {
   const pad = n => String(n).padStart(2, '0');
   const dow = new Date(`${y}-${pad(m)}-${pad(d)}T12:00:00Z`).getUTCDay();
 
-  const slotHours = generateSlots(cfg.schedule, dow);
+  const schedule  = await getSchedule(bId, env);
+  const slotHours = generateSlots(schedule, dow);
   if (slotHours.length === 0) {
     return json({ slots: [], calendarConfigured: !!cfg.calendarId, diaNoLaboral: true });
   }

@@ -342,12 +342,17 @@ async function initCalendarPicker() {
 
   // Escuchar selección de barbero
   document.addEventListener('barberoSeleccionado', async (e) => {
-    selectedBarbero = e.detail;
+    selectedBarbero = { ...e.detail };
     selectedDay  = null;
     selectedSlot = null;
     slotPicker.innerHTML = '';
     slotPicker.style.display = 'none';
     validar();
+    // Cargar horario dinámico desde D1
+    try {
+      const r = await fetch(`/api/horarios?barbero=${selectedBarbero.id}`);
+      if (r.ok) selectedBarbero.schedule = await r.json();
+    } catch { /* usa schedule hardcodeado del BARBEROS array */ }
     if (selectedServicio) await renderDays();
   });
 

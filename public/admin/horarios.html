@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gebyanos — Horarios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:      #0c0b09;
+      --surface: #141210;
+      --border:  #2a2620;
+      --gold:    #c9a84c;
+      --text:    #e8dcc8;
+      --muted:   #6b6055;
+      --green:   #6dbf7e;
+      --red:     #e57373;
+      --font-serif: 'Playfair Display', serif;
+      --font-mono:  'DM Mono', monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-mono); min-height: 100vh; }
+
+    /* ── NAV ── */
+    .nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.5rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: sticky; top: 0; z-index: 10;
+      min-height: 64px;
+    }
+    .nav-brand { display: flex; align-items: center; gap: 0.75rem; }
+    .nav-logo  { width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; }
+    .nav-title { font-family: var(--font-serif); font-size: 1rem; white-space: nowrap; }
+    .nav-x     { color: var(--muted); font-size: 0.9rem; flex-shrink: 0; }
+    .nav-vs    { height: 96px; opacity: 0.9; flex-shrink: 0; }
+    .nav-tabs  { display: flex; gap: 0.25rem; }
+    .nav-tab {
+      color: var(--muted); text-decoration: none;
+      font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 0.5rem 1rem; border-radius: 4px;
+      transition: color 200ms, background 200ms;
+    }
+    .nav-tab:hover  { color: var(--text); background: var(--border); }
+    .nav-tab.active { color: var(--gold); background: rgba(201,168,76,0.08); }
+    .nav-right { display: flex; align-items: center; gap: 0.75rem; }
+    .nav-user  { font-size: 0.8rem; color: var(--gold); letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+    .nav-logout {
+      background: none; border: 1px solid var(--border); border-radius: 4px;
+      color: var(--muted); font-family: var(--font-mono); font-size: 0.7rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.45rem 0.75rem; cursor: pointer; transition: color 200ms, border-color 200ms;
+    }
+    .nav-logout:hover { color: var(--text); border-color: var(--muted); }
+
+    /* ── MAIN ── */
+    .main { max-width: 640px; margin: 0 auto; padding: 2rem 1rem 5.5rem; }
+
+    /* ── HEADER ── */
+    .page-header { margin-bottom: 2rem; }
+    .page-title { font-family: var(--font-serif); font-size: 1.4rem; margin-bottom: 0.25rem; }
+    .page-sub   { font-size: 0.8rem; color: var(--muted); }
+
+    /* ── BARBERO SELECTOR (owner) ── */
+    .barbero-row {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin-bottom: 1.75rem; flex-wrap: wrap;
+    }
+    .barbero-row label { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .barbero-select {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-family: var(--font-mono); font-size: 0.875rem;
+      padding: 0.5rem 0.875rem; outline: none; cursor: pointer; transition: border-color 200ms;
+      appearance: none; min-height: 44px;
+    }
+    .barbero-select:focus { border-color: var(--gold); }
+    .barbero-select option { background: var(--surface); }
+
+    /* ── SCHEDULE GRID ── */
+    .schedule { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem; }
+
+    .day-row {
+      display: grid;
+      grid-template-columns: 20px 100px 1fr;
+      align-items: center; gap: 1rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1rem 1.25rem;
+      transition: border-color 200ms;
+    }
+    .day-row.activo  { border-color: rgba(201,168,76,0.2); }
+    .day-row.inactivo { opacity: 0.5; }
+
+    /* checkbox custom */
+    .day-check {
+      width: 18px; height: 18px; border-radius: 4px;
+      border: 1px solid var(--muted); background: var(--bg);
+      cursor: pointer; appearance: none; flex-shrink: 0;
+      transition: background 200ms, border-color 200ms;
+    }
+    .day-check:checked { background: var(--gold); border-color: var(--gold); }
+    .day-check:checked::after {
+      content: ''; display: block;
+      width: 4px; height: 8px;
+      border: 2px solid var(--bg); border-top: none; border-left: none;
+      transform: rotate(45deg) translate(2px, -1px);
+    }
+
+    .day-nombre {
+      font-size: 0.875rem; font-weight: 500;
+    }
+    .day-inactivo-label {
+      font-size: 0.78rem; color: var(--muted); font-style: italic;
+    }
+
+    .time-range {
+      display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+    }
+    .time-select {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-family: var(--font-mono); font-size: 0.875rem;
+      padding: 0.4rem 0.6rem; outline: none; cursor: pointer;
+      transition: border-color 200ms; appearance: none;
+      min-width: 70px; min-height: 40px;
+    }
+    .time-select:focus  { border-color: var(--gold); }
+    .time-select option { background: var(--surface); }
+    .time-select:disabled { opacity: 0.3; cursor: default; }
+    .time-sep { color: var(--muted); font-size: 0.85rem; }
+
+    /* ── ACTIONS ── */
+    .actions { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .btn-save {
+      background: var(--gold); border: none; border-radius: 8px;
+      color: var(--bg); font-family: var(--font-mono); font-size: 0.8rem;
+      font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.75rem 2rem; cursor: pointer; transition: opacity 200ms;
+      min-height: 48px;
+    }
+    .btn-save:hover    { opacity: 0.85; }
+    .btn-save:disabled { opacity: 0.4; cursor: default; }
+
+    .feedback {
+      font-size: 0.8rem; padding: 0.5rem 1rem; border-radius: 6px; display: none;
+    }
+    .feedback.ok  { color: var(--green); background: rgba(109,191,126,0.1); border: 1px solid rgba(109,191,126,0.2); }
+    .feedback.err { color: var(--red);   background: rgba(229,115,115,0.1); border: 1px solid rgba(229,115,115,0.2); }
+
+    .loading { text-align: center; color: var(--muted); padding: 3rem 0; font-size: 0.875rem; }
+
+    /* ── BOTTOM NAV (mobile) ── */
+    .bottom-nav {
+      display: none;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--surface); border-top: 1px solid var(--border);
+      z-index: 20;
+    }
+    .bottom-nav a {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      gap: 0.25rem; padding: 0.75rem 0.5rem 0.875rem;
+      text-decoration: none; color: var(--muted);
+      font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase;
+      transition: color 200ms;
+    }
+    .bottom-nav a.active { color: var(--gold); }
+    .bottom-nav a svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 540px) {
+      .nav-tabs  { display: none; }
+      .nav-title { display: none; }
+      .nav-vs    { height: 64px; }
+      .nav-logo  { width: 36px; height: 36px; }
+      .nav { padding: 0.5rem 1rem; }
+      .bottom-nav { display: flex; }
+      .main { padding: 1.5rem 0.875rem 5.5rem; }
+      .day-row { grid-template-columns: 20px 80px 1fr; gap: 0.75rem; padding: 0.875rem 1rem; }
+      .time-select { min-width: 60px; font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="bottom-nav">
+    <a href="/admin/dashboard">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Reservas
+    </a>
+    <a href="/admin/agenda">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+      Agenda
+    </a>
+    <a href="/admin/horarios" class="active">
+      <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/></svg>
+      Horarios
+    </a>
+  </nav>
+
+  <nav class="nav">
+    <div class="nav-brand">
+      <img src="/img/logo.jpg" alt="Gebyanos" class="nav-logo">
+      <span class="nav-title">Gebyanos</span>
+      <span class="nav-x">×</span>
+      <img src="/img/Valor Solutions-blanca.png" alt="Valor Solutions" class="nav-vs">
+    </div>
+    <div class="nav-tabs">
+      <a href="/admin/dashboard" class="nav-tab">Reservas</a>
+      <a href="/admin/agenda"    class="nav-tab">Agenda</a>
+      <a href="/admin/horarios"  class="nav-tab active">Horarios</a>
+    </div>
+    <div class="nav-right">
+      <span class="nav-user" id="nav-user"></span>
+      <button class="nav-logout" id="logout-btn">Salir</button>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <div class="page-header">
+      <h1 class="page-title">Horario semanal</h1>
+      <p class="page-sub">Los turnos se generan automáticamente en estos rangos.</p>
+    </div>
+
+    <div class="barbero-row" id="barbero-row" style="display:none">
+      <label>Barbero</label>
+      <select class="barbero-select" id="barbero-select">
+        <option value="gebyano">Gebyano</option>
+        <option value="lobo">Lobo</option>
+        <option value="felipe">Felipe</option>
+      </select>
+    </div>
+
+    <div id="content"><div class="loading">Cargando...</div></div>
+
+    <div class="actions" id="actions" style="display:none">
+      <button class="btn-save" id="btn-save">Guardar horario</button>
+      <span class="feedback" id="feedback"></span>
+    </div>
+
+  </main>
+
+  <script>
+    const HORAS = Array.from({ length: 17 }, (_, i) => i + 7); // 7 a 23
+
+    let role           = null;
+    let sessionBarbero = null;
+    let scheduleData   = [];
+
+    async function init() {
+      const res = await fetch('/admin/api/me');
+      if (!res.ok) { location.href = '/admin/'; return; }
+      const { barbero_id, role: r } = await res.json();
+      role           = r;
+      sessionBarbero = barbero_id;
+      document.getElementById('nav-user').textContent = cap(barbero_id);
+
+      if (role === 'owner') {
+        document.getElementById('barbero-row').style.display = 'flex';
+        document.getElementById('barbero-select').addEventListener('change', load);
+      }
+
+      await load();
+    }
+
+    async function load() {
+      document.getElementById('content').innerHTML = '<div class="loading">Cargando...</div>';
+      document.getElementById('actions').style.display = 'none';
+
+      const bId = getSelectedBarbero();
+      const res = await fetch(`/admin/api/horarios?barbero=${bId}`);
+      if (!res.ok) { location.href = '/admin/'; return; }
+
+      const { schedule } = await res.json();
+      scheduleData = schedule;
+      render(schedule);
+      document.getElementById('actions').style.display = 'flex';
+    }
+
+    function render(schedule) {
+      const rows = schedule.map(day => {
+        const horaInicioOpts = HORAS.map(h =>
+          `<option value="${h}" ${h === day.hora_inicio ? 'selected' : ''}>${pad(h)}:00</option>`
+        ).join('');
+        const horaFinOpts = HORAS.map(h =>
+          `<option value="${h}" ${h === day.hora_fin ? 'selected' : ''}>${pad(h)}:00</option>`
+        ).join('');
+
+        return `
+          <div class="day-row ${day.activo ? 'activo' : 'inactivo'}" id="row-${day.dow}">
+            <input type="checkbox" class="day-check" data-dow="${day.dow}" ${day.activo ? 'checked' : ''}
+                   onchange="toggleDay(${day.dow}, this.checked)">
+            <span class="day-nombre">${day.nombre}</span>
+            ${day.activo
+              ? `<div class="time-range">
+                   <select class="time-select" data-dow="${day.dow}" data-field="inicio"
+                           onchange="updateTime(${day.dow},'inicio',this.value)">${horaInicioOpts}</select>
+                   <span class="time-sep">—</span>
+                   <select class="time-select" data-dow="${day.dow}" data-field="fin"
+                           onchange="updateTime(${day.dow},'fin',this.value)">${horaFinOpts}</select>
+                 </div>`
+              : `<span class="day-inactivo-label">No disponible</span>`
+            }
+          </div>`;
+      }).join('');
+
+      document.getElementById('content').innerHTML = `<div class="schedule">${rows}</div>`;
+    }
+
+    function toggleDay(dow, activo) {
+      const day = scheduleData.find(d => d.dow === dow);
+      if (!day) return;
+      day.activo = activo;
+      render(scheduleData);
+      hideFeedback();
+    }
+
+    function updateTime(dow, field, value) {
+      const day = scheduleData.find(d => d.dow === dow);
+      if (!day) return;
+      if (field === 'inicio') day.hora_inicio = Number(value);
+      if (field === 'fin')    day.hora_fin    = Number(value);
+      hideFeedback();
+    }
+
+    document.getElementById('btn-save').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-save');
+      btn.disabled = true;
+      btn.textContent = 'Guardando...';
+
+      const res = await fetch('/admin/api/horarios', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ barbero_id: getSelectedBarbero(), schedule: scheduleData }),
+      });
+
+      const data = await res.json();
+      btn.disabled = false;
+      btn.textContent = 'Guardar horario';
+
+      if (res.ok) {
+        showFeedback('Horario guardado correctamente', 'ok');
+      } else {
+        showFeedback(data.error || 'Error al guardar', 'err');
+      }
+    });
+
+    function showFeedback(msg, type) {
+      const el = document.getElementById('feedback');
+      el.textContent = msg;
+      el.className = `feedback ${type}`;
+      el.style.display = 'inline-block';
+      setTimeout(hideFeedback, 4000);
+    }
+    function hideFeedback() {
+      document.getElementById('feedback').style.display = 'none';
+    }
+
+    function getSelectedBarbero() {
+      return role === 'owner' ? document.getElementById('barbero-select').value : sessionBarbero;
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await fetch('/admin/api/auth', { method: 'DELETE' });
+      location.href = '/admin/';
+    });
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+    init();
+  </script>
+
+</body>
+</html>
