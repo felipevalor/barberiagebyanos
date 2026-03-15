@@ -277,6 +277,15 @@ section {
   background: var(--gold);
 }
 
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.75rem;
+}
+
 /* Services */
 .servicios-grid {
   display: grid;
@@ -284,6 +293,7 @@ section {
   gap: 1px;
   background: var(--border);
   border: 1px solid var(--border);
+  margin-top: 2.5rem;
 }
 
 .servicio-card {
@@ -306,12 +316,12 @@ section {
 
 .servicio-nombre {
   font-family: 'Playfair Display', serif;
-  font-size: 1.3rem;
+  font-size: 1.6rem;
   color: var(--text);
 }
 
 .servicio-incluye {
-  font-size: 0.8rem;
+  font-size: 1rem;
   color: var(--muted);
   font-style: italic;
   line-height: 1.5;
@@ -320,7 +330,7 @@ section {
 
 .servicio-precio {
   font-family: 'DM Mono', monospace;
-  font-size: 1.1rem;
+  font-size: 1.3rem;
   color: var(--gold);
   margin-top: 0.75rem;
 }
@@ -592,24 +602,24 @@ textarea {
   max-width: 480px; margin: 0 auto; text-align: center;
 }
 .mi-turno-label {
-  font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--muted); margin-bottom: 1rem;
+  font-size: 0.85rem; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 1.25rem;
 }
 .mi-turno-row {
   display: flex; gap: 0.5rem;
 }
 .mi-turno-row input {
   flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
-  color: var(--text); font-family: var(--font-mono); font-size: 0.9rem;
-  padding: 0.75rem 1rem; outline: none; transition: border-color 200ms;
+  color: var(--text); font-family: var(--font-mono); font-size: 1.05rem;
+  padding: 0.875rem 1.125rem; outline: none; transition: border-color 200ms;
 }
 .mi-turno-row input:focus { border-color: var(--gold); }
 .mi-turno-row input::placeholder { color: var(--muted); }
 .mi-turno-row button {
   background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
-  color: var(--muted); font-family: var(--font-mono); font-size: 0.75rem;
+  color: var(--muted); font-family: var(--font-mono); font-size: 0.875rem;
   letter-spacing: 0.08em; text-transform: uppercase;
-  padding: 0.75rem 1.25rem; cursor: pointer; white-space: nowrap;
+  padding: 0.875rem 1.5rem; cursor: pointer; white-space: nowrap;
   transition: color 200ms, border-color 200ms;
 }
 .mi-turno-row button:hover { color: var(--text); border-color: var(--muted); }
@@ -749,6 +759,19 @@ footer {
 .footer-credit {
   display: flex;
   align-items: center;
+}
+
+.footer-map {
+  width: 100%;
+  height: 300px;
+  margin: 2.5rem 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.footer-map iframe {
+  width: 100%; height: 100%;
+  border: none; display: block;
 }
 
 .footer-credit a {
@@ -936,6 +959,8 @@ body.nav-open .nav-hamburger span:nth-child(3) {
   .servicios-grid {
     grid-template-columns: 1fr;
   }
+
+  .footer-map { height: 220px; margin: 1.5rem 0; }
 
   .footer-grid {
     grid-template-columns: 1fr;

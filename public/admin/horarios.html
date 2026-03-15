@@ -290,7 +290,11 @@
     .admin-footer-credit { display: flex; align-items: center; gap: 0.5rem; }
     .admin-footer-credit a { display: inline-flex; align-items: center; opacity: 0.7; transition: opacity 200ms; }
     .admin-footer-credit a:hover { opacity: 1; }
-    .admin-footer-credit img { height: 96px; width: auto; }
+    .admin-footer-credit img { height: 140px; width: auto; }
+    @media (max-width: 540px) {
+      .admin-footer { flex-direction: column; gap: 0.75rem; text-align: center; padding: 1.25rem 1rem; }
+      .admin-footer-credit { flex-direction: column; gap: 0.375rem; }
+    }
   </style>
 </head>
 <body>
