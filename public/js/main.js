@@ -3,14 +3,25 @@
  * Premium Motion Design & Interactive Logic
  */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Iniciar fetch de barberos sin bloquear — las animaciones arrancan de inmediato
+    const barberosFetch = fetch('/api/barberos').catch(() => null);
+
     initCustomCursor();
     initNavScroll();
     initScrollReveal();
     initTextScramble();
     initMagneticButtons();
-    initReservaForm();
     initCustomSelect();
+    initHamburgerMenu();
+
+    // Esperar barberos solo antes de las funciones que los necesitan
+    try {
+        const r = await barberosFetch;
+        if (r?.ok) BARBEROS = await r.json();
+    } catch { /* usa fallback hardcodeado */ }
+
+    initReservaForm();
     initCalendarPicker();
     initMiTurno();
 });
@@ -56,6 +67,26 @@ function initCustomCursor() {
 
     window.addEventListener('mousedown', () => document.body.classList.add('mousedown'));
     window.addEventListener('mouseup', () => document.body.classList.remove('mousedown'));
+}
+
+/**
+ * Hamburger Menu
+ */
+function initHamburgerMenu() {
+    const btn = document.getElementById('nav-hamburger');
+    const links = document.getElementById('nav-links');
+    if (!btn || !links) return;
+
+    btn.addEventListener('click', () => {
+        document.body.classList.toggle('nav-open');
+    });
+
+    // Cerrar al hacer click en un link
+    links.querySelectorAll('a').forEach(a => {
+        a.addEventListener('click', () => {
+            document.body.classList.remove('nav-open');
+        });
+    });
 }
 
 /**
@@ -283,7 +314,8 @@ const SERVICIOS = {
 /**
  * Reserva Form Logic
  */
-const BARBEROS = [
+// Poblado en DOMContentLoaded desde /api/barberos; fallback a hardcodeado si la API falla
+let BARBEROS = [
   { id: 'gebyano', nombre: 'Gebyano', tel: '5493416021009', disponible: true,  calendarId: null,                      schedule: DEFAULT_SCHEDULE },
   { id: 'lobo',    nombre: 'Lobo',    tel: '5493412754502', disponible: true,  calendarId: null,                      schedule: DEFAULT_SCHEDULE },
   { id: 'felipe',  nombre: 'Felipe',  tel: '5493416513207', disponible: true,  calendarId: 'felipevalor7@gmail.com',  schedule: DEFAULT_SCHEDULE },
@@ -360,7 +392,6 @@ async function initCalendarPicker() {
   let selectedServicio = null;
   let selectedDay      = null;
   let selectedSlot     = null;
-  const slotsCache     = {}; // { "calendarId_dd/mm/yyyy": [...eventos] }
 
   // Escuchar selección de barbero
   document.addEventListener('barberoSeleccionado', async (e) => {
@@ -382,8 +413,6 @@ async function initCalendarPicker() {
         selectedBarbero.feriados = new Set(feriados);
       }
     } catch { selectedBarbero.feriados = new Set(); }
-    // Prefetch de disponibilidad para los próximos 14 días (1 sola llamada a Google Calendar)
-    prefetchBusySlots(selectedBarbero);
     if (selectedServicio) await renderDays();
   });
 
@@ -508,94 +537,29 @@ async function initCalendarPicker() {
     slotPicker.appendChild(grid);
   }
 
-  // Prefetch: 1 sola llamada para todos los días visibles al seleccionar barbero
-  async function prefetchBusySlots(barbero) {
-    if (!barbero.calendarId) return;
-
-    const today   = new Date();
-    const timeMin = new Date(today); timeMin.setHours(0, 0, 0, 0);
-    const timeMax = new Date(today); timeMax.setDate(today.getDate() + 14); timeMax.setHours(23, 59, 59, 999);
-
-    const calId = encodeURIComponent(barbero.calendarId);
-    const url = `https://www.googleapis.com/calendar/v3/calendars/${calId}/events?` +
-      `key=${GOOGLE_CALENDAR_CONFIG.apiKey}` +
-      `&timeMin=${timeMin.toISOString()}` +
-      `&timeMax=${timeMax.toISOString()}` +
-      `&singleEvents=true&orderBy=startTime`;
-
-    try {
-      let items = [];
-      let pageToken = '';
-      do {
-        const res  = await fetch(url + (pageToken ? `&pageToken=${pageToken}` : ''));
-        const data = await res.json();
-        items = items.concat(data.items || []);
-        pageToken = data.nextPageToken || '';
-      } while (pageToken);
-
-      // Distribuir eventos por fecha en la caché
-      const eventos = items
-        .filter(e => e.status !== 'cancelled' && e.start?.dateTime && e.end?.dateTime)
-        .map(e => ({ start: e.start.dateTime, end: e.end.dateTime }));
-
-      for (let i = 0; i < 15; i++) {
-        const d = new Date(today);
-        d.setDate(today.getDate() + i);
-        const key   = `${barbero.calendarId}_${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
-        const dayStart = new Date(d); dayStart.setHours(0, 0, 0, 0);
-        const dayEnd   = new Date(d); dayEnd.setHours(23, 59, 59, 999);
-        slotsCache[key] = eventos.filter(e =>
-          new Date(e.start) < dayEnd && new Date(e.end) > dayStart
-        );
-      }
-    } catch { /* fallback a fetch individual por día */ }
-  }
-
   async function fetchBusySlots(day, barbero) {
-    const d1Busy = await fetchD1BusySlots(barbero.nombre, day);
-    if (!barbero.calendarId) return d1Busy;
-
-    const key = `${barbero.calendarId}_${day.getDate()}/${day.getMonth() + 1}/${day.getFullYear()}`;
-    if (slotsCache[key]) return [...slotsCache[key], ...d1Busy];
-
-    // Fallback: fetch individual si el prefetch no llegó a tiempo
-    const timeMin = new Date(day); timeMin.setHours(0, 0, 0, 0);
-    const timeMax = new Date(day); timeMax.setHours(23, 59, 59, 999);
-
-    const calId = encodeURIComponent(barbero.calendarId);
-    const url = `https://www.googleapis.com/calendar/v3/calendars/${calId}/events?` +
-      `key=${GOOGLE_CALENDAR_CONFIG.apiKey}` +
-      `&timeMin=${timeMin.toISOString()}` +
-      `&timeMax=${timeMax.toISOString()}` +
-      `&singleEvents=true&orderBy=startTime`;
-
-    try {
-      const res  = await fetch(url);
-      const data = await res.json();
-      const gcalBusy = (data.items || [])
-        .filter(e => e.status !== 'cancelled' && e.start?.dateTime && e.end?.dateTime)
-        .map(e => ({ start: e.start.dateTime, end: e.end.dateTime }));
-      slotsCache[key] = gcalBusy;
-      return [...gcalBusy, ...d1Busy];
-    } catch {
-      return d1Busy;
-    }
+    return fetchD1BusySlots(barbero.nombre, day);
   }
 
   function validar() {
-    const nombre   = document.getElementById('reserva-nombre')?.value.trim();
-    const servicio = document.getElementById('servicio-value')?.value;
-    btn.disabled = !(nombre && servicio && selectedBarbero && selectedDay && selectedSlot);
+    const nombre    = document.getElementById('reserva-nombre')?.value.trim();
+    const telefono  = document.getElementById('reserva-telefono')?.value.trim();
+    const servicio  = document.getElementById('servicio-value')?.value;
+    btn.disabled = !(nombre && telefono && servicio && selectedBarbero && selectedDay && selectedSlot);
   }
 
   document.getElementById('reserva-nombre')
     ?.addEventListener('input', validar);
 
   // Click en botón — confirmar turno directamente in-app
+  document.getElementById('reserva-telefono')
+    ?.addEventListener('input', validar);
+
   btn.addEventListener('click', async () => {
-    const nombre   = document.getElementById('reserva-nombre').value.trim();
-    const servicio = document.getElementById('servicio-value').value;
-    if (!nombre || !servicio || !selectedBarbero || !selectedDay || !selectedSlot) return;
+    const nombre    = document.getElementById('reserva-nombre').value.trim();
+    const telefono  = document.getElementById('reserva-telefono').value.trim();
+    const servicio  = document.getElementById('servicio-value').value;
+    if (!nombre || !telefono || !servicio || !selectedBarbero || !selectedDay || !selectedSlot) return;
 
     btn.disabled    = true;
     btn.textContent = 'Confirmando...';
@@ -608,6 +572,7 @@ async function initCalendarPicker() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           nombre,
+          telefono,
           servicio,
           barberoId:  selectedBarbero.id,
           barbero:    selectedBarbero.nombre,
@@ -628,7 +593,7 @@ async function initCalendarPicker() {
       }
 
       // Mostrar pantalla de confirmación
-      showConfirmacion(data.turno || { nombre, servicio, barbero: selectedBarbero.nombre, fecha, hora: selectedSlot });
+      showConfirmacion(data.turno || { nombre, telefono, servicio, barbero: selectedBarbero.nombre, fecha, hora: selectedSlot });
 
     } catch {
       alert('Error de red. Verificá tu conexión e intentá de nuevo.');
@@ -637,9 +602,23 @@ async function initCalendarPicker() {
     }
   });
 
+  function buildGcalUrl({ servicio, barbero, fecha, hora }) {
+    const pad2   = n => String(n).padStart(2, '0');
+    const [d, m, y] = fecha.split('/').map(Number);
+    const [h, min]  = hora.split(':').map(Number);
+    const dur    = SERVICIOS[servicio]?.duracion || 30;
+    const endMin = h * 60 + min + dur;
+    const dtStr  = `${y}${pad2(m)}${pad2(d)}`;
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE`
+      + `&text=${encodeURIComponent('Turno Gebyanos — ' + servicio)}`
+      + `&dates=${dtStr}T${pad2(h)}${pad2(min)}00/${dtStr}T${pad2(Math.floor(endMin/60))}${pad2(endMin%60)}00`
+      + `&details=${encodeURIComponent('Barbero: ' + barbero + '\nGebyanos — 1 de Mayo 1687, Rosario')}`;
+  }
+
   function showConfirmacion(turno) {
-    // Guardar nombre en cookie (90 días)
+    // Guardar nombre y teléfono en cookie (90 días)
     document.cookie = `gb_nombre=${encodeURIComponent(turno.nombre)}; max-age=${60*60*24*90}; SameSite=Lax; Path=/`;
+    if (turno.telefono) document.cookie = `gb_tel=${encodeURIComponent(turno.telefono)}; max-age=${60*60*24*90}; SameSite=Lax; Path=/`;
 
     // Ocultar form, mostrar confirmación
     document.getElementById('reserva-form').style.display = 'none';
@@ -671,20 +650,7 @@ async function initCalendarPicker() {
         <span class="confirm-row-value">${turno.hora}</span>
       </div>`;
 
-    // Armar link Google Calendar
-    const pad2  = n => String(n).padStart(2, '0');
-    const [h, min] = turno.hora.split(':').map(Number);
-    const dur   = SERVICIOS[turno.servicio]?.duracion || 30;
-    const endMin = h * 60 + min + dur;
-    const dtStr = `${y}${pad2(m)}${pad2(d)}`;
-    const start = `${dtStr}T${pad2(h)}${pad2(min)}00`;
-    const end   = `${dtStr}T${pad2(Math.floor(endMin / 60))}${pad2(endMin % 60)}00`;
-    const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE`
-      + `&text=${encodeURIComponent('Turno Gebyanos — ' + turno.servicio)}`
-      + `&dates=${start}/${end}`
-      + `&details=${encodeURIComponent('Barbero: ' + turno.barbero + '\nGebyanos — 1 de Mayo 1687, Rosario')}`;
-
-    document.getElementById('btn-gcal').href = gcalUrl;
+    document.getElementById('btn-gcal').href = buildGcalUrl(turno);
 
     // Scroll suave a la confirmación
     confirmDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -695,6 +661,7 @@ async function initCalendarPicker() {
     document.getElementById('reserva-form').style.display = '';
     document.getElementById('reserva-confirmacion').style.display = 'none';
     document.getElementById('reserva-nombre').value = '';
+    document.getElementById('reserva-telefono').value = '';
     document.getElementById('servicio-value').value = '';
     btn.disabled    = true;
     btn.textContent = 'Confirmar turno';
@@ -716,14 +683,16 @@ function initMiTurno() {
 
   const editCache = {};
 
-  // Auto-buscar si hay cookie con nombre guardado
-  const cookieMatch = document.cookie.match(/gb_nombre=([^;]+)/);
-  if (cookieMatch) {
-    const nombre = decodeURIComponent(cookieMatch[1]);
-    if (nombre.length >= 3) {
-      input.value = nombre;
-      buscarTurno(nombre);
-    }
+  // Auto-buscar: priorizar cookie de teléfono, fallback a nombre
+  const cookieTel    = document.cookie.match(/gb_tel=([^;]+)/);
+  const cookieNombre = document.cookie.match(/gb_nombre=([^;]+)/);
+  if (cookieTel) {
+    const tel = decodeURIComponent(cookieTel[1]);
+    input.value = tel;
+    buscarTurno(tel);
+  } else if (cookieNombre) {
+    const nombre = decodeURIComponent(cookieNombre[1]);
+    if (nombre.length >= 3) { input.value = nombre; buscarTurno(nombre); }
   }
 
   btn.addEventListener('click', () => {
@@ -735,11 +704,19 @@ function initMiTurno() {
     if (e.key === 'Enter') btn.click();
   });
 
-  async function buscarTurno(nombre) {
+  function esTelefono(query) {
+    return /^\d{8,}$/.test(query.replace(/[\s\-().+]/g, ''));
+  }
+
+  async function buscarTurno(query) {
     result.innerHTML = '<div class="mi-turno-loading">Buscando...</div>';
     btn.disabled = true;
+    const esTel = esTelefono(query);
+    const param = esTel
+      ? `telefono=${encodeURIComponent(query.replace(/[\s\-().+]/g, ''))}`
+      : `nombre=${encodeURIComponent(query)}`;
     try {
-      const res  = await fetch(`/api/mi-turno?nombre=${encodeURIComponent(nombre)}`);
+      const res  = await fetch(`/api/mi-turno?${param}`);
       const data = await res.json();
       if (!data.turno) {
         result.innerHTML = '<div class="mi-turno-none">Sin turnos próximos para ese nombre.</div>';
@@ -808,7 +785,8 @@ function initMiTurno() {
     const extra = document.getElementById('mi-turno-extra');
     extra.innerHTML = '<div class="mi-turno-loading">Cargando disponibilidad...</div>';
 
-    const barberoConfig = BARBEROS.find(b => b.nombre === t.barbero) || BARBEROS[0];
+    const barberoConfig = BARBEROS.find(b => b.nombre === t.barbero)
+      || { id: t.barbero.toLowerCase().replace(/\s+/g, ''), schedule: DEFAULT_SCHEDULE };
     let schedule = barberoConfig.schedule || DEFAULT_SCHEDULE;
     let feriados = new Set();
 
@@ -923,26 +901,7 @@ function initMiTurno() {
   }
 
   async function fetchEditBusy(day, barbero) {
-    const d1Busy = await fetchD1BusySlots(barbero.nombre, day);
-    if (!barbero.calendarId) return d1Busy;
-    const key = `${barbero.calendarId}_${day.getDate()}/${day.getMonth()+1}/${day.getFullYear()}`;
-    if (editCache[key]) return [...editCache[key], ...d1Busy];
-    const timeMin = new Date(day); timeMin.setHours(0,0,0,0);
-    const timeMax = new Date(day); timeMax.setHours(23,59,59,999);
-    const calId = encodeURIComponent(barbero.calendarId);
-    const url = `https://www.googleapis.com/calendar/v3/calendars/${calId}/events?` +
-      `key=${GOOGLE_CALENDAR_CONFIG.apiKey}` +
-      `&timeMin=${timeMin.toISOString()}&timeMax=${timeMax.toISOString()}` +
-      `&singleEvents=true&orderBy=startTime`;
-    try {
-      const res  = await fetch(url);
-      const data = await res.json();
-      const gcalBusy = (data.items || [])
-        .filter(e => e.status !== 'cancelled' && e.start?.dateTime)
-        .map(e => ({ start: e.start.dateTime, end: e.end.dateTime }));
-      editCache[key] = gcalBusy;
-      return [...gcalBusy, ...d1Busy];
-    } catch { return d1Busy; }
+    return fetchD1BusySlots(barbero.nombre, day);
   }
 
   async function submitEdit(t, newFecha, newHora) {
@@ -956,10 +915,31 @@ function initMiTurno() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error al modificar. Intentá de nuevo.');
-      // Re-buscar para mostrar el turno actualizado
-      buscarTurno(t.nombre);
+      showEditConfirmacion(t, newFecha, newHora);
     } catch (e) {
       if (footerEl) footerEl.innerHTML = `<div class="mi-turno-none">${e.message || 'Error al modificar. Intentá de nuevo.'}</div>`;
     }
+  }
+
+  function showEditConfirmacion(t, newFecha, newHora) {
+    const extra = document.getElementById('mi-turno-extra');
+    if (!extra) return;
+    const gcalUrl = buildGcalUrl({ servicio: t.servicio, barbero: t.barbero, fecha: newFecha, hora: newHora });
+    extra.innerHTML = `
+      <div class="mi-turno-edit-panel-inner" style="text-align:center;padding:1.5rem 1.25rem;">
+        <div style="color:var(--gold);font-size:1.4rem;margin-bottom:0.5rem;">✓</div>
+        <div style="font-family:var(--font-serif);font-size:1rem;color:var(--text);margin-bottom:1.25rem;">
+          Turno actualizado al <strong>${newFecha}</strong> a las <strong>${newHora}</strong>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.75rem;align-items:center;">
+          <a href="${gcalUrl}" target="_blank" rel="noopener" class="btn-confirm-cal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Agregar al calendario
+          </a>
+          <button class="btn-confirm-new" id="mt-edit-ver-turno">Ver mi turno</button>
+        </div>
+      </div>`;
+    document.getElementById('mt-edit-ver-turno').addEventListener('click', () => buscarTurno(t.nombre));
+    extra.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 }

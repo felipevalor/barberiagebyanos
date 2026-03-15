@@ -213,10 +213,11 @@
       <img src="/img/Valor Solutions-blanca.png" alt="Valor Solutions" class="nav-vs">
     </div>
     <div class="nav-tabs">
-      <a href="/admin/dashboard"    class="nav-tab active">Reservas</a>
-      <a href="/admin/agenda"       class="nav-tab">Agenda</a>
-      <a href="/admin/horarios"     class="nav-tab">Horarios</a>
-      <a href="/admin/recurrentes"  class="nav-tab">Fijos</a>
+      <a href="/admin/dashboard"     class="nav-tab active">Reservas</a>
+      <a href="/admin/agenda"        class="nav-tab">Agenda</a>
+      <a href="/admin/horarios"      class="nav-tab">Horarios</a>
+      <a href="/admin/recurrentes"   class="nav-tab">Fijos</a>
+      <a href="/admin/configuracion" class="nav-tab nav-tab-owner" style="display:none">Config</a>
     </div>
     <div class="nav-right">
       <span class="nav-user" id="nav-user"></span>
@@ -258,7 +259,10 @@
       const { barbero_id, role: r } = await res.json();
       role = r;
       document.getElementById('nav-user').textContent = cap(barbero_id);
-      if (role === 'owner') document.getElementById('filter-row').style.display = 'flex';
+      if (role === 'owner') {
+        document.getElementById('filter-row').style.display = 'flex';
+        document.querySelector('.nav-tab-owner')?.style.removeProperty('display');
+      }
       await load();
     }
 

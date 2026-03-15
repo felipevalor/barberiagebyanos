@@ -10,9 +10,9 @@ const CORS = {
 export async function onRequestPost({ request, env }) {
   try {
     const body = await request.json();
-    const { nombre, servicio, barberoId, barbero: barberoNombre, fecha, hora, calendarId, duracion } = body;
+    const { nombre, telefono, servicio, barberoId, barbero: barberoNombre, fecha, hora, calendarId, duracion } = body;
 
-    if (!nombre?.trim() || !servicio || !fecha || !hora) {
+    if (!nombre?.trim() || !telefono?.trim() || !servicio || !fecha || !hora) {
       return res({ success: false, error: 'Faltan campos obligatorios' }, 400);
     }
 
@@ -62,9 +62,10 @@ export async function onRequestPost({ request, env }) {
     // ── Guardar en D1 ─────────────────────────────────────────────────────────
     await env.barberia_db.prepare(
       `INSERT INTO reservas (nombre, telefono, servicio, barbero, fecha, mensaje, calendar_event_id, created_at)
-       VALUES (?, '', ?, ?, ?, ?, ?, ?)`
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       nombre.trim(),
+      telefono.trim(),
       servicio,
       nombreBarbero,
       fecha,

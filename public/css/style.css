@@ -109,7 +109,8 @@ body.mousedown .cursor-ring {
   width: 100%;
   z-index: 100;
   padding: 1.5rem 0;
-  transition: var(--transition);
+  transition: background 0.4s cubic-bezier(0.23, 1, 0.32, 1),
+              padding 0.4s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 #navbar.scrolled {
@@ -785,6 +786,42 @@ footer {
   transform: translateY(0);
 }
 
+/* Hamburger */
+.nav-hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  position: relative;
+  z-index: 200;
+}
+
+.nav-hamburger span {
+  display: block;
+  width: 24px;
+  height: 1.5px;
+  background: var(--text);
+  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.3s;
+}
+
+body.nav-open .nav-hamburger span:nth-child(1) {
+  transform: translateY(6.5px) rotate(45deg);
+}
+body.nav-open .nav-hamburger span:nth-child(2) {
+  opacity: 0;
+}
+body.nav-open .nav-hamburger span:nth-child(3) {
+  transform: translateY(-6.5px) rotate(-45deg);
+}
+
+.hero-content h1 {
+  font-size: clamp(2.5rem, 8vw, 5rem);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   html {
@@ -795,12 +832,48 @@ footer {
     display: none;
   }
 
-  .hero-content h1 {
-    font-size: 3rem;
+  .nav-hamburger {
+    display: flex;
+  }
+
+  .nav-logo-img {
+    width: 48px;
+    height: 48px;
   }
 
   .nav-links {
     display: none;
+  }
+
+  /* Cuando el menú está abierto: quitar backdrop-filter del navbar
+     para eliminar el stacking context que atrapa al overlay.
+     transition: none evita animar backdrop-filter (muy costoso en GPU) */
+  body.nav-open #navbar {
+    backdrop-filter: none;
+    background: transparent;
+    transition: none;
+  }
+
+  body.nav-open .nav-links {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    background: rgba(12, 11, 9, 0.98);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2.5rem;
+    z-index: 150;
+  }
+
+  body.nav-open .nav-links a {
+    font-size: 1.5rem;
+    letter-spacing: 0.1em;
+  }
+
+  body.nav-open .nav-links .btn-nav {
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
   }
 
   .servicios-grid {
@@ -814,6 +887,10 @@ footer {
   .galeria-grid {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto;
+  }
+
+  .galeria-item {
+    min-height: 180px;
   }
 
   .galeria-item:nth-child(1) {
@@ -847,6 +924,19 @@ footer {
 @media (max-width: 480px) {
   .servicios-grid {
     grid-template-columns: 1fr;
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .footer-vs-logo {
+    height: 60px;
+  }
+
+  .footer-barbero-link {
+    white-space: normal;
+    font-size: 1rem;
   }
 }
 

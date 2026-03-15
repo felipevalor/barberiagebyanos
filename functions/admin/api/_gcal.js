@@ -83,18 +83,28 @@ export async function checkFeriado(fecha, barbero_id, env) {
 }
 
 // Envía notificación WA al barbero via CallMeBot (best-effort, nunca bloquea)
-export async function sendWhatsAppNotification(barberoId, turno, env) {
+// tipo: 'nuevo' | 'modificado' | 'cancelado'
+export async function sendWhatsAppNotification(barberoId, turno, env, tipo = 'nuevo') {
   try {
     const keys   = JSON.parse(env.CALLMEBOT_KEYS || '{}');
     const apiKey = keys[barberoId];
     if (!apiKey) return;
 
-    const cfg = BARBEROS_CONFIG[barberoId];
-    if (!cfg?.tel) return;
+    // Intentar leer tel desde D1; fallback al hardcodeado
+    let tel = BARBEROS_CONFIG[barberoId]?.tel || null;
+    try {
+      const row = await env.barberia_db.prepare(
+        'SELECT tel FROM barberos_config WHERE id = ?'
+      ).bind(barberoId).first();
+      if (row?.tel) tel = row.tel;
+    } catch {}
+    if (!tel) return;
 
     const { nombre, servicio, fecha, hora } = turno;
-    const texto = `🔔 Nuevo turno\n👤 ${nombre}\n✂️ ${servicio}\n📅 ${fecha} a las ${hora}`;
-    const url   = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(cfg.tel)}&text=${encodeURIComponent(texto)}&apikey=${apiKey}`;
+    const prefijos = { nuevo: '🔔 Nuevo turno', modificado: '✏️ Turno modificado', cancelado: '❌ Turno cancelado' };
+    const prefijo  = prefijos[tipo] ?? prefijos.nuevo;
+    const texto    = `${prefijo}\n👤 ${nombre}\n✂️ ${servicio}\n📅 ${fecha} a las ${hora}`;
+    const url      = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(tel)}&text=${encodeURIComponent(texto)}&apikey=${apiKey}`;
 
     await fetch(url).catch(() => {});
   } catch { /* nunca bloquea la reserva */ }

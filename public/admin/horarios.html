@@ -312,10 +312,11 @@
       <img src="/img/Valor Solutions-blanca.png" alt="Valor Solutions" class="nav-vs">
     </div>
     <div class="nav-tabs">
-      <a href="/admin/dashboard"   class="nav-tab">Reservas</a>
-      <a href="/admin/agenda"      class="nav-tab">Agenda</a>
-      <a href="/admin/horarios"    class="nav-tab active">Horarios</a>
-      <a href="/admin/recurrentes" class="nav-tab">Fijos</a>
+      <a href="/admin/dashboard"     class="nav-tab">Reservas</a>
+      <a href="/admin/agenda"        class="nav-tab">Agenda</a>
+      <a href="/admin/horarios"      class="nav-tab active">Horarios</a>
+      <a href="/admin/recurrentes"   class="nav-tab">Fijos</a>
+      <a href="/admin/configuracion" class="nav-tab nav-tab-owner" style="display:none">Config</a>
     </div>
     <div class="nav-right">
       <span class="nav-user" id="nav-user"></span>
@@ -393,6 +394,7 @@
         document.getElementById('barbero-row').style.display = 'flex';
         document.getElementById('barbero-select').addEventListener('change', load);
         document.getElementById('servicios-card').style.display = 'block';
+        document.querySelector('.nav-tab-owner')?.style.removeProperty('display');
       } else {
         // barbero: también puede editar sus propias duraciones
         document.getElementById('servicios-card').style.display = 'block';

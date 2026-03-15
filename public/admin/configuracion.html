@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gebyanos — Configuración</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:      #0c0b09;
+      --surface: #141210;
+      --border:  #2a2620;
+      --gold:    #c9a84c;
+      --text:    #e8dcc8;
+      --muted:   #6b6055;
+      --green:   #6dbf7e;
+      --red:     #e57373;
+      --font-serif: 'Playfair Display', serif;
+      --font-mono:  'DM Mono', monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-mono); min-height: 100vh; }
+
+    /* ── NAV ── */
+    .nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.5rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: sticky; top: 0; z-index: 10;
+      min-height: 64px;
+    }
+    .nav-brand { display: flex; align-items: center; gap: 0.75rem; }
+    .nav-logo  { width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; }
+    .nav-title { font-family: var(--font-serif); font-size: 1rem; white-space: nowrap; }
+    .nav-x     { color: var(--muted); font-size: 0.9rem; flex-shrink: 0; }
+    .nav-vs    { height: 96px; opacity: 0.9; flex-shrink: 0; }
+    .nav-tabs  { display: flex; gap: 0.25rem; }
+    .nav-tab {
+      color: var(--muted); text-decoration: none;
+      font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 0.5rem 1rem; border-radius: 4px;
+      transition: color 200ms, background 200ms;
+    }
+    .nav-tab:hover  { color: var(--text); background: var(--border); }
+    .nav-tab.active { color: var(--gold); background: rgba(201,168,76,0.08); }
+    .nav-right { display: flex; align-items: center; gap: 0.75rem; }
+    .nav-user  { font-size: 0.8rem; color: var(--gold); letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+    .nav-logout {
+      background: none; border: 1px solid var(--border); border-radius: 4px;
+      color: var(--muted); font-family: var(--font-mono); font-size: 0.7rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.45rem 0.75rem; cursor: pointer; transition: color 200ms, border-color 200ms;
+      white-space: nowrap;
+    }
+    .nav-logout:hover { color: var(--text); border-color: var(--muted); }
+
+    /* ── MAIN ── */
+    .main { max-width: 680px; margin: 0 auto; padding: 2rem 1rem 5rem; }
+
+    .page-header { margin-bottom: 2rem; }
+    .page-title  { font-family: var(--font-serif); font-size: 1.75rem; font-weight: 600; margin-bottom: 0.375rem; }
+    .page-sub    { font-size: 0.85rem; color: var(--muted); }
+
+    /* ── BARBERO LIST ── */
+    .section-title {
+      font-family: var(--font-serif); font-size: 1.1rem; font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .barbero-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .barbero-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden;
+      transition: border-color 200ms;
+    }
+    .barbero-card.editing { border-color: var(--gold); }
+
+    .barbero-summary {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.25rem; gap: 1rem; cursor: pointer;
+    }
+    .barbero-summary:hover .barbero-nombre { color: var(--gold); }
+
+    .barbero-left { display: flex; align-items: center; gap: 0.875rem; }
+    .barbero-nombre { font-size: 0.95rem; font-weight: 500; transition: color 150ms; }
+    .barbero-id {
+      font-size: 0.72rem; color: var(--muted);
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 4px; padding: 0.15rem 0.5rem; letter-spacing: 0.06em;
+    }
+
+    .barbero-badges { display: flex; align-items: center; gap: 0.5rem; }
+    .badge {
+      font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.2rem 0.6rem; border-radius: 4px;
+    }
+    .badge-active   { color: var(--green); background: rgba(109,191,126,0.12); border: 1px solid rgba(109,191,126,0.2); }
+    .badge-inactive { color: var(--muted); background: var(--bg); border: 1px solid var(--border); }
+
+    .btn-chevron {
+      background: none; border: none; color: var(--muted); cursor: pointer;
+      padding: 0.25rem; transition: color 150ms, transform 200ms;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .btn-chevron svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .barbero-card.editing .btn-chevron { color: var(--gold); transform: rotate(180deg); }
+
+    /* ── EDIT FORM ── */
+    .barbero-edit {
+      display: none; padding: 0 1.25rem 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+    .barbero-card.editing .barbero-edit { display: block; }
+
+    .edit-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 1rem; margin-top: 1.25rem;
+    }
+    .edit-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .edit-group.full { grid-column: 1 / -1; }
+    .edit-label { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+    .edit-input {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-family: var(--font-mono); font-size: 0.875rem;
+      padding: 0.6rem 0.875rem; outline: none; transition: border-color 200ms;
+    }
+    .edit-input:focus { border-color: var(--gold); }
+    .edit-input:disabled { color: var(--muted); cursor: default; }
+    .edit-hint { font-size: 0.7rem; color: var(--muted); margin-top: 0.25rem; }
+
+    .toggle-row { display: flex; align-items: center; gap: 0.75rem; margin-top: 1rem; }
+    .toggle-row-label { font-size: 0.8rem; color: var(--muted); }
+    .toggle {
+      position: relative; width: 44px; height: 24px; flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-track {
+      position: absolute; inset: 0; border-radius: 12px;
+      background: var(--border); cursor: pointer; transition: background 200ms;
+    }
+    .toggle input:checked + .toggle-track { background: var(--green); }
+    .toggle-track::after {
+      content: ''; position: absolute;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: white; top: 3px; left: 3px;
+      transition: transform 200ms;
+    }
+    .toggle input:checked + .toggle-track::after { transform: translateX(20px); }
+
+    .edit-actions {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin-top: 1.25rem; flex-wrap: wrap;
+    }
+    .btn-save {
+      background: var(--gold); border: none; border-radius: 8px;
+      color: var(--bg); font-family: var(--font-mono); font-size: 0.78rem;
+      font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.65rem 1.75rem; cursor: pointer; transition: opacity 200ms;
+      min-height: 44px;
+    }
+    .btn-save:hover    { opacity: 0.85; }
+    .btn-save:disabled { opacity: 0.4; cursor: default; }
+
+    .btn-delete {
+      background: none; border: 1px solid var(--border); border-radius: 8px;
+      color: var(--red); font-family: var(--font-mono); font-size: 0.78rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.65rem 1.25rem; cursor: pointer; transition: border-color 200ms, opacity 200ms;
+      min-height: 44px;
+    }
+    .btn-delete:hover { border-color: var(--red); }
+
+    .feedback {
+      font-size: 0.78rem; padding: 0.4rem 0.875rem; border-radius: 6px; display: none;
+    }
+    .feedback.ok  { display: inline-block; color: var(--green); background: rgba(109,191,126,0.1); border: 1px solid rgba(109,191,126,0.2); }
+    .feedback.err { display: inline-block; color: var(--red);   background: rgba(229,115,115,0.1); border: 1px solid rgba(229,115,115,0.2); }
+
+    /* ── ADD NEW ── */
+    .add-section { margin-top: 2rem; }
+
+    .btn-add {
+      display: flex; align-items: center; gap: 0.5rem;
+      background: none; border: 1px dashed var(--border); border-radius: 12px;
+      color: var(--muted); font-family: var(--font-mono); font-size: 0.85rem;
+      padding: 0.875rem 1.25rem; cursor: pointer; width: 100%;
+      transition: border-color 200ms, color 200ms;
+    }
+    .btn-add:hover { border-color: var(--gold); color: var(--gold); }
+    .btn-add svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+    .add-form {
+      display: none; background: var(--surface); border: 1px solid var(--gold);
+      border-radius: 12px; padding: 1.5rem; margin-top: 1rem;
+    }
+    .add-form.open { display: block; }
+    .add-form-title { font-family: var(--font-serif); font-size: 1rem; margin-bottom: 1.25rem; }
+
+    /* ── LOADING ── */
+    .loading { text-align: center; color: var(--muted); padding: 3rem 0; font-size: 0.875rem; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 540px) {
+      .nav-tabs  { display: none; }
+      .nav-title { display: none; }
+      .nav-vs    { height: 64px; }
+      .nav-logo  { width: 36px; height: 36px; }
+      .nav { padding: 0.5rem 1rem; }
+      .edit-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-brand">
+      <img src="/img/logo.jpg" alt="Gebyanos" class="nav-logo">
+      <span class="nav-title">Gebyanos</span>
+      <span class="nav-x">×</span>
+      <img src="/img/Valor Solutions-blanca.png" alt="Valor Solutions" class="nav-vs">
+    </div>
+    <div class="nav-tabs">
+      <a href="/admin/dashboard"       class="nav-tab">Reservas</a>
+      <a href="/admin/agenda"          class="nav-tab">Agenda</a>
+      <a href="/admin/horarios"        class="nav-tab">Horarios</a>
+      <a href="/admin/recurrentes"     class="nav-tab">Fijos</a>
+      <a href="/admin/configuracion"   class="nav-tab active">Config</a>
+    </div>
+    <div class="nav-right">
+      <span class="nav-user" id="nav-user"></span>
+      <button class="nav-logout" id="logout-btn">Salir</button>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <div class="page-header">
+      <h1 class="page-title">Configuración</h1>
+      <p class="page-sub">Administrá los barberos del sistema. Solo visible para Valor Solutions.</p>
+    </div>
+
+    <div class="section-title">Barberos</div>
+    <div id="barbero-list" class="barbero-list">
+      <div class="loading">Cargando...</div>
+    </div>
+
+    <!-- ── AGREGAR NUEVO ── -->
+    <div class="add-section">
+      <button class="btn-add" id="btn-add-new">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Agregar barbero
+      </button>
+      <div class="add-form" id="add-form">
+        <div class="add-form-title">Nuevo barbero</div>
+        <div class="edit-grid">
+          <div class="edit-group">
+            <label class="edit-label">ID único</label>
+            <input class="edit-input" id="new-id" placeholder="ej: marcos" autocomplete="off">
+            <div class="edit-hint">Minúsculas, sin espacios. No se puede cambiar después.</div>
+          </div>
+          <div class="edit-group">
+            <label class="edit-label">Nombre</label>
+            <input class="edit-input" id="new-nombre" placeholder="ej: Marcos">
+          </div>
+          <div class="edit-group">
+            <label class="edit-label">Teléfono WA</label>
+            <input class="edit-input" id="new-tel" placeholder="+5493415551234">
+          </div>
+          <div class="edit-group">
+            <label class="edit-label">Calendar ID</label>
+            <input class="edit-input" id="new-cal" placeholder="mail@gmail.com">
+            <div class="edit-hint">Email del calendario de Google que compartió el barbero.</div>
+          </div>
+          <div class="edit-group">
+            <label class="edit-label">Orden</label>
+            <input class="edit-input" id="new-orden" type="number" value="0" min="0">
+          </div>
+          <div class="edit-group" style="align-self:end">
+            <div class="toggle-row">
+              <label class="toggle">
+                <input type="checkbox" id="new-activo" checked>
+                <span class="toggle-track"></span>
+              </label>
+              <span class="toggle-row-label">Activo</span>
+            </div>
+          </div>
+        </div>
+        <div class="edit-actions">
+          <button class="btn-save" id="btn-save-new">Guardar</button>
+          <button class="btn-delete" id="btn-cancel-new" style="color:var(--muted)">Cancelar</button>
+          <span class="feedback" id="new-feedback"></span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    const API = '/admin/api/config/barberos';
+
+    // ── Auth ──────────────────────────────────────────────────────────────────
+    async function checkAuth() {
+      const res = await fetch('/admin/api/me');
+      if (!res.ok) { location.href = '/admin/'; return null; }
+      const data = await res.json();
+      if (data.role !== 'owner') { location.href = '/admin/dashboard'; return null; }
+      document.getElementById('nav-user').textContent = data.barbero_id;
+      return data;
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await fetch('/admin/api/auth', { method: 'DELETE' });
+      location.href = '/admin/';
+    });
+
+    // ── Load & Render ─────────────────────────────────────────────────────────
+    async function loadBarberos() {
+      const res = await fetch(API);
+      if (!res.ok) return;
+      const { barberos } = await res.json();
+      renderList(barberos);
+    }
+
+    function renderList(barberos) {
+      const list = document.getElementById('barbero-list');
+      if (!barberos.length) {
+        list.innerHTML = '<div class="loading">Sin barberos configurados.</div>';
+        return;
+      }
+      list.innerHTML = '';
+      barberos.forEach(b => list.appendChild(buildCard(b)));
+    }
+
+    function buildCard(b) {
+      const card = document.createElement('div');
+      card.className = 'barbero-card';
+      card.dataset.id = b.id;
+
+      card.innerHTML = `
+        <div class="barbero-summary">
+          <div class="barbero-left">
+            <span class="barbero-nombre">${b.nombre}</span>
+            <span class="barbero-id">${b.id}</span>
+          </div>
+          <div class="barbero-badges">
+            <span class="badge ${b.activo ? 'badge-active' : 'badge-inactive'}">${b.activo ? 'Activo' : 'Inactivo'}</span>
+            <button class="btn-chevron" aria-label="Editar">
+              <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="barbero-edit">
+          <div class="edit-grid">
+            <div class="edit-group">
+              <label class="edit-label">ID</label>
+              <input class="edit-input" value="${b.id}" disabled>
+            </div>
+            <div class="edit-group">
+              <label class="edit-label">Nombre</label>
+              <input class="edit-input edit-nombre" value="${b.nombre || ''}">
+            </div>
+            <div class="edit-group">
+              <label class="edit-label">Teléfono WA</label>
+              <input class="edit-input edit-tel" value="${b.tel || ''}" placeholder="+5493415551234">
+            </div>
+            <div class="edit-group">
+              <label class="edit-label">Calendar ID</label>
+              <input class="edit-input edit-cal" value="${b.calendar_id || ''}" placeholder="mail@gmail.com">
+              <div class="edit-hint">Email del calendario de Google del barbero.</div>
+            </div>
+            <div class="edit-group">
+              <label class="edit-label">Orden</label>
+              <input class="edit-input edit-orden" type="number" value="${b.orden ?? 0}" min="0">
+            </div>
+            <div class="edit-group" style="align-self:end">
+              <div class="toggle-row">
+                <label class="toggle">
+                  <input type="checkbox" class="edit-activo" ${b.activo ? 'checked' : ''}>
+                  <span class="toggle-track"></span>
+                </label>
+                <span class="toggle-row-label">Activo</span>
+              </div>
+            </div>
+          </div>
+          <div class="edit-actions">
+            <button class="btn-save btn-save-edit">Guardar</button>
+            <button class="btn-delete btn-delete-barbero">Eliminar</button>
+            <span class="feedback edit-feedback"></span>
+          </div>
+        </div>`;
+
+      card.querySelector('.barbero-summary').addEventListener('click', () => {
+        card.classList.toggle('editing');
+      });
+
+      card.querySelector('.btn-save-edit').addEventListener('click', () => saveEdit(card, b.id));
+      card.querySelector('.btn-delete-barbero').addEventListener('click', () => deleteBarbero(card, b.id, b.nombre));
+
+      return card;
+    }
+
+    async function saveEdit(card, id) {
+      const btn      = card.querySelector('.btn-save-edit');
+      const feedback = card.querySelector('.edit-feedback');
+      const nombre   = card.querySelector('.edit-nombre').value.trim();
+      const tel      = card.querySelector('.edit-tel').value.trim();
+      const cal      = card.querySelector('.edit-cal').value.trim();
+      const activo   = card.querySelector('.edit-activo').checked;
+      const orden    = parseInt(card.querySelector('.edit-orden').value) || 0;
+
+      if (!nombre) { showFeedback(feedback, 'El nombre no puede estar vacío.', true); return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Guardando...';
+
+      try {
+        const res = await fetch(API, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, nombre, tel: tel || null, calendar_id: cal || null, activo, orden }),
+        });
+        const data = await res.json();
+        if (!res.ok) { showFeedback(feedback, data.error || 'Error al guardar.', true); return; }
+
+        showFeedback(feedback, 'Guardado', false);
+        // Actualizar badge
+        const badge = card.querySelector('.badge');
+        badge.className = 'badge ' + (activo ? 'badge-active' : 'badge-inactive');
+        badge.textContent = activo ? 'Activo' : 'Inactivo';
+        card.querySelector('.barbero-nombre').textContent = nombre;
+      } catch {
+        showFeedback(feedback, 'Error de red.', true);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+      }
+    }
+
+    async function deleteBarbero(card, id, nombre) {
+      if (!confirm(`¿Eliminar a "${nombre}"? Esta acción no se puede deshacer.`)) return;
+
+      const btn = card.querySelector('.btn-delete-barbero');
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(`${API}?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error();
+        card.style.opacity = '0';
+        card.style.transition = 'opacity 250ms';
+        setTimeout(() => card.remove(), 260);
+      } catch {
+        const feedback = card.querySelector('.edit-feedback');
+        showFeedback(feedback, 'Error al eliminar.', true);
+        btn.disabled = false;
+      }
+    }
+
+    // ── Add new ───────────────────────────────────────────────────────────────
+    document.getElementById('btn-add-new').addEventListener('click', () => {
+      document.getElementById('add-form').classList.add('open');
+      document.getElementById('btn-add-new').style.display = 'none';
+      document.getElementById('new-id').focus();
+    });
+
+    document.getElementById('btn-cancel-new').addEventListener('click', () => {
+      document.getElementById('add-form').classList.remove('open');
+      document.getElementById('btn-add-new').style.display = '';
+      clearAddForm();
+    });
+
+    document.getElementById('btn-save-new').addEventListener('click', async () => {
+      const btn      = document.getElementById('btn-save-new');
+      const feedback = document.getElementById('new-feedback');
+      const id       = document.getElementById('new-id').value.trim().toLowerCase().replace(/\s+/g, '-');
+      const nombre   = document.getElementById('new-nombre').value.trim();
+      const tel      = document.getElementById('new-tel').value.trim();
+      const cal      = document.getElementById('new-cal').value.trim();
+      const activo   = document.getElementById('new-activo').checked;
+      const orden    = parseInt(document.getElementById('new-orden').value) || 0;
+
+      if (!id)     { showFeedback(feedback, 'El ID es obligatorio.', true);     return; }
+      if (!nombre) { showFeedback(feedback, 'El nombre es obligatorio.', true); return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Guardando...';
+
+      try {
+        const res = await fetch(API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, nombre, tel: tel || null, calendar_id: cal || null, activo, orden }),
+        });
+        const data = await res.json();
+        if (!res.ok) { showFeedback(feedback, data.error || 'Error al guardar.', true); return; }
+
+        showFeedback(feedback, 'Barbero agregado', false);
+        clearAddForm();
+        document.getElementById('add-form').classList.remove('open');
+        document.getElementById('btn-add-new').style.display = '';
+        await loadBarberos();
+      } catch {
+        showFeedback(feedback, 'Error de red.', true);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+      }
+    });
+
+    function clearAddForm() {
+      ['new-id','new-nombre','new-tel','new-cal'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('new-orden').value = '0';
+      document.getElementById('new-activo').checked = true;
+      const f = document.getElementById('new-feedback');
+      f.className = 'feedback';
+      f.textContent = '';
+    }
+
+    function showFeedback(el, msg, isError) {
+      el.textContent = msg;
+      el.className = 'feedback ' + (isError ? 'err' : 'ok');
+      clearTimeout(el._t);
+      el._t = setTimeout(() => { el.className = 'feedback'; el.textContent = ''; }, 3500);
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    (async () => {
+      const me = await checkAuth();
+      if (!me) return;
+      await loadBarberos();
+    })();
+  </script>
+
+</body>
+</html>
