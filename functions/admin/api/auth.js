@@ -27,8 +27,12 @@ export async function onRequestPost({ request, env }) {
     });
   }
 
-  const OWNERS = ['gebyano', 'felipe'];
-  const role  = OWNERS.includes(barbero_id) ? 'owner' : 'barbero';
+  // Rol dinámico desde D1 — permite vender el producto a cualquier barbería
+  // sin tocar código. Fallback a 'barbero' si el id no está en barberos_config.
+  const barberoRow = await env.barberia_db.prepare(
+    'SELECT rol FROM barberos_config WHERE id = ?'
+  ).bind(barbero_id).first();
+  const role = barberoRow?.rol || 'barbero';
   const token = crypto.randomUUID();
   const expiresAt = new Date(Date.now() + MAX_AGE * 1000).toISOString();
 

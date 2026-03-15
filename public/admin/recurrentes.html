@@ -257,6 +257,16 @@
       .main { padding: 1.25rem 0.875rem 5.5rem; }
       .field-row { grid-template-columns: 1fr; }
     }
+    .admin-footer {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.875rem 1.5rem; margin-top: 2rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.8rem; color: var(--muted);
+    }
+    .admin-footer-credit { display: flex; align-items: center; gap: 0.5rem; }
+    .admin-footer-credit a { display: inline-flex; align-items: center; opacity: 0.7; transition: opacity 200ms; }
+    .admin-footer-credit a:hover { opacity: 1; }
+    .admin-footer-credit img { height: 96px; width: auto; }
   </style>
 </head>
 <body>
@@ -278,14 +288,16 @@
       <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
       Fijos
     </a>
+    <a href="/admin/configuracion" class="bottom-nav-owner" style="display:none">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Config
+    </a>
   </nav>
 
   <nav class="nav">
     <div class="nav-brand">
       <img src="/img/logo.jpg" alt="Gebyanos" class="nav-logo">
       <span class="nav-title">Gebyanos</span>
-      <span class="nav-x">×</span>
-      <img src="/img/Valor Solutions-blanca.png" alt="Valor Solutions" class="nav-vs">
     </div>
     <div class="nav-tabs">
       <a href="/admin/dashboard"     class="nav-tab">Reservas</a>
@@ -411,6 +423,7 @@
         sel.value = sessionBarbero;
         sel.addEventListener('change', load);
         document.querySelector('.nav-tab-owner')?.style.removeProperty('display');
+        document.querySelector('.bottom-nav-owner')?.style.removeProperty('display');
       }
       await load();
     }
@@ -723,5 +736,14 @@
     init();
   </script>
 
+  <footer class="admin-footer">
+    <span>© 2026 Barbería Gebyanos</span>
+    <span class="admin-footer-credit">
+      Diseñado y desarrollado con ♥ por
+      <a href="https://valor-solutions.pages.dev" target="_blank">
+        <img src="/img/Valor Solutions-blanca.png" alt="Valor Solutions">
+      </a>
+    </span>
+  </footer>
 </body>
 </html>
