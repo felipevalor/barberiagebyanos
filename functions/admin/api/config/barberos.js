@@ -50,9 +50,15 @@ export async function onRequestPut({ request, env }) {
   if (!id) return json({ error: 'Falta id' }, 400);
   if (!nombre?.trim()) return json({ error: 'Falta nombre' }, 400);
 
-  await env.barberia_db.prepare(
-    'UPDATE barberos_config SET nombre = ?, tel = ?, calendar_id = ?, activo = ?, orden = ? WHERE id = ?'
-  ).bind(nombre.trim(), tel || null, calendar_id || null, activo ? 1 : 0, orden ?? 0, id).run();
+  try {
+    const result = await env.barberia_db.prepare(
+      'UPDATE barberos_config SET nombre = ?, tel = ?, calendar_id = ?, activo = ?, orden = ? WHERE id = ?'
+    ).bind(nombre.trim(), tel || null, calendar_id || null, activo ? 1 : 0, orden ?? 0, id).run();
+
+    if (!result.meta?.changes) return json({ error: `Barbero "${id}" no encontrado` }, 404);
+  } catch {
+    return json({ error: 'Error interno' }, 500);
+  }
 
   return json({ ok: true });
 }
@@ -63,7 +69,15 @@ export async function onRequestDelete({ request, env }) {
   const id = new URL(request.url).searchParams.get('id');
   if (!id) return json({ error: 'Falta id' }, 400);
 
-  await env.barberia_db.prepare('DELETE FROM barberos_config WHERE id = ?').bind(id).run();
+  try {
+    const result = await env.barberia_db.prepare(
+      'DELETE FROM barberos_config WHERE id = ?'
+    ).bind(id).run();
+
+    if (!result.meta?.changes) return json({ error: `Barbero "${id}" no encontrado` }, 404);
+  } catch {
+    return json({ error: 'Error interno' }, 500);
+  }
 
   return json({ ok: true });
 }
