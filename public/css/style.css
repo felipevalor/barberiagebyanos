@@ -822,6 +822,17 @@ body.nav-open .nav-hamburger span:nth-child(3) {
   font-size: clamp(2.5rem, 8vw, 5rem);
 }
 
+/* Hero — word-by-word reveal */
+.hw {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(32px);
+  animation: hw-in 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes hw-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   html {
