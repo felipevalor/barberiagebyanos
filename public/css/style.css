@@ -257,6 +257,7 @@ body.mousedown .cursor-ring {
 /* Sections */
 section {
   padding: 10rem 0;
+  scroll-margin-top: 90px;
 }
 
 .section-title {
@@ -374,7 +375,7 @@ section {
 
 .promo-nombre {
   font-family: 'Playfair Display', serif;
-  font-size: 1.2rem;
+  font-size: 1.6rem;
   color: var(--text);
   margin-bottom: 0.5rem;
 }
@@ -392,7 +393,7 @@ section {
 }
 
 .promo-nota {
-  font-size: 0.78rem;
+  font-size: 1rem;
   color: var(--muted);
   font-style: italic;
   line-height: 1.5;
@@ -597,6 +598,7 @@ textarea {
 #mi-turno {
   padding: 3rem 0 4rem;
   border-top: 1px solid var(--border);
+  scroll-margin-top: 90px;
 }
 .mi-turno-wrap {
   max-width: 480px; margin: 0 auto; text-align: center;
@@ -700,6 +702,7 @@ footer {
   padding-top: 3rem;
   padding-bottom: 2rem;
   border-top: 1px solid var(--border);
+  scroll-margin-top: 90px;
 }
 
 .footer-grid {

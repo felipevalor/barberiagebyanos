@@ -7,7 +7,7 @@ const CORS = {
   'Content-Type':                 'application/json',
 };
 
-export async function onRequestPost({ request, env }) {
+export async function onRequestPost({ request, env, waitUntil }) {
   try {
     const body = await request.json();
     const { nombre, telefono, servicio, barberoId, barbero: barberoNombre, fecha, hora, calendarId, duracion } = body;
@@ -46,38 +46,41 @@ export async function onRequestPost({ request, env }) {
       }
     }
 
-    // ── Crear evento en Google Calendar (best-effort) ─────────────────────────
-    let calendarEventId = null;
-    const calId = calendarId || cfg?.calendarId;
-    if (calId && env.GOOGLE_SERVICE_ACCOUNT) {
-      try {
-        const sa  = JSON.parse(env.GOOGLE_SERVICE_ACCOUNT);
-        const tk  = await getGoogleAccessToken(sa);
-        calendarEventId = await createCalendarEvent(calId, `Turno — ${nombre.trim()} (${servicio})`, fecha, hora, durMin, tk);
-      } catch (e) {
-        console.error('Calendar error:', e);
-      }
-    }
-
-    // ── Guardar en D1 ─────────────────────────────────────────────────────────
+    // ── Guardar en D1 (sin calendar_event_id por ahora) ──────────────────────
+    const mensaje = `${fecha} ${hora}`;
+    const calId   = calendarId || cfg?.calendarId;
     await env.barberia_db.prepare(
       `INSERT INTO reservas (nombre, telefono, servicio, barbero, fecha, mensaje, calendar_event_id, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+       VALUES (?, ?, ?, ?, ?, ?, NULL, ?)`
     ).bind(
       nombre.trim(),
       telefono.trim(),
       servicio,
       nombreBarbero,
       fecha,
-      `${fecha} ${hora}`,
-      calendarEventId,
+      mensaje,
       new Date().toISOString()
     ).run();
 
-    // ── Notificar al barbero por WA (best-effort) ─────────────────────────────
-    if (bId) {
-      await sendWhatsAppNotification(bId, { nombre: nombre.trim(), servicio, fecha, hora }, env);
-    }
+    // ── Calendar + WA en background (no bloquean la respuesta) ───────────────
+    waitUntil(Promise.all([
+      // Crear evento en Google Calendar y actualizar D1 con el event_id
+      (async () => {
+        if (!calId || !env.GOOGLE_SERVICE_ACCOUNT) return;
+        try {
+          const sa  = JSON.parse(env.GOOGLE_SERVICE_ACCOUNT);
+          const tk  = await getGoogleAccessToken(sa);
+          const eid = await createCalendarEvent(calId, `Turno — ${nombre.trim()} (${servicio})`, fecha, hora, durMin, tk);
+          if (eid) {
+            await env.barberia_db.prepare(
+              'UPDATE reservas SET calendar_event_id = ? WHERE mensaje = ? AND barbero = ?'
+            ).bind(eid, mensaje, nombreBarbero).run();
+          }
+        } catch (e) { console.error('Calendar error:', e); }
+      })(),
+      // Notificar al barbero por WA
+      bId ? sendWhatsAppNotification(bId, { nombre: nombre.trim(), servicio, fecha, hora }, env).catch(() => {}) : Promise.resolve(),
+    ]));
 
     return res({ success: true, turno: { nombre: nombre.trim(), servicio, barbero: nombreBarbero, fecha, hora } });
 

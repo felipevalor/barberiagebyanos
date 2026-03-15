@@ -51,7 +51,7 @@ export async function onRequestGet({ request, env }) {
   return json({ turno: { nombre: r.nombre, servicio: r.servicio, barbero: r.barbero, fecha, hora, mensaje: r.mensaje } });
 }
 
-export async function onRequestDelete({ request, env }) {
+export async function onRequestDelete({ request, env, waitUntil }) {
   const url     = new URL(request.url);
   const nombre  = url.searchParams.get('nombre')?.trim();
   const mensaje = url.searchParams.get('mensaje')?.trim();
@@ -73,23 +73,23 @@ export async function onRequestDelete({ request, env }) {
   const bId   = barberoIdByNombre(turno.barbero);
   const calId = bId ? BARBEROS_CONFIG[bId]?.calendarId : null;
 
-  // Eliminar evento de Google Calendar (best-effort)
-  if (calId && turno.calendar_event_id && env.GOOGLE_SERVICE_ACCOUNT) {
-    try {
-      const sa = JSON.parse(env.GOOGLE_SERVICE_ACCOUNT);
-      const tk = await getGoogleAccessToken(sa);
-      await deleteCalendarEvent(calId, turno.calendar_event_id, tk);
-    } catch {}
-  }
-
-  if (bId) {
-    await sendWhatsAppNotification(bId, { nombre, servicio: turno.servicio, fecha, hora }, env, 'cancelado');
-  }
+  // Calendar delete + WA en background
+  waitUntil(Promise.all([
+    (async () => {
+      if (!calId || !turno.calendar_event_id || !env.GOOGLE_SERVICE_ACCOUNT) return;
+      try {
+        const sa = JSON.parse(env.GOOGLE_SERVICE_ACCOUNT);
+        const tk = await getGoogleAccessToken(sa);
+        await deleteCalendarEvent(calId, turno.calendar_event_id, tk);
+      } catch {}
+    })(),
+    bId ? sendWhatsAppNotification(bId, { nombre, servicio: turno.servicio, fecha, hora }, env, 'cancelado').catch(() => {}) : Promise.resolve(),
+  ]));
 
   return json({ ok: true });
 }
 
-export async function onRequestPut({ request, env }) {
+export async function onRequestPut({ request, env, waitUntil }) {
   let body;
   try { body = await request.json(); }
   catch { return json({ error: 'JSON inválido' }, 400); }
@@ -142,32 +142,37 @@ export async function onRequestPut({ request, env }) {
   const bId   = barberoIdByNombre(existing.barbero);
   const calId = bId ? BARBEROS_CONFIG[bId]?.calendarId : null;
 
-  // Mover evento en Google Calendar: borrar viejo + crear nuevo (best-effort)
-  if (calId && env.GOOGLE_SERVICE_ACCOUNT) {
-    try {
-      const sa = JSON.parse(env.GOOGLE_SERVICE_ACCOUNT);
-      const tk = await getGoogleAccessToken(sa);
-      if (existing.calendar_event_id) {
-        await deleteCalendarEvent(calId, existing.calendar_event_id, tk);
-      }
-      await createCalendarEvent(
-        calId,
-        `Turno — ${nombre} (${existing.servicio})`,
-        new_fecha, new_hora,
-        SERVICIOS_DUR[existing.servicio] || 30,
-        tk
-      );
-    } catch {}
-  }
-
-  if (bId) {
-    await sendWhatsAppNotification(
+  // Calendar move + WA en background
+  waitUntil(Promise.all([
+    (async () => {
+      if (!calId || !env.GOOGLE_SERVICE_ACCOUNT) return;
+      try {
+        const sa = JSON.parse(env.GOOGLE_SERVICE_ACCOUNT);
+        const tk = await getGoogleAccessToken(sa);
+        if (existing.calendar_event_id) {
+          await deleteCalendarEvent(calId, existing.calendar_event_id, tk);
+        }
+        const newEid = await createCalendarEvent(
+          calId,
+          `Turno — ${nombre} (${existing.servicio})`,
+          new_fecha, new_hora,
+          SERVICIOS_DUR[existing.servicio] || 30,
+          tk
+        );
+        if (newEid) {
+          await env.barberia_db.prepare(
+            'UPDATE reservas SET calendar_event_id = ? WHERE LOWER(nombre) = LOWER(?) AND mensaje = ?'
+          ).bind(newEid, nombre, `${new_fecha} ${new_hora}`).run();
+        }
+      } catch {}
+    })(),
+    bId ? sendWhatsAppNotification(
       bId,
       { nombre, servicio: existing.servicio, fecha: new_fecha, hora: new_hora },
       env,
       'modificado'
-    );
-  }
+    ).catch(() => {}) : Promise.resolve(),
+  ]));
 
   return json({ ok: true });
 }
