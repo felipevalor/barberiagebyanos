@@ -226,11 +226,8 @@ function initCustomSelect() {
 /**
  * Google Calendar Config
  */
-const GOOGLE_CALENDAR_CONFIG = {
-  apiKey: 'AIzaSyCt8-oaJu57_A73I7bVtCAupY9xA9rZ6aQ',
-  timezone: 'America/Argentina/Buenos_Aires',
-  slotDuration: 30,
-};
+const SLOT_DURATION = 30; // minutos
+const TIMEZONE = 'America/Argentina/Buenos_Aires';
 
 const DEFAULT_SCHEDULE = {
   1: { start: 9, end: 20 },
@@ -420,7 +417,7 @@ async function initCalendarPicker() {
 
     const dow = day.getDay();
     const { start, end } = selectedBarbero.schedule[dow];
-    const duration = GOOGLE_CALENDAR_CONFIG.slotDuration;
+    const duration = SLOT_DURATION;
 
     const slots = [];
     for (let h = start; h < end; h++) {
@@ -434,7 +431,7 @@ async function initCalendarPicker() {
     grid.className = 'slot-grid';
 
     const now = new Date();
-    const duracionServicio = SERVICIOS[selectedServicio]?.duracion || GOOGLE_CALENDAR_CONFIG.slotDuration;
+    const duracionServicio = SERVICIOS[selectedServicio]?.duracion || SLOT_DURATION;
 
     const scheduleEnd = new Date(day);
     scheduleEnd.setHours(end, 0, 0, 0);
@@ -805,7 +802,7 @@ function initMiTurno() {
     const busySlots = await fetchEditBusy(day, barbero);
     const dow = day.getDay();
     const { start, end } = schedule[dow] || { start: 9, end: 20 };
-    const duration = GOOGLE_CALENDAR_CONFIG.slotDuration;
+    const duration = SLOT_DURATION;
     const now = new Date();
     const scheduleEnd = new Date(day); scheduleEnd.setHours(end, 0, 0, 0);
 
