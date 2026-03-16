@@ -8,12 +8,12 @@ function isSecure(request) {
 
 function setCookie(token, request) {
   const secure = isSecure(request) ? ' Secure;' : '';
-  return `${COOKIE}=${token}; HttpOnly;${secure} SameSite=Strict; Path=/admin; Max-Age=${MAX_AGE}`;
+  return `${COOKIE}=${token}; HttpOnly;${secure} SameSite=Lax; Path=/admin; Max-Age=${MAX_AGE}`;
 }
 
 function clearCookie(request) {
   const secure = isSecure(request) ? ' Secure;' : '';
-  return `${COOKIE}=; HttpOnly;${secure} SameSite=Strict; Path=/admin; Max-Age=0`;
+  return `${COOKIE}=; HttpOnly;${secure} SameSite=Lax; Path=/admin; Max-Age=0`;
 }
 
 export async function onRequestPost({ request, env }) {

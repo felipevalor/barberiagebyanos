@@ -612,10 +612,11 @@ async function initCalendarPicker() {
 
 // ── Mi turno ──────────────────────────────────────────────────────────────────
 function initMiTurno() {
-  const input  = document.getElementById('mi-turno-input');
-  const btn    = document.getElementById('mi-turno-btn');
-  const result = document.getElementById('mi-turno-result');
-  if (!input || !btn || !result) return;
+  const inputNombre = document.getElementById('mi-turno-nombre');
+  const inputTel    = document.getElementById('mi-turno-tel');
+  const btn         = document.getElementById('mi-turno-btn');
+  const result      = document.getElementById('mi-turno-result');
+  if (!inputNombre || !btn || !result) return;
 
   const editCache = {};
 
@@ -624,21 +625,23 @@ function initMiTurno() {
   const cookieNombre = document.cookie.match(/gb_nombre=([^;]+)/);
   if (cookieTel) {
     const tel = decodeURIComponent(cookieTel[1]);
-    input.value = tel;
+    if (inputTel) inputTel.value = tel;
     buscarTurno(tel);
   } else if (cookieNombre) {
     const nombre = decodeURIComponent(cookieNombre[1]);
-    if (nombre.length >= 3) { input.value = nombre; buscarTurno(nombre); }
+    if (nombre.length >= 3) { inputNombre.value = nombre; buscarTurno(nombre); }
   }
 
   btn.addEventListener('click', () => {
-    const nombre = input.value.trim();
-    if (nombre.length < 3) { input.focus(); return; }
-    buscarTurno(nombre);
+    const tel    = inputTel?.value.trim() || '';
+    const nombre = inputNombre.value.trim();
+    const query  = tel.length >= 7 ? tel : nombre;
+    if (query.length < 3) { (tel ? inputTel : inputNombre).focus(); return; }
+    buscarTurno(query);
   });
-  input.addEventListener('keydown', e => {
+  [inputNombre, inputTel].forEach(el => el?.addEventListener('keydown', e => {
     if (e.key === 'Enter') btn.click();
-  });
+  }));
 
   function esTelefono(query) {
     return /^\d{8,}$/.test(query.replace(/[\s\-().+]/g, ''));

@@ -54,7 +54,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
        VALUES (?, ?, ?, ?, ?, ?, NULL, ?)`
     ).bind(
       nombre.trim(),
-      telefono.trim(),
+      telefono.trim().replace(/[\s\-().+]/g, ''),
       servicio,
       nombreBarbero,
       fecha,

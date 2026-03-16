@@ -607,24 +607,24 @@ textarea {
   font-size: 0.85rem; letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--muted); margin-bottom: 1.25rem;
 }
-.mi-turno-row {
-  display: flex; gap: 0.5rem;
+.mi-turno-form {
+  display: flex; flex-direction: column; gap: 0.5rem;
 }
-.mi-turno-row input {
-  flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+.mi-turno-form input {
+  width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
   color: var(--text); font-family: var(--font-mono); font-size: 1.05rem;
   padding: 0.875rem 1.125rem; outline: none; transition: border-color 200ms;
 }
-.mi-turno-row input:focus { border-color: var(--gold); }
-.mi-turno-row input::placeholder { color: var(--muted); }
-.mi-turno-row button {
-  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+.mi-turno-form input:focus { border-color: var(--gold); }
+.mi-turno-form input::placeholder { color: var(--muted); }
+.mi-turno-form button {
+  width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
   color: var(--muted); font-family: var(--font-mono); font-size: 0.875rem;
   letter-spacing: 0.08em; text-transform: uppercase;
-  padding: 0.875rem 1.5rem; cursor: pointer; white-space: nowrap;
+  padding: 0.875rem 1.5rem; cursor: pointer;
   transition: color 200ms, border-color 200ms;
 }
-.mi-turno-row button:hover { color: var(--text); border-color: var(--muted); }
+.mi-turno-form button:hover { color: var(--text); border-color: var(--muted); }
 #mi-turno-result { margin-top: 1rem; min-height: 1rem; }
 .mi-turno-card {
   background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
