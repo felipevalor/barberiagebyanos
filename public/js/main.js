@@ -299,11 +299,12 @@ function initReservaForm() {
   form.addEventListener('submit', (e) => e.preventDefault());
 }
 
-// ── Slots ocupados en D1 (para barberos sin calendarId) ───────────────────────
-async function fetchD1BusySlots(barberoNombre, day) {
-  const fecha = `${day.getDate()}/${day.getMonth() + 1}/${day.getFullYear()}`;
+// ── Slots ocupados: D1 + Google Calendar del barbero ─────────────────────────
+async function fetchD1BusySlots(barberoNombre, day, barberoId) {
+  const fecha    = `${day.getDate()}/${day.getMonth() + 1}/${day.getFullYear()}`;
+  const idParam  = barberoId ? `&barberoId=${encodeURIComponent(barberoId)}` : '';
   try {
-    const res = await fetch(`/api/turnos?barbero=${encodeURIComponent(barberoNombre)}&fecha=${encodeURIComponent(fecha)}`);
+    const res = await fetch(`/api/turnos?barbero=${encodeURIComponent(barberoNombre)}&fecha=${encodeURIComponent(fecha)}${idParam}`);
     if (!res.ok) return [];
     const { occupied } = await res.json();
     return (occupied || []).map(({ hora, duracion }) => {
@@ -474,7 +475,7 @@ async function initCalendarPicker() {
   }
 
   async function fetchBusySlots(day, barbero) {
-    return fetchD1BusySlots(barbero.nombre, day);
+    return fetchD1BusySlots(barbero.nombre, day, barbero.id);
   }
 
   function validar() {
@@ -840,7 +841,7 @@ function initMiTurno() {
   }
 
   async function fetchEditBusy(day, barbero) {
-    return fetchD1BusySlots(barbero.nombre, day);
+    return fetchD1BusySlots(barbero.nombre, day, barbero.id);
   }
 
   async function submitEdit(t, newFecha, newHora) {

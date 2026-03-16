@@ -1,6 +1,8 @@
-// GET /api/turnos?barbero=Gebyano&fecha=15/3/2026
-// Devuelve los slots ocupados en D1 para un barbero/fecha dado.
-// Usado por el frontend para marcar slots como busy cuando calendarId es null.
+// GET /api/turnos?barbero=Gebyano&fecha=15/3/2026&barberoId=gebyano
+// Devuelve slots ocupados: reservas D1 + eventos de Google Calendar del barbero.
+// Si el barbero tiene calendarId configurado, los eventos personales también bloquean slots.
+
+import { getGoogleAccessToken, getCalendarEvents, BARBEROS_CONFIG } from '../admin/api/_gcal.js';
 
 const SERVICIOS_DUR = {
   'Corte': 30, 'Corte + Barba': 45, 'Barba': 15,
@@ -8,12 +10,14 @@ const SERVICIOS_DUR = {
 };
 
 export async function onRequestGet({ request, env }) {
-  const url    = new URL(request.url);
-  const barbero = url.searchParams.get('barbero')?.trim();
-  const fecha   = url.searchParams.get('fecha')?.trim();
+  const url       = new URL(request.url);
+  const barbero   = url.searchParams.get('barbero')?.trim();
+  const barberoId = url.searchParams.get('barberoId')?.trim();
+  const fecha     = url.searchParams.get('fecha')?.trim();
 
   if (!barbero || !fecha) return json({ occupied: [] });
 
+  // ── D1: reservas existentes ───────────────────────────────────────────────
   const { results } = await env.barberia_db.prepare(
     'SELECT mensaje, servicio FROM reservas WHERE barbero = ? AND fecha = ?'
   ).bind(barbero, fecha).all();
@@ -21,6 +25,34 @@ export async function onRequestGet({ request, env }) {
   const occupied = results
     .map(r => ({ hora: r.mensaje?.split(' ')[1], duracion: SERVICIOS_DUR[r.servicio] || 30 }))
     .filter(r => r.hora);
+
+  // ── Google Calendar: eventos personales del barbero ───────────────────────
+  if (barberoId && env.GOOGLE_SERVICE_ACCOUNT) {
+    try {
+      // Buscar calendarId: primero D1, fallback a BARBEROS_CONFIG hardcodeado
+      let calendarId = BARBEROS_CONFIG[barberoId]?.calendarId || null;
+      try {
+        const row = await env.barberia_db.prepare(
+          'SELECT calendar_id FROM barberos_config WHERE id = ?'
+        ).bind(barberoId).first();
+        if (row?.calendar_id) calendarId = row.calendar_id;
+      } catch {}
+
+      if (calendarId) {
+        const sa     = JSON.parse(env.GOOGLE_SERVICE_ACCOUNT);
+        const tk     = await getGoogleAccessToken(sa);
+        const events = await getCalendarEvents(calendarId, fecha, tk);
+
+        for (const ev of events) {
+          // Extraer hora local directamente del ISO string (-03:00) para evitar
+          // conversiones UTC incorrectas dentro del Worker
+          const hora     = ev.start.slice(11, 16); // "17:30"
+          const duracion = Math.round((new Date(ev.end) - new Date(ev.start)) / 60000);
+          occupied.push({ hora, duracion });
+        }
+      }
+    } catch { /* fallo de GCal nunca bloquea la respuesta */ }
+  }
 
   return json({ occupied });
 }
