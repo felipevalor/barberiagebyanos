@@ -57,8 +57,8 @@ export async function onRequestPost({ request, env }) {
 
   try {
     const result = await env.barberia_db.prepare(
-      `INSERT INTO reservas (nombre, telefono, servicio, barbero, fecha, mensaje, calendar_event_id, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO reservas (nombre, telefono, servicio, barbero, fecha, mensaje, calendar_event_id, source, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'admin', ?)`
     ).bind(
       nombre.trim(),
       normalizeTel(telefono),

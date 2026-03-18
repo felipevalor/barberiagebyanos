@@ -194,6 +194,64 @@
     .riesgo-wa:hover { background: rgba(109,191,126,0.22); border-color: rgba(109,191,126,0.4); }
     .riesgo-wa svg { width: 18px; height: 18px; }
 
+    /* ── IMPORT HISTORIAL ── */
+    .import-btn {
+      background: none; border: 1px dashed var(--border); border-radius: 6px;
+      color: var(--muted); font-family: var(--font-mono); font-size: 0.72rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.4rem 0.875rem; cursor: pointer; transition: all 200ms;
+    }
+    .import-btn:hover { color: var(--text); border-color: var(--muted); }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      z-index: 100; align-items: center; justify-content: center; padding: 1rem;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+      padding: 1.5rem; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto;
+      display: flex; flex-direction: column; gap: 1rem;
+    }
+    .modal-title { font-family: var(--font-serif); font-size: 1.2rem; color: var(--text); }
+    .modal-desc  { font-size: 0.82rem; color: var(--muted); line-height: 1.55; }
+    .modal-code  {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+      padding: 0.75rem 1rem; font-size: 0.75rem; color: var(--gold);
+      white-space: pre; overflow-x: auto;
+    }
+    .modal textarea {
+      width: 100%; min-height: 160px; background: var(--bg);
+      border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-family: var(--font-mono); font-size: 0.8rem;
+      padding: 0.75rem; resize: vertical; outline: none;
+      transition: border-color 200ms;
+    }
+    .modal textarea:focus { border-color: var(--gold); }
+    .modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--gold); border: none; border-radius: 6px;
+      color: var(--bg); font-family: var(--font-mono); font-size: 0.78rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.6rem 1.25rem; cursor: pointer; transition: opacity 200ms;
+    }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-secondary {
+      background: none; border: 1px solid var(--border); border-radius: 6px;
+      color: var(--muted); font-family: var(--font-mono); font-size: 0.78rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.6rem 1.25rem; cursor: pointer; transition: all 200ms;
+    }
+    .btn-secondary:hover { color: var(--text); border-color: var(--muted); }
+    .import-result {
+      font-size: 0.82rem; padding: 0.75rem 1rem; border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .import-result.ok  { background: rgba(109,191,126,0.08); color: var(--green); border-color: rgba(109,191,126,0.2); }
+    .import-result.err { background: rgba(229,115,115,0.08); color: var(--red);   border-color: rgba(229,115,115,0.2); }
+
     /* ── EMPTY / LOADING ── */
     .empty { text-align: center; color: var(--muted); font-size: 0.88rem; padding: 2.5rem 0; }
 
@@ -310,8 +368,11 @@
   <main class="main">
 
     <!-- Barbero selector (owner) -->
-    <div class="bselector" id="bselector" style="display:none">
-      <button class="bsel-btn active" data-v="todos">Todos</button>
+    <div style="display:none" id="owner-toolbar" style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;margin-bottom:1.5rem">
+      <div class="bselector" id="bselector" style="flex:1;margin-bottom:0">
+        <button class="bsel-btn active" data-v="todos">Todos</button>
+      </div>
+      <button class="import-btn" id="open-import">↑ Importar historial</button>
     </div>
 
     <!-- Skeleton inicial -->
@@ -334,6 +395,28 @@
 
   </main>
 
+  <!-- Modal importar historial -->
+  <div class="modal-overlay" id="modal-import">
+    <div class="modal">
+      <div class="modal-title">Importar historial</div>
+      <div class="modal-desc">
+        Pegá o escribí los datos históricos en formato CSV. Columnas separadas por <strong>;</strong>:<br>
+        <strong>fecha</strong> (obligatorio) · <strong>barbero</strong> (obligatorio) · servicio · nombre · celular
+      </div>
+      <div class="modal-code">fecha;barbero;servicio;nombre;celular
+01/03/2025;Gebyano;Corte;Juan Pérez;3416513207
+02/03/2025;Lobo;Corte + Barba;;
+03/03/2025;Gebyano;Corte;;;
+</div>
+      <textarea id="import-csv" placeholder="fecha;barbero;servicio;nombre;celular&#10;01/03/2025;Gebyano;Corte;;"></textarea>
+      <div id="import-result" style="display:none" class="import-result"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="cancel-import">Cancelar</button>
+        <button class="btn-primary" id="confirm-import">Importar</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     let role       = null;
     let barberoid  = null;
@@ -353,15 +436,14 @@
         document.querySelector('.nav-tab-owner')?.style.removeProperty('display');
         document.querySelector('.bottom-nav-owner')?.style.removeProperty('display');
         buildBSelector();
+        initImportModal();
       }
       await loadStats();
     }
 
     // ── Selector de barbero (owner) ──────────────────────────────────────────
     function buildBSelector() {
-      const wrap = document.getElementById('bselector');
-      wrap.style.display = 'flex';
-      // Los botones de barberos específicos se agregan cuando llegan los datos
+      document.getElementById('owner-toolbar').style.display = 'flex';
     }
 
     function addBarberoButtons(porBarbero) {
@@ -491,23 +573,39 @@
     }
 
     function cardComparativo(mes, comp) {
+      const meses = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+      // Priorizar year-over-year si hay datos históricos importados
+      const useAnio = comp.anio_anterior_count > 0;
+      const delta   = useAnio ? comp.delta_anio     : comp.delta;
+      const deltaPct = useAnio ? comp.delta_anio_pct : comp.delta_pct;
+      const prevCount = useAnio ? comp.anio_anterior_count : comp.mes_anterior_count;
+      const label     = useAnio
+        ? `vs ${meses[comp.mes_num] || ''} ${comp.anio_anterior}`
+        : 'vs Mes anterior';
+
       let deltaHtml = '';
-      if (comp.delta_pct !== null) {
-        const sign = comp.delta > 0 ? '+' : '';
-        const cls  = comp.delta > 0 ? 'delta-up' : (comp.delta < 0 ? 'delta-down' : 'delta-flat');
-        const arrow = comp.delta > 0 ? '↑' : (comp.delta < 0 ? '↓' : '=');
+      if (deltaPct !== null) {
+        const sign  = delta > 0 ? '+' : '';
+        const cls   = delta > 0 ? 'delta-up' : (delta < 0 ? 'delta-down' : 'delta-flat');
+        const arrow = delta > 0 ? '↑' : (delta < 0 ? '↓' : '=');
         deltaHtml = `<div class="delta ${cls}">
-          <span class="delta-big">${sign}${comp.delta}</span>
-          <span>${arrow}${Math.abs(comp.delta_pct)}%</span>
+          <span class="delta-big">${sign}${delta}</span>
+          <span>${arrow}${Math.abs(deltaPct)}%</span>
         </div>`;
       } else {
-        deltaHtml = `<span class="stat-big">${comp.delta > 0 ? '+' : ''}${comp.delta}</span>`;
+        deltaHtml = `<span class="stat-big">${delta > 0 ? '+' : ''}${delta}</span>`;
       }
+
+      // Sub-línea: si mostramos year-over-year, también mostramos vs mes anterior como dato secundario
+      const sub = useAnio
+        ? `${prevCount} → ${mes.count} · mes ant. ${comp.mes_anterior_count}`
+        : `${prevCount} → ${mes.count}`;
+
       return `
         <div class="stat-card">
-          <span class="stat-label">vs Mes anterior</span>
+          <span class="stat-label">${label}</span>
           ${deltaHtml}
-          <span class="stat-sub">${comp.mes_anterior_count} → ${mes.count}</span>
+          <span class="stat-sub">${sub}</span>
         </div>`;
     }
 
@@ -590,6 +688,55 @@
       }).join('');
       return `<p class="section-hdr">Clientes fijos con retraso · ${riesgo.length}</p>
         <div class="riesgo-list">${rows}</div>`;
+    }
+
+    // ── Modal importar historial ─────────────────────────────────────────────
+    function initImportModal() {
+      const overlay = document.getElementById('modal-import');
+      const csvTA   = document.getElementById('import-csv');
+      const result  = document.getElementById('import-result');
+      const btnConf = document.getElementById('confirm-import');
+
+      document.getElementById('open-import').addEventListener('click', () => {
+        result.style.display = 'none';
+        csvTA.value = '';
+        overlay.classList.add('open');
+      });
+      document.getElementById('cancel-import').addEventListener('click', () => overlay.classList.remove('open'));
+      overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+
+      btnConf.addEventListener('click', async () => {
+        const csv = csvTA.value.trim();
+        if (!csv) return;
+        btnConf.disabled = true;
+        btnConf.textContent = 'Importando...';
+        result.style.display = 'none';
+        try {
+          const res  = await fetch('/admin/api/reservas/importar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ csv }),
+          });
+          const data = await res.json();
+          if (res.ok && data.ok) {
+            result.className = 'import-result ok';
+            result.textContent = `✓ ${data.created} turnos importados · ${data.errors} errores · rango: ${data.rango.desde} → ${data.rango.hasta}`;
+            result.style.display = '';
+            loadStats(); // refresca el dashboard
+          } else {
+            result.className = 'import-result err';
+            result.textContent = data.error || 'Error al importar';
+            result.style.display = '';
+          }
+        } catch {
+          result.className = 'import-result err';
+          result.textContent = 'Error de conexión';
+          result.style.display = '';
+        } finally {
+          btnConf.disabled = false;
+          btnConf.textContent = 'Importar';
+        }
+      });
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

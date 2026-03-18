@@ -14,24 +14,53 @@ export async function onRequestGet({ request, env }) {
   const q     = url.searchParams.get('q')?.trim() || '';
   const limit = Math.min(parseInt(url.searchParams.get('limit') || '500'), 500);
 
-  let results;
-  if (q.length >= 1) {
-    const like = `%${q}%`;
-    ({ results } = await env.barberia_db.prepare(
-      `SELECT id, nombre, telefono, notas
-       FROM clientes
-       WHERE LOWER(nombre) LIKE LOWER(?) OR telefono LIKE ?
-       ORDER BY LOWER(nombre) ASC LIMIT ?`
-    ).bind(like, like, limit).all());
-  } else {
-    ({ results } = await env.barberia_db.prepare(
-      `SELECT id, nombre, telefono, notas
-       FROM clientes
-       ORDER BY LOWER(nombre) ASC LIMIT ?`
-    ).bind(limit).all());
+  // Barberos solo ven sus propios clientes (quienes reservaron con ellos)
+  const isBarber = session.role !== 'owner';
+  let barberoNombre = null;
+  if (isBarber) {
+    const cfg = await env.barberia_db.prepare(
+      'SELECT nombre FROM barberos_config WHERE id = ?'
+    ).bind(session.barbero_id).first();
+    barberoNombre = cfg?.nombre || null;
   }
 
-  return json({ clientes: results });
+  let results;
+  if (isBarber && barberoNombre) {
+    const subquery = `SELECT DISTINCT telefono FROM reservas WHERE barbero = ? AND telefono IS NOT NULL AND telefono != ''`;
+    if (q.length >= 1) {
+      const like = `%${q}%`;
+      ({ results } = await env.barberia_db.prepare(
+        `SELECT id, nombre, telefono, notas FROM clientes
+         WHERE telefono IN (${subquery})
+           AND (LOWER(nombre) LIKE LOWER(?) OR telefono LIKE ?)
+         ORDER BY LOWER(nombre) ASC LIMIT ?`
+      ).bind(barberoNombre, like, like, limit).all());
+    } else {
+      ({ results } = await env.barberia_db.prepare(
+        `SELECT id, nombre, telefono, notas FROM clientes
+         WHERE telefono IN (${subquery})
+         ORDER BY LOWER(nombre) ASC LIMIT ?`
+      ).bind(barberoNombre, limit).all());
+    }
+  } else {
+    if (q.length >= 1) {
+      const like = `%${q}%`;
+      ({ results } = await env.barberia_db.prepare(
+        `SELECT id, nombre, telefono, notas
+         FROM clientes
+         WHERE LOWER(nombre) LIKE LOWER(?) OR telefono LIKE ?
+         ORDER BY LOWER(nombre) ASC LIMIT ?`
+      ).bind(like, like, limit).all());
+    } else {
+      ({ results } = await env.barberia_db.prepare(
+        `SELECT id, nombre, telefono, notas
+         FROM clientes
+         ORDER BY LOWER(nombre) ASC LIMIT ?`
+      ).bind(limit).all());
+    }
+  }
+
+  return json({ clientes: results, scope: isBarber ? 'barber' : 'all' });
 }
 
 export async function onRequestPost({ request, env }) {
