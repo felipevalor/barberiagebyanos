@@ -12,8 +12,11 @@
       --surface: #141210;
       --border:  #2a2620;
       --gold:    #c9a84c;
+      --gold-dim: rgba(201,168,76,0.12);
       --text:    #e8dcc8;
       --muted:   #6b6055;
+      --green:   #6dbf7e;
+      --red:     #e57373;
       --font-serif: 'Playfair Display', serif;
       --font-mono:  'DM Mono', monospace;
     }
@@ -32,9 +35,6 @@
     .nav-brand { display: flex; align-items: center; gap: 0.75rem; }
     .nav-logo  { width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; }
     .nav-title { font-family: var(--font-serif); font-size: 1rem; white-space: nowrap; }
-    .nav-x     { color: var(--muted); font-size: 0.9rem; flex-shrink: 0; }
-    .nav-vs    { height: 96px; opacity: 0.9; flex-shrink: 0; }
-
     .nav-tabs  { display: flex; gap: 0.25rem; }
     .nav-tab {
       color: var(--muted); text-decoration: none;
@@ -43,10 +43,9 @@
       transition: color 200ms, background 200ms;
     }
     .nav-tab:hover  { color: var(--text); background: var(--border); }
-    .nav-tab.active { color: var(--gold); background: rgba(201,168,76,0.08); }
-
-    .nav-right  { display: flex; align-items: center; gap: 0.75rem; }
-    .nav-user   { font-size: 0.8rem; color: var(--gold); letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+    .nav-tab.active { color: var(--gold); background: var(--gold-dim); }
+    .nav-right { display: flex; align-items: center; gap: 0.75rem; }
+    .nav-user  { font-size: 0.8rem; color: var(--gold); letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
     .nav-logout {
       background: none; border: 1px solid var(--border); border-radius: 4px;
       color: var(--muted); font-family: var(--font-mono); font-size: 0.7rem;
@@ -57,102 +56,158 @@
     .nav-logout:hover { color: var(--text); border-color: var(--muted); }
 
     /* ── MAIN ── */
-    .main { max-width: 760px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+    .main { max-width: 860px; margin: 0 auto; padding: 1.75rem 1.25rem 5rem; }
 
-    /* ── DATE NAV ── */
-    .date-nav {
-      display: flex; align-items: center; gap: 0.5rem;
-      margin-bottom: 1.5rem;
+    /* ── BARBERO SELECTOR (owner) ── */
+    .bselector {
+      display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;
     }
-    .date-label { font-family: var(--font-serif); font-size: 1.2rem; flex: 1; text-transform: capitalize; }
-    .btn-cal {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
-      color: var(--muted); cursor: pointer; transition: border-color 200ms, color 200ms;
-      min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center;
-    }
-    .btn-cal:hover, .btn-cal.open { border-color: var(--gold); color: var(--gold); }
-    /* ── CALENDAR POPUP ── */
-    .cal-popup {
-      display: none; position: fixed; z-index: 300;
-      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-      padding: 1rem; width: 272px; box-shadow: 0 12px 40px rgba(0,0,0,0.6);
-      font-family: var(--font-mono);
-    }
-    .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
-    .cal-month-lbl { font-family: var(--font-serif); font-size: 0.95rem; color: var(--text); }
-    .cal-nav {
-      background: none; border: 1px solid var(--border); border-radius: 6px;
-      color: var(--muted); cursor: pointer; width: 30px; height: 30px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.85rem; transition: color 150ms, border-color 150ms;
-    }
-    .cal-nav:hover { color: var(--text); border-color: var(--muted); }
-    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
-    .cal-dow {
-      text-align: center; font-size: 0.6rem; letter-spacing: 0.06em;
-      text-transform: uppercase; color: var(--muted); padding: 0.25rem 0 0.5rem;
-    }
-    .cal-day {
-      text-align: center; padding: 0.3rem 0; font-size: 0.78rem;
-      border-radius: 6px; border: 1px solid transparent;
-      cursor: pointer; transition: background 120ms, color 120ms;
-      color: var(--text);
-    }
-    .cal-day:hover { background: var(--border); }
-    .cal-day.other { color: var(--muted); opacity: 0.35; }
-    .cal-day.is-today { border-color: rgba(201,168,76,0.5); color: var(--gold); }
-    .cal-day.is-selected { background: var(--gold); color: var(--bg); font-weight: 600; border-color: transparent; }
-    .cal-day.is-selected:hover { background: var(--gold); }
-    .cal-footer { display: flex; justify-content: flex-end; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border); }
-    .cal-hoy-btn {
-      background: none; border: none; color: var(--gold);
-      font-family: var(--font-mono); font-size: 0.72rem;
-      letter-spacing: 0.08em; text-transform: uppercase;
-      cursor: pointer; padding: 0.25rem 0.5rem; transition: opacity 150ms;
-    }
-    .cal-hoy-btn:hover { opacity: 0.7; }
-    .date-btn {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
-      color: var(--text); font-family: var(--font-mono); font-size: 0.9rem;
-      padding: 0.5rem 0.875rem; cursor: pointer; transition: border-color 200ms;
-      min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center;
-    }
-    .date-btn:hover { border-color: var(--muted); }
-    .date-btn.today {
-      color: var(--gold); border-color: var(--gold);
-      font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase;
-    }
-
-    /* ── FILTER BARBEROS ── */
-    .filter-row { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
-    .filter-btn {
+    .bsel-btn {
       background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
       color: var(--muted); font-family: var(--font-mono); font-size: 0.75rem;
       letter-spacing: 0.08em; text-transform: uppercase;
       padding: 0.45rem 1rem; cursor: pointer; transition: all 200ms;
-      min-height: 40px;
+      min-height: 38px;
     }
-    .filter-btn:hover  { color: var(--text); border-color: var(--muted); }
-    .filter-btn.active { background: var(--gold); border-color: var(--gold); color: var(--bg); }
+    .bsel-btn:hover  { color: var(--text); border-color: var(--muted); }
+    .bsel-btn.active { background: var(--gold); border-color: var(--gold); color: var(--bg); }
 
-    /* ── RESERVAS ── */
-    .count { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.75rem; }
-    .reservas-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    /* ── STATS GRID ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.875rem;
+      margin-bottom: 0.875rem;
+    }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 1.25rem 1.375rem;
+      display: flex; flex-direction: column; gap: 0.625rem;
+    }
+    .stat-label {
+      font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+    }
+    .stat-big {
+      font-family: var(--font-serif); font-size: 2.4rem; line-height: 1;
+      color: var(--text);
+    }
+    .stat-sub { font-size: 0.8rem; color: var(--muted); }
 
-    .reserva-card {
+    /* barra de ocupación */
+    .occ-bar-wrap { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .occ-bar      { height: 100%; background: var(--gold); border-radius: 2px; transition: width 600ms ease; }
+
+    /* delta */
+    .delta { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.82rem; }
+    .delta-up   { color: var(--green); }
+    .delta-down { color: var(--red); }
+    .delta-flat { color: var(--muted); }
+    .delta-big  { font-family: var(--font-serif); font-size: 1.9rem; line-height: 1; }
+
+    /* mini week chart */
+    .week-chart { display: flex; align-items: flex-end; gap: 4px; height: 44px; margin-top: 0.25rem; }
+    .week-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; }
+    .week-bar {
+      width: 100%; border-radius: 3px 3px 0 0;
+      background: var(--border); min-height: 3px;
+      transition: height 400ms ease;
+    }
+    .week-bar.has-data { background: var(--muted); }
+    .week-bar.is-today { background: var(--gold); }
+    .week-dow {
+      font-size: 0.55rem; letter-spacing: 0.04em; text-transform: uppercase;
+      color: var(--muted); white-space: nowrap;
+    }
+    .week-dow.is-today { color: var(--gold); }
+
+    /* ── SECTION HEADER ── */
+    .section-hdr {
+      font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
+      margin: 1.5rem 0 0.75rem;
+    }
+
+    /* ── TURNOS DE HOY ── */
+    .turnos-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    .turno-row {
       background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-      padding: 1rem 1.125rem; transition: border-color 200ms;
+      padding: 0.875rem 1.125rem;
+      display: flex; align-items: center; gap: 1rem;
+      transition: border-color 200ms;
     }
-    .reserva-card:hover { border-color: rgba(201,168,76,0.3); }
-    .reserva-top { display: flex; align-items: center; gap: 0.875rem; margin-bottom: 0.3rem; }
-    .reserva-hora    { font-size: 1.05rem; color: var(--gold); font-weight: 500; white-space: nowrap; }
-    .reserva-nombre  { font-size: 0.95rem; font-weight: 500; }
-    .reserva-bottom  { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
-    .reserva-servicio { font-size: 0.8rem; color: var(--muted); }
-    .reserva-barbero  { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+    .turno-row:hover { border-color: rgba(201,168,76,0.25); }
+    .turno-row.pasado { opacity: 0.45; }
+    .turno-hora    { font-size: 1.05rem; color: var(--gold); font-weight: 500; white-space: nowrap; min-width: 46px; }
+    .turno-nombre  { flex: 1; font-size: 0.95rem; font-weight: 500; }
+    .turno-right   { display: flex; flex-direction: column; align-items: flex-end; gap: 0.2rem; }
+    .turno-svc     { font-size: 0.8rem; color: var(--muted); }
+    .turno-barbero { font-size: 0.68rem; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+    .turno-dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+      background: var(--gold);
+    }
+    .turno-row.pasado .turno-dot { background: var(--muted); }
 
-    .empty   { text-align: center; color: var(--muted); font-size: 0.9rem; padding: 3rem 0; }
-    .loading { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 3rem 0; }
+    /* ── TOP SERVICIOS ── */
+    .svc-list { display: flex; flex-direction: column; gap: 0.625rem; }
+    .svc-row  { display: flex; align-items: center; gap: 0.875rem; }
+    .svc-nombre { min-width: 120px; font-size: 0.85rem; color: var(--text); }
+    .svc-bar-wrap { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .svc-bar      { height: 100%; background: var(--gold); border-radius: 3px; transition: width 500ms ease; }
+    .svc-pct { font-size: 0.75rem; color: var(--muted); min-width: 36px; text-align: right; }
+    .svc-count { font-size: 0.72rem; color: var(--muted); min-width: 28px; text-align: right; }
+
+    /* ── POR BARBERO (owner) ── */
+    .barberos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem; }
+    .barbero-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 1rem 1.125rem;
+    }
+    .barbero-nombre { font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+    .barbero-mes    { font-family: var(--font-serif); font-size: 1.75rem; line-height: 1; color: var(--text); }
+    .barbero-sub    { font-size: 0.78rem; color: var(--muted); margin-top: 0.25rem; }
+    .barbero-pct    { font-size: 0.72rem; color: var(--gold); margin-top: 0.5rem; }
+
+    /* ── RECURRENTES EN RIESGO ── */
+    .riesgo-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    .riesgo-row {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 0.875rem 1.125rem;
+      display: flex; align-items: center; gap: 0.875rem;
+      transition: border-color 200ms;
+    }
+    .riesgo-row:hover { border-color: rgba(229,115,115,0.3); }
+    .riesgo-nombre  { flex: 1; font-size: 0.9rem; font-weight: 500; }
+    .riesgo-info    { font-size: 0.78rem; color: var(--muted); }
+    .riesgo-badge {
+      font-size: 0.68rem; letter-spacing: 0.06em; padding: 0.25rem 0.5rem;
+      border-radius: 4px; white-space: nowrap; flex-shrink: 0;
+    }
+    .riesgo-badge.urgent { background: rgba(229,115,115,0.15); color: var(--red); }
+    .riesgo-badge.warn   { background: rgba(201,168,76,0.12); color: var(--gold); }
+    .riesgo-wa {
+      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+      background: rgba(109,191,126,0.12); color: var(--green);
+      text-decoration: none; border: 1px solid rgba(109,191,126,0.2);
+      transition: background 200ms, border-color 200ms;
+    }
+    .riesgo-wa:hover { background: rgba(109,191,126,0.22); border-color: rgba(109,191,126,0.4); }
+    .riesgo-wa svg { width: 18px; height: 18px; }
+
+    /* ── EMPTY / LOADING ── */
+    .empty { text-align: center; color: var(--muted); font-size: 0.88rem; padding: 2.5rem 0; }
+
+    /* ── SKELETON ── */
+    .skel {
+      background: linear-gradient(90deg, var(--surface) 25%, var(--border) 50%, var(--surface) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.6s infinite;
+      border-radius: 8px;
+    }
+    @keyframes shimmer { 0%{ background-position: 200% 0 } 100%{ background-position: -200% 0 } }
+    .skel-card   { height: 130px; border-radius: 12px; }
+    .skel-row    { height: 62px; border-radius: 10px; }
+    .skel-bar    { height: 28px; border-radius: 6px; }
 
     /* ── BOTTOM NAV (mobile) ── */
     .bottom-nav {
@@ -171,17 +226,7 @@
     .bottom-nav a.active { color: var(--gold); }
     .bottom-nav a svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.5; }
 
-    /* ── RESPONSIVE ── */
-    @media (max-width: 540px) {
-      .nav-tabs  { display: none; }
-      .nav-title { display: none; }
-      .nav-vs    { height: 64px; }
-      .nav-logo  { width: 36px; height: 36px; }
-      .nav { padding: 0.5rem 1rem; }
-      .date-label { font-size: 1rem; }
-      .main { padding: 1.25rem 0.875rem 5.5rem; }
-      .bottom-nav { display: flex; }
-    }
+    /* ── FOOTER ── */
     .admin-footer {
       display: flex; justify-content: space-between; align-items: center;
       padding: 0.875rem 1.5rem; margin-top: 2rem;
@@ -192,18 +237,33 @@
     .admin-footer-credit a { display: inline-flex; align-items: center; opacity: 0.7; transition: opacity 200ms; }
     .admin-footer-credit a:hover { opacity: 1; }
     .admin-footer-credit img { height: 140px; width: auto; }
-    @media (max-width: 540px) {
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 560px) {
+      .nav-tabs  { display: none; }
+      .nav-title { display: none; }
+      .nav-logo  { width: 36px; height: 36px; }
+      .nav { padding: 0.5rem 1rem; }
+      .main { padding: 1.25rem 0.875rem 5.5rem; }
+      .bottom-nav { display: flex; }
+      .stats-grid { grid-template-columns: 1fr 1fr; gap: 0.625rem; }
+      .stat-big   { font-size: 1.9rem; }
+      .svc-nombre { min-width: 90px; font-size: 0.8rem; }
       .admin-footer { flex-direction: column; gap: 0.75rem; text-align: center; padding: 1.25rem 1rem; }
       .admin-footer-credit { flex-direction: column; gap: 0.375rem; }
+    }
+    @media (max-width: 360px) {
+      .stats-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
+  <!-- MOBILE BOTTOM NAV -->
   <nav class="bottom-nav">
     <a href="/admin/dashboard" class="active">
-      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      Reservas
+      <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Dashboard
     </a>
     <a href="/admin/agenda">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
@@ -212,6 +272,10 @@
     <a href="/admin/horarios">
       <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/></svg>
       Horarios
+    </a>
+    <a href="/admin/clientes">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Clientes
     </a>
     <a href="/admin/recurrentes">
       <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -223,15 +287,17 @@
     </a>
   </nav>
 
+  <!-- DESKTOP NAV -->
   <nav class="nav">
     <div class="nav-brand">
       <img src="/img/logo.jpg" alt="Gebyanos" class="nav-logo">
       <span class="nav-title">Gebyanos</span>
     </div>
     <div class="nav-tabs">
-      <a href="/admin/dashboard"     class="nav-tab active">Reservas</a>
+      <a href="/admin/dashboard"     class="nav-tab active">Dashboard</a>
       <a href="/admin/agenda"        class="nav-tab">Agenda</a>
       <a href="/admin/horarios"      class="nav-tab">Horarios</a>
+      <a href="/admin/clientes"      class="nav-tab">Clientes</a>
       <a href="/admin/recurrentes"   class="nav-tab">Fijos</a>
       <a href="/admin/configuracion" class="nav-tab nav-tab-owner" style="display:none">Config</a>
     </div>
@@ -243,168 +309,301 @@
 
   <main class="main">
 
-    <div class="date-nav">
-      <button class="date-btn" id="prev-btn">←</button>
-      <span class="date-label" id="date-label"></span>
-    <button class="btn-cal" id="btn-cal" title="Elegir fecha">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-    </button>
-      <button class="date-btn" id="next-btn">→</button>
-      <button class="date-btn today" id="today-btn">Hoy</button>
+    <!-- Barbero selector (owner) -->
+    <div class="bselector" id="bselector" style="display:none">
+      <button class="bsel-btn active" data-v="todos">Todos</button>
     </div>
 
-    <div class="filter-row" id="filter-row" style="display:none">
-      <button class="filter-btn active" data-v="todos">Todos</button>
-      <button class="filter-btn" data-v="gebyano">Gebyano</button>
-      <button class="filter-btn" data-v="lobo">Lobo</button>
-      <button class="filter-btn" data-v="felipe">Felipe</button>
+    <!-- Skeleton inicial -->
+    <div id="skeleton">
+      <div class="stats-grid" style="margin-bottom:0.875rem">
+        <div class="skel skel-card"></div>
+        <div class="skel skel-card"></div>
+        <div class="skel skel-card"></div>
+        <div class="skel skel-card"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0.5rem;margin-top:1.5rem">
+        <div class="skel skel-row"></div>
+        <div class="skel skel-row"></div>
+        <div class="skel skel-row"></div>
+      </div>
     </div>
 
-    <div id="content"></div>
+    <!-- Contenido real -->
+    <div id="content" style="display:none"></div>
 
   </main>
 
   <script>
-    let role        = null;
-    let currentDate = new Date();
-    let filtro      = 'todos';
+    let role       = null;
+    let barberoid  = null;
+    let filtro     = 'todos';
+    let statsData  = null;
 
+    // ── Inicializar ──────────────────────────────────────────────────────────
     async function init() {
       const res = await fetch('/admin/api/me');
       if (!res.ok) { location.href = '/admin/'; return; }
       const { barbero_id, role: r } = await res.json();
-      role = r;
+      role      = r;
+      barberoid = barbero_id;
       document.getElementById('nav-user').textContent = cap(barbero_id);
+
       if (role === 'owner') {
-        document.getElementById('filter-row').style.display = 'flex';
         document.querySelector('.nav-tab-owner')?.style.removeProperty('display');
         document.querySelector('.bottom-nav-owner')?.style.removeProperty('display');
+        buildBSelector();
       }
-      await load();
+      await loadStats();
     }
 
-    async function load() {
-      document.getElementById('date-label').textContent = formatLabel(currentDate);
-      document.getElementById('content').innerHTML = '<div class="loading">Cargando...</div>';
-
-      const params = new URLSearchParams({ fecha: formatFecha(currentDate) });
-      if (filtro !== 'todos') params.set('barbero', filtro);
-
-      const res = await fetch(`/admin/api/reservas?${params}`);
-      if (!res.ok) { location.href = '/admin/'; return; }
-
-      const { reservas } = await res.json();
-      render(reservas);
+    // ── Selector de barbero (owner) ──────────────────────────────────────────
+    function buildBSelector() {
+      const wrap = document.getElementById('bselector');
+      wrap.style.display = 'flex';
+      // Los botones de barberos específicos se agregan cuando llegan los datos
     }
 
-    function render(reservas) {
-      const el = document.getElementById('content');
-      if (!reservas.length) {
-        el.innerHTML = '<p class="empty">Sin reservas para este día.</p>';
-        return;
+    function addBarberoButtons(porBarbero) {
+      const wrap = document.getElementById('bselector');
+      // Limpiar botones anteriores (excepto "Todos")
+      wrap.querySelectorAll('[data-v]:not([data-v="todos"])').forEach(b => b.remove());
+      for (const b of porBarbero) {
+        const btn = document.createElement('button');
+        btn.className = 'bsel-btn';
+        btn.dataset.v = b.barbero_id;
+        btn.textContent = b.nombre;
+        btn.addEventListener('click', () => selectBarbero(b.barbero_id));
+        wrap.appendChild(btn);
       }
-
-      const isOwner = role === 'owner';
-      const cards = reservas.map(r => {
-        const hora = r.mensaje?.split(' ')[1] || '—';
-        return `
-          <div class="reserva-card">
-            <div class="reserva-top">
-              <span class="reserva-hora">${hora}</span>
-              <span class="reserva-nombre">${r.nombre}</span>
-            </div>
-            <div class="reserva-bottom">
-              <span class="reserva-servicio">${r.servicio}</span>
-              ${isOwner ? `<span class="reserva-barbero">${r.barbero}</span>` : ''}
-            </div>
-          </div>`;
-      }).join('');
-
-      el.innerHTML = `
-        <p class="count">${reservas.length} turno${reservas.length !== 1 ? 's' : ''}</p>
-        <div class="reservas-list">${cards}</div>`;
     }
 
-    document.getElementById('prev-btn').addEventListener('click', () => { currentDate.setDate(currentDate.getDate() - 1); load(); });
-    document.getElementById('next-btn').addEventListener('click', () => { currentDate.setDate(currentDate.getDate() + 1); load(); });
-    document.getElementById('today-btn').addEventListener('click', () => { currentDate = new Date(); load(); });
-    // ── Calendar Picker ───────────────────────────────────────────────────────
-    const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-    let calOpen = false, calY = 0, calM = 0;
-
-    function openCal() {
-      if (calOpen) { closeCal(); return; }
-      calY = currentDate.getFullYear(); calM = currentDate.getMonth();
-      renderCal();
-      const btn = document.getElementById('btn-cal');
-      const rect = btn.getBoundingClientRect();
-      const popup = document.getElementById('cal-popup');
-      popup.style.top  = (rect.bottom + 6) + 'px';
-      popup.style.left = Math.max(8, rect.right - 272) + 'px';
-      popup.style.display = 'block';
-      btn.classList.add('open');
-      calOpen = true;
+    function selectBarbero(v) {
+      filtro = v;
+      document.querySelectorAll('.bsel-btn').forEach(b => b.classList.toggle('active', b.dataset.v === v));
+      loadStats();
     }
-    function closeCal() {
-      document.getElementById('cal-popup').style.display = 'none';
-      document.getElementById('btn-cal').classList.remove('open');
-      calOpen = false;
-    }
-    function renderCal() {
-      const today = new Date();
-      const first = new Date(calY, calM, 1);
-      const lastD = new Date(calY, calM + 1, 0).getDate();
-      const offset = first.getDay() === 0 ? 6 : first.getDay() - 1;
-      const cells = [];
-      for (let i = offset - 1; i >= 0; i--) cells.push({ d: new Date(calY, calM, -i), other: true });
-      for (let i = 1; i <= lastD; i++)       cells.push({ d: new Date(calY, calM, i), other: false });
-      while (cells.length % 7) cells.push({ d: new Date(calY, calM + 1, cells.length - lastD - offset + 1), other: true });
 
-      const same = (a, b) => a.getDate()===b.getDate() && a.getMonth()===b.getMonth() && a.getFullYear()===b.getFullYear();
-      document.getElementById('cal-popup').innerHTML = `
-        <div class="cal-header">
-          <button class="cal-nav" id="cal-prev">←</button>
-          <span class="cal-month-lbl">${MESES[calM]} ${calY}</span>
-          <button class="cal-nav" id="cal-next">→</button>
-        </div>
-        <div class="cal-grid">
-          ${['L','M','M','J','V','S','D'].map(d=>`<div class="cal-dow">${d}</div>`).join('')}
-          ${cells.map(({d,other})=>`<div class="cal-day${other?' other':''}${!other&&same(d,today)&&!same(d,currentDate)?' is-today':''}${same(d,currentDate)?' is-selected':''}" data-ts="${d.getTime()}">${d.getDate()}</div>`).join('')}
-        </div>
-        <div class="cal-footer"><button class="cal-hoy-btn" id="cal-hoy">Hoy</button></div>`;
-
-      document.getElementById('cal-prev').onclick = e => { e.stopPropagation(); calM--; if(calM<0){calM=11;calY--;} renderCal(); };
-      document.getElementById('cal-next').onclick = e => { e.stopPropagation(); calM++; if(calM>11){calM=0;calY++;} renderCal(); };
-      document.getElementById('cal-hoy').onclick  = e => { e.stopPropagation(); currentDate = new Date(); closeCal(); load(); };
-      document.querySelectorAll('#cal-popup .cal-day').forEach(el => {
-        el.onclick = e => { e.stopPropagation(); currentDate = new Date(Number(el.dataset.ts)); closeCal(); load(); };
-      });
-    }
-    document.getElementById('btn-cal').addEventListener('click', e => { e.stopPropagation(); openCal(); });
-    document.addEventListener('click', () => { if (calOpen) closeCal(); });
-
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        filtro = btn.dataset.v;
-        load();
-      });
+    document.getElementById('bselector').addEventListener('click', e => {
+      const btn = e.target.closest('.bsel-btn');
+      if (btn && btn.dataset.v === 'todos') selectBarbero('todos');
     });
 
+    // ── Cargar stats ─────────────────────────────────────────────────────────
+    async function loadStats() {
+      document.getElementById('skeleton').style.display = '';
+      document.getElementById('content').style.display  = 'none';
+
+      const params = new URLSearchParams();
+      if (filtro !== 'todos') params.set('barbero', filtro);
+
+      const res = await fetch(`/admin/api/stats?${params}`);
+      if (!res.ok) { location.href = '/admin/'; return; }
+
+      statsData = await res.json();
+
+      if (statsData.por_barbero) addBarberoButtons(statsData.por_barbero);
+
+      document.getElementById('skeleton').style.display = 'none';
+      document.getElementById('content').style.display  = '';
+      render(statsData);
+    }
+
+    // ── Render principal ─────────────────────────────────────────────────────
+    function render(d) {
+      const isOwner = role === 'owner';
+      const el = document.getElementById('content');
+      el.innerHTML = `
+        ${renderStatsGrid(d)}
+        ${renderTurnos(d.hoy, isOwner)}
+        ${d.por_barbero ? renderPorBarbero(d.por_barbero) : ''}
+        ${renderTopServicios(d.top_servicios)}
+        ${renderRiesgo(d.recurrentes_riesgo)}
+      `;
+    }
+
+    // ── Stats grid (4 cards) ─────────────────────────────────────────────────
+    function renderStatsGrid(d) {
+      return `
+        <div class="stats-grid">
+          ${cardHoy(d.hoy)}
+          ${cardSemana(d.semana)}
+          ${cardMes(d.mes)}
+          ${cardComparativo(d.mes, d.comparativo)}
+        </div>`;
+    }
+
+    function cardHoy(hoy) {
+      const sub = hoy.count === 0
+        ? 'Sin turnos hoy'
+        : hoy.proximos === 0
+          ? `${hoy.count} turno${hoy.count !== 1 ? 's' : ''} · todos pasaron`
+          : `${hoy.proximos} próximo${hoy.proximos !== 1 ? 's' : ''}`;
+      return `
+        <div class="stat-card">
+          <span class="stat-label">Hoy · ${hoy.fecha}</span>
+          <span class="stat-big">${hoy.count}</span>
+          <span class="stat-sub">${sub}</span>
+        </div>`;
+    }
+
+    function cardSemana(sem) {
+      const maxCount = Math.max(...sem.por_dia.map(d => d.count), 1);
+      const bars = sem.por_dia.map(d => {
+        const h = d.slots === 0
+          ? 4
+          : Math.max(4, Math.round((d.count / maxCount) * 40));
+        const cls = d.esHoy ? 'week-bar is-today' : (d.count > 0 ? 'week-bar has-data' : 'week-bar');
+        const dowCls = d.esHoy ? 'week-dow is-today' : 'week-dow';
+        return `<div class="week-bar-wrap">
+          <div class="${cls}" style="height:${h}px"></div>
+          <span class="${dowCls}">${d.dow}</span>
+        </div>`;
+      }).join('');
+      const pct = sem.slots_totales > 0 ? `${sem.pct}%` : '—';
+      return `
+        <div class="stat-card">
+          <span class="stat-label">Esta semana</span>
+          <div style="display:flex;align-items:baseline;gap:0.5rem">
+            <span class="stat-big">${sem.count}</span>
+            <span class="stat-sub">${pct}</span>
+          </div>
+          <div class="week-chart">${bars}</div>
+        </div>`;
+    }
+
+    function cardMes(mes) {
+      const meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+      const now   = new Date();
+      const mesN  = now.getMonth() + 1; // aprox — el server ya sabe cuál es
+      const label = meses[mesN] || 'Este mes';
+      const pctStr = mes.slots_totales > 0 ? `${mes.pct}% ocupación` : '';
+      return `
+        <div class="stat-card">
+          <span class="stat-label">${label}</span>
+          <span class="stat-big">${mes.count}</span>
+          <span class="stat-sub">${pctStr || `de ${mes.slots_totales} slots`}</span>
+          ${mes.slots_totales > 0 ? `
+          <div class="occ-bar-wrap">
+            <div class="occ-bar" style="width:${Math.min(mes.pct, 100)}%"></div>
+          </div>` : ''}
+        </div>`;
+    }
+
+    function cardComparativo(mes, comp) {
+      let deltaHtml = '';
+      if (comp.delta_pct !== null) {
+        const sign = comp.delta > 0 ? '+' : '';
+        const cls  = comp.delta > 0 ? 'delta-up' : (comp.delta < 0 ? 'delta-down' : 'delta-flat');
+        const arrow = comp.delta > 0 ? '↑' : (comp.delta < 0 ? '↓' : '=');
+        deltaHtml = `<div class="delta ${cls}">
+          <span class="delta-big">${sign}${comp.delta}</span>
+          <span>${arrow}${Math.abs(comp.delta_pct)}%</span>
+        </div>`;
+      } else {
+        deltaHtml = `<span class="stat-big">${comp.delta > 0 ? '+' : ''}${comp.delta}</span>`;
+      }
+      return `
+        <div class="stat-card">
+          <span class="stat-label">vs Mes anterior</span>
+          ${deltaHtml}
+          <span class="stat-sub">${comp.mes_anterior_count} → ${mes.count}</span>
+        </div>`;
+    }
+
+    // ── Turnos de hoy ────────────────────────────────────────────────────────
+    function renderTurnos(hoy, isOwner) {
+      if (!hoy.turnos.length) {
+        return `<p class="section-hdr">Turnos de hoy</p>
+          <p class="empty">Sin turnos para hoy.</p>`;
+      }
+      const rows = hoy.turnos.map(t => `
+        <div class="turno-row${t.pasado ? ' pasado' : ''}">
+          <div class="turno-dot"></div>
+          <span class="turno-hora">${t.hora}</span>
+          <span class="turno-nombre">${t.nombre}</span>
+          <div class="turno-right">
+            <span class="turno-svc">${t.servicio}</span>
+            ${isOwner ? `<span class="turno-barbero">${t.barbero}</span>` : ''}
+          </div>
+        </div>`).join('');
+      return `<p class="section-hdr">Turnos de hoy · ${hoy.fecha}</p>
+        <div class="turnos-list">${rows}</div>`;
+    }
+
+    // ── Por barbero (owner) ──────────────────────────────────────────────────
+    function renderPorBarbero(porBarbero) {
+      if (!porBarbero.length) return '';
+      const cards = porBarbero.map(b => `
+        <div class="barbero-card">
+          <div class="barbero-nombre">${b.nombre}</div>
+          <div class="barbero-mes">${b.mes_count}</div>
+          <div class="barbero-sub">${b.semana_count} esta semana</div>
+          <div class="barbero-pct">${b.pct_mes}% del mes</div>
+        </div>`).join('');
+      return `<p class="section-hdr">Por barbero · este mes</p>
+        <div class="barberos-grid">${cards}</div>`;
+    }
+
+    // ── Top servicios ────────────────────────────────────────────────────────
+    function renderTopServicios(top) {
+      if (!top.length) return '';
+      const rows = top.map(s => `
+        <div class="svc-row">
+          <span class="svc-nombre">${s.nombre}</span>
+          <div class="svc-bar-wrap">
+            <div class="svc-bar" style="width:${s.pct}%"></div>
+          </div>
+          <span class="svc-pct">${s.pct}%</span>
+          <span class="svc-count">${s.count}</span>
+        </div>`).join('');
+      return `<p class="section-hdr">Servicios · este mes</p>
+        <div class="svc-list">${rows}</div>`;
+    }
+
+    // ── Recurrentes en riesgo ─────────────────────────────────────────────────
+    function renderRiesgo(riesgo) {
+      if (!riesgo.length) return '';
+      const rows = riesgo.map(c => {
+        const urgent  = c.dias_retraso >= 7;
+        const badgeCls = urgent ? 'riesgo-badge urgent' : 'riesgo-badge warn';
+        const badgeTxt = `${c.dias_retraso}d de retraso`;
+        let waBtn = '';
+        if (c.barbero_tel) {
+          const tel = c.barbero_tel.replace(/\D/g, '');
+          const txt = encodeURIComponent(`Hola, te aviso que ${c.nombre} no viene hace ${c.dias_retraso} días (viene cada ${c.frecuencia_dias} días). ¿Lo agendamos?`);
+          waBtn = `<a class="riesgo-wa" href="https://wa.me/${tel}?text=${txt}" target="_blank" title="Recordatorio WA">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+            </svg>
+          </a>`;
+        }
+        return `
+          <div class="riesgo-row">
+            <div style="flex:1;min-width:0">
+              <div class="riesgo-nombre">${c.nombre}</div>
+              <div class="riesgo-info">${c.servicio} · cada ${c.frecuencia_dias} días</div>
+            </div>
+            <span class="${badgeCls}">${badgeTxt}</span>
+            ${waBtn}
+          </div>`;
+      }).join('');
+      return `<p class="section-hdr">Clientes fijos con retraso · ${riesgo.length}</p>
+        <div class="riesgo-list">${rows}</div>`;
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+    function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+
+    // ── Logout ───────────────────────────────────────────────────────────────
     document.getElementById('logout-btn').addEventListener('click', async () => {
       await fetch('/admin/api/auth', { method: 'DELETE' });
       location.href = '/admin/';
     });
 
-    function formatFecha(d) { return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`; }
-    function formatLabel(d) { return d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }); }
-    function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
-
     init();
   </script>
 
-  <div class="cal-popup" id="cal-popup"></div>
   <footer class="admin-footer">
     <span>© 2026 Barbería Gebyanos</span>
     <span class="admin-footer-credit">

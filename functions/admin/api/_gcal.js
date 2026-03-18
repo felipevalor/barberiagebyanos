@@ -1,5 +1,16 @@
 // Utilidades compartidas de Google Calendar para el panel admin
 
+// Normaliza teléfonos argentinos a 10 dígitos locales (área + número)
+// Acepta: "3416513207", "543416513207", "5493416513207", con espacios/guiones/etc.
+export function normalizeTel(raw) {
+  if (!raw) return '';
+  const digits = raw.replace(/\D/g, '');
+  if (digits.length === 13 && digits.startsWith('549')) return digits.slice(3);
+  if (digits.length === 12 && digits.startsWith('54'))  return digits.slice(2);
+  if (digits.length === 11 && digits.startsWith('9'))   return digits.slice(1);
+  return digits;
+}
+
 export const DEFAULT_SCHEDULE = {
   1: { start: 9, end: 20 },
   2: { start: 9, end: 20 },

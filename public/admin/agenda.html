@@ -187,8 +187,52 @@
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
       margin: 0;
+      max-height: 90vh; overflow-y: auto;
     }
     dialog::backdrop { background: rgba(0,0,0,0.75); }
+
+    /* ── Autocomplete ── */
+    .ac-wrap { position: relative; }
+    .ac-list {
+      position: absolute; top: 100%; left: 0; right: 0; z-index: 200;
+      background: var(--surface); border: 1px solid var(--gold);
+      border-radius: 8px; overflow: hidden; margin-top: 2px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+    .ac-item {
+      padding: 0.6rem 1rem; cursor: pointer; font-size: 0.875rem;
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid var(--border); transition: background 100ms;
+    }
+    .ac-item:last-child { border-bottom: none; }
+    .ac-item:hover { background: var(--border); }
+    .ac-tel { color: var(--muted); font-size: 0.75rem; }
+
+    /* ── Edit day/slot pickers ── */
+    .edit-days {
+      display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px;
+    }
+    .edit-day-btn {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-family: var(--font-mono); font-size: 0.6rem;
+      padding: 0.3rem 0.1rem; cursor: pointer; text-align: center;
+      transition: border-color 150ms; line-height: 1.4;
+    }
+    .edit-day-btn:hover { border-color: var(--muted); }
+    .edit-day-btn.selected { border-color: var(--gold); color: var(--gold); }
+    .edit-slots {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px;
+    }
+    .edit-slot-btn {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-family: var(--font-mono); font-size: 0.72rem;
+      padding: 0.45rem 0.1rem; cursor: pointer; text-align: center;
+      transition: border-color 150ms;
+    }
+    .edit-slot-btn:hover:not(:disabled) { border-color: var(--muted); }
+    .edit-slot-btn.selected { border-color: var(--gold); color: var(--gold); }
+    .edit-slot-btn:disabled { opacity: 0.28; cursor: default; }
+    .edit-loading { font-size: 0.78rem; color: var(--muted); padding: 0.5rem 0; }
     .modal-header {
       padding: 1.25rem 1.25rem 0;
       display: flex; align-items: flex-start; justify-content: space-between;
@@ -289,8 +333,8 @@
 
   <nav class="bottom-nav">
     <a href="/admin/dashboard">
-      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      Reservas
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Dashboard
     </a>
     <a href="/admin/agenda" class="active">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
@@ -304,6 +348,10 @@
       <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       Fijos
     </a>
+    <a href="/admin/clientes">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/><line x1="20" y1="8" x2="20" y2="14"/></svg>
+      Clientes
+    </a>
     <a href="/admin/configuracion" class="bottom-nav-owner" style="display:none">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       Config
@@ -316,10 +364,11 @@
       <span class="nav-title">Gebyanos</span>
     </div>
     <div class="nav-tabs">
-      <a href="/admin/dashboard"     class="nav-tab">Reservas</a>
+      <a href="/admin/dashboard"     class="nav-tab">Dashboard</a>
       <a href="/admin/agenda"        class="nav-tab active">Agenda</a>
       <a href="/admin/horarios"      class="nav-tab">Horarios</a>
       <a href="/admin/recurrentes"   class="nav-tab">Fijos</a>
+      <a href="/admin/clientes"      class="nav-tab">Clientes</a>
       <a href="/admin/configuracion" class="nav-tab nav-tab-owner" style="display:none">Config</a>
     </div>
     <div class="nav-right">
@@ -362,6 +411,13 @@
 
   <script>
     const SERVICIOS = ['Corte', 'Corte + Barba', 'Barba', 'Afeitado', 'Niños'];
+    const BARBEROS  = [
+      { id: 'gebyano', nombre: 'Gebyano' },
+      { id: 'lobo',    nombre: 'Lobo' },
+      { id: 'felipe',  nombre: 'Felipe' },
+    ];
+    const DIAS_ABR  = ['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
+    const DEFAULT_SCHEDULE = { 1:{start:9,end:20}, 2:{start:9,end:20}, 3:{start:9,end:20}, 4:{start:9,end:20}, 5:{start:9,end:20}, 6:{start:9,end:17} };
 
     let role           = null;
     let sessionBarbero = null;
@@ -469,62 +525,221 @@
       const slot = slotsData.find(s => s.hora === hora);
       if (!slot) return;
       if (slot.status === 'libre')     openModalAgregar(slot);
-      if (slot.status === 'reservado') openModalEditar(slot);
+      if (slot.status === 'reservado') openModalEditar(slot);   // async, no await needed
       if (slot.status === 'bloqueado') openModalDesbloquear(slot);
     }
 
     // ── Modal: Agregar turno ──────────────────────────────
-    function openModalAgregar(slot, preNombre = '', preServicio = '') {
-      setModalHeader('Agregar turno', `${slot.hora} · ${formatLabel(currentDate)}`);
+    async function openModalAgregar(slot, preNombre = '', preServicio = '') {
+      const initBarberoId = getSelectedBarbero();
+      setModalHeader('Agregar turno', formatLabel(currentDate));
+
+      const barberoOpts = BARBEROS.map(b =>
+        `<option value="${b.id}"${b.id === initBarberoId ? ' selected' : ''}>${b.nombre}</option>`
+      ).join('');
+
       document.getElementById('modal-body').innerHTML = `
+        ${role === 'owner' ? `
+        <div class="field">
+          <label>Barbero</label>
+          <select id="m-barbero">${barberoOpts}</select>
+        </div>` : ''}
         <div class="field">
           <label>Nombre del cliente</label>
-          <input id="m-nombre" type="text" placeholder="Juan García" autocomplete="off" value="${preNombre.replace(/"/g, '&quot;')}">
+          <div class="ac-wrap">
+            <input id="m-nombre" type="text" placeholder="Juan García" autocomplete="off" value="${preNombre.replace(/"/g, '&quot;')}">
+          </div>
+        </div>
+        <div class="field">
+          <label>Celular <span style="opacity:0.5;font-size:0.65rem">(opcional)</span></label>
+          <input id="m-tel" type="tel" placeholder="3415551234" autocomplete="off">
         </div>
         <div class="field">
           <label>Servicio</label>
           <select id="m-servicio">
             ${SERVICIOS.map(s => `<option value="${s}"${s === preServicio ? ' selected' : ''}>${s}</option>`).join('')}
           </select>
+        </div>
+        <div class="field">
+          <label>Fecha</label>
+          <div id="m-edit-days" class="edit-days"><span class="edit-loading">Cargando...</span></div>
+        </div>
+        <div class="field">
+          <label>Hora</label>
+          <div id="m-edit-slots" class="edit-slots"><span class="edit-loading">—</span></div>
         </div>`;
+
       document.getElementById('modal-footer').className = 'modal-footer';
       document.getElementById('modal-footer').innerHTML = `
         <button class="btn btn-cancel" onclick="closeModal()">Cancelar</button>
         <button class="btn btn-primary" id="btn-confirm">Confirmar</button>`;
-      document.getElementById('btn-confirm').onclick = () => confirmarAgregar(slot.hora);
-      document.getElementById('m-nombre').addEventListener('keydown', e => { if (e.key === 'Enter') confirmarAgregar(slot.hora); });
       openModal();
       setTimeout(() => document.getElementById('m-nombre')?.focus(), 50);
+
+      let addBarberoId  = initBarberoId;
+      let addFecha      = formatFecha(currentDate);
+      let addHora       = slot.hora;
+      let cachedSchedule = null;
+
+      async function loadSchedule() {
+        try {
+          const r = await fetch(`/api/horarios?barbero=${addBarberoId}`);
+          cachedSchedule = r.ok ? await r.json() : { ...DEFAULT_SCHEDULE };
+        } catch { cachedSchedule = { ...DEFAULT_SCHEDULE }; }
+      }
+
+      function renderDays() {
+        const daysEl = document.getElementById('m-edit-days');
+        if (!daysEl) return;
+        daysEl.innerHTML = '';
+        const today = new Date();
+        for (let i = 0; i < 14; i++) {
+          const d = new Date(today); d.setDate(today.getDate() + i);
+          if (!cachedSchedule[d.getDay()]) continue;
+          const fechaStr = formatFecha(d);
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'edit-day-btn' + (fechaStr === addFecha ? ' selected' : '');
+          btn.innerHTML = `${DIAS_ABR[d.getDay()]}<br><strong>${d.getDate()}</strong>`;
+          btn.addEventListener('click', async () => {
+            daysEl.querySelectorAll('.edit-day-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            addFecha = fechaStr;
+            addHora  = null;
+            await renderSlots();
+          });
+          daysEl.appendChild(btn);
+        }
+      }
+
+      async function renderSlots() {
+        const slotsEl = document.getElementById('m-edit-slots');
+        if (!slotsEl) return;
+        slotsEl.innerHTML = '<span class="edit-loading">Cargando...</span>';
+
+        const barberoNombre = BARBEROS.find(b => b.id === addBarberoId)?.nombre || addBarberoId;
+        let occupied = [];
+        try {
+          const r = await fetch(`/api/turnos?barbero=${encodeURIComponent(barberoNombre)}&fecha=${encodeURIComponent(addFecha)}&barberoId=${addBarberoId}`);
+          if (r.ok) ({ occupied } = await r.json());
+        } catch {}
+
+        const [dd, mm, yy] = addFecha.split('/').map(Number);
+        const dow = new Date(yy, mm - 1, dd).getDay();
+        const daySchedule = cachedSchedule[dow];
+        slotsEl.innerHTML = '';
+
+        if (!daySchedule) {
+          slotsEl.innerHTML = '<span class="edit-loading">Día no laborable.</span>';
+          return;
+        }
+
+        const SLOT_DUR = 30;
+        const now = new Date();
+        for (let h = daySchedule.start; h < daySchedule.end; h++) {
+          for (let m = 0; m < 60; m += SLOT_DUR) {
+            const timeStr   = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+            const slotStart = h * 60 + m;
+            const slotEnd   = slotStart + SLOT_DUR;
+            const slotDate  = new Date(yy, mm - 1, dd, h, m);
+
+            const isBusy = slotDate < now || occupied.some(b => {
+              const [bh, bm] = b.hora.split(':').map(Number);
+              const bStart = bh * 60 + bm;
+              return slotStart < bStart + b.duracion && slotEnd > bStart;
+            });
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'edit-slot-btn' + (timeStr === addHora ? ' selected' : '');
+            btn.textContent = timeStr;
+            btn.disabled = isBusy;
+            if (!isBusy) {
+              btn.addEventListener('click', () => {
+                slotsEl.querySelectorAll('.edit-slot-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                addHora = timeStr;
+              });
+            }
+            slotsEl.appendChild(btn);
+          }
+        }
+      }
+
+      if (role === 'owner') {
+        document.getElementById('m-barbero').addEventListener('change', async e => {
+          addBarberoId = e.target.value;
+          addHora = null;
+          await loadSchedule();
+          renderDays();
+          await renderSlots();
+        });
+      }
+
+      document.getElementById('btn-confirm').onclick = () => confirmarAgregar(addBarberoId, addFecha, addHora);
+      initAutocomplete('m-nombre', 'm-tel');
+
+      await loadSchedule();
+      renderDays();
+      await renderSlots();
     }
 
-    async function confirmarAgregar(hora) {
+    async function confirmarAgregar(barberoId, fecha, hora) {
       const nombre   = document.getElementById('m-nombre').value.trim();
+      const tel      = document.getElementById('m-tel')?.value.trim().replace(/[\s\-().+]/g,'') || '';
       const servicio = document.getElementById('m-servicio').value;
       if (!nombre) { document.getElementById('m-nombre').focus(); return; }
+      if (!hora)   { alert('Elegí un horario'); return; }
       setBusy(true);
       const res = await fetch('/admin/api/turno', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ barbero_id: getSelectedBarbero(), fecha: formatFecha(currentDate), hora, nombre, servicio }),
+        body: JSON.stringify({ barbero_id: barberoId, fecha, hora, nombre, servicio, telefono: tel }),
       });
       if (res.ok) { closeModal(); await load(); }
       else { const { error } = await res.json(); alert(error || 'Error al guardar'); setBusy(false); }
     }
 
     // ── Modal: Editar / Eliminar turno ───────────────────
-    function openModalEditar(slot) {
+    async function openModalEditar(slot) {
+      const slotBarberoId = getSelectedBarbero();
       setModalHeader(`Turno ${slot.hora}`, formatLabel(currentDate));
+
+      const barberoOpts = BARBEROS.map(b =>
+        `<option value="${b.id}"${b.id === slotBarberoId ? ' selected' : ''}>${b.nombre}</option>`
+      ).join('');
+
       document.getElementById('modal-body').innerHTML = `
+        ${role === 'owner' ? `
+        <div class="field">
+          <label>Barbero</label>
+          <select id="m-barbero">${barberoOpts}</select>
+        </div>` : ''}
         <div class="field">
           <label>Nombre del cliente</label>
-          <input id="m-nombre" type="text" value="${esc(slot.nombre)}" autocomplete="off">
+          <div class="ac-wrap">
+            <input id="m-nombre" type="text" value="${esc(slot.nombre)}" autocomplete="off">
+          </div>
+        </div>
+        <div class="field">
+          <label>Celular <span style="opacity:0.5;font-size:0.65rem">(opcional)</span></label>
+          <input id="m-tel" type="tel" placeholder="3415551234" autocomplete="off">
         </div>
         <div class="field">
           <label>Servicio</label>
           <select id="m-servicio">
-            ${SERVICIOS.map(s => `<option value="${s}" ${s === slot.servicio ? 'selected' : ''}>${s}</option>`).join('')}
+            ${SERVICIOS.map(s => `<option value="${s}"${s === slot.servicio ? ' selected' : ''}>${s}</option>`).join('')}
           </select>
+        </div>
+        <div class="field">
+          <label>Fecha</label>
+          <div id="m-edit-days" class="edit-days"><span class="edit-loading">Cargando...</span></div>
+        </div>
+        <div class="field">
+          <label>Hora</label>
+          <div id="m-edit-slots" class="edit-slots"><span class="edit-loading">—</span></div>
         </div>`;
+
       document.getElementById('modal-footer').className = 'modal-footer space-between';
       document.getElementById('modal-footer').innerHTML = `
         <button class="btn btn-danger" id="btn-eliminar">Eliminar</button>
@@ -532,21 +747,138 @@
           <button class="btn btn-cancel" onclick="closeModal()">Cancelar</button>
           <button class="btn btn-primary" id="btn-confirm">Guardar</button>
         </div>`;
-      document.getElementById('btn-confirm').onclick  = () => confirmarEditar(slot.id);
       document.getElementById('btn-eliminar').onclick = () => confirmarEliminar(slot);
       openModal();
       setTimeout(() => { const el = document.getElementById('m-nombre'); if (el) { el.focus(); el.select(); } }, 50);
+
+      let editBarberoId = slotBarberoId;
+      let editFecha     = formatFecha(currentDate);
+      let editHora      = slot.hora;
+      let cachedSchedule = null;
+
+      async function loadSchedule() {
+        try {
+          const r = await fetch(`/api/horarios?barbero=${editBarberoId}`);
+          cachedSchedule = r.ok ? await r.json() : { ...DEFAULT_SCHEDULE };
+        } catch { cachedSchedule = { ...DEFAULT_SCHEDULE }; }
+      }
+
+      function renderDays() {
+        const daysEl = document.getElementById('m-edit-days');
+        if (!daysEl) return;
+        daysEl.innerHTML = '';
+        const today = new Date();
+        for (let i = 0; i < 14; i++) {
+          const d = new Date(today); d.setDate(today.getDate() + i);
+          if (!cachedSchedule[d.getDay()]) continue;
+          const fechaStr = formatFecha(d);
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'edit-day-btn' + (fechaStr === editFecha ? ' selected' : '');
+          btn.innerHTML = `${DIAS_ABR[d.getDay()]}<br><strong>${d.getDate()}</strong>`;
+          btn.addEventListener('click', async () => {
+            daysEl.querySelectorAll('.edit-day-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            editFecha = fechaStr;
+            editHora  = null;
+            await renderSlots();
+          });
+          daysEl.appendChild(btn);
+        }
+      }
+
+      async function renderSlots() {
+        const slotsEl = document.getElementById('m-edit-slots');
+        if (!slotsEl) return;
+        slotsEl.innerHTML = '<span class="edit-loading">Cargando...</span>';
+
+        const barberoNombre = BARBEROS.find(b => b.id === editBarberoId)?.nombre || editBarberoId;
+        let occupied = [];
+        try {
+          const r = await fetch(`/api/turnos?barbero=${encodeURIComponent(barberoNombre)}&fecha=${encodeURIComponent(editFecha)}&barberoId=${editBarberoId}`);
+          if (r.ok) ({ occupied } = await r.json());
+        } catch {}
+
+        const [dd, mm, yy] = editFecha.split('/').map(Number);
+        const dow = new Date(yy, mm - 1, dd).getDay();
+        const daySchedule = cachedSchedule[dow];
+        slotsEl.innerHTML = '';
+
+        if (!daySchedule) {
+          slotsEl.innerHTML = '<span class="edit-loading">Día no laborable.</span>';
+          return;
+        }
+
+        const SLOT_DUR = 30;
+        const now = new Date();
+        for (let h = daySchedule.start; h < daySchedule.end; h++) {
+          for (let m = 0; m < 60; m += SLOT_DUR) {
+            const timeStr = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+            const slotStart = h * 60 + m;
+            const slotEnd   = slotStart + SLOT_DUR;
+            const slotDate  = new Date(yy, mm - 1, dd, h, m);
+
+            // El slot actual del turno sigue disponible aunque esté en DB
+            const isCurrentSlot = timeStr === slot.hora
+              && editFecha     === formatFecha(currentDate)
+              && editBarberoId === slotBarberoId;
+
+            const isBusy = !isCurrentSlot && (
+              slotDate < now ||
+              occupied.some(b => {
+                const [bh, bm] = b.hora.split(':').map(Number);
+                const bStart = bh * 60 + bm;
+                const bEnd   = bStart + b.duracion;
+                return slotStart < bEnd && slotEnd > bStart;
+              })
+            );
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'edit-slot-btn' + (timeStr === editHora ? ' selected' : '');
+            btn.textContent = timeStr;
+            btn.disabled = isBusy;
+            if (!isBusy) {
+              btn.addEventListener('click', () => {
+                slotsEl.querySelectorAll('.edit-slot-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                editHora = timeStr;
+              });
+            }
+            slotsEl.appendChild(btn);
+          }
+        }
+      }
+
+      if (role === 'owner') {
+        document.getElementById('m-barbero').addEventListener('change', async e => {
+          editBarberoId = e.target.value;
+          editHora = null;
+          await loadSchedule();
+          renderDays();
+          await renderSlots();
+        });
+      }
+
+      document.getElementById('btn-confirm').onclick = () => confirmarEditar(slot.id, editBarberoId, editFecha, editHora);
+      initAutocomplete('m-nombre', 'm-tel');
+
+      await loadSchedule();
+      renderDays();
+      await renderSlots();
     }
 
-    async function confirmarEditar(id) {
+    async function confirmarEditar(id, editBarberoId, editFecha, editHora) {
       const nombre   = document.getElementById('m-nombre').value.trim();
+      const tel      = document.getElementById('m-tel')?.value.trim().replace(/[\s\-().+]/g,'') || '';
       const servicio = document.getElementById('m-servicio').value;
-      if (!nombre) { document.getElementById('m-nombre').focus(); return; }
+      if (!nombre)   { document.getElementById('m-nombre').focus(); return; }
+      if (!editHora) { alert('Elegí un horario'); return; }
       setBusy(true);
       const res = await fetch('/admin/api/turno', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, nombre, servicio }),
+        body: JSON.stringify({ id, nombre, servicio, telefono: tel, nuevo_barbero_id: editBarberoId, nueva_fecha: editFecha, nueva_hora: editHora }),
       });
       if (res.ok) { closeModal(); await load(); }
       else { const { error } = await res.json(); alert(error || 'Error al guardar'); setBusy(false); }
@@ -674,6 +1006,49 @@
       await fetch('/admin/api/auth', { method: 'DELETE' });
       location.href = '/admin/';
     });
+
+    // ── Autocomplete clientes ─────────────────────────────
+    function initAutocomplete(nombreId, telId) {
+      const input  = document.getElementById(nombreId);
+      const telEl  = document.getElementById(telId);
+      if (!input) return;
+      let dropEl = null, timer = null;
+
+      function close() { dropEl?.remove(); dropEl = null; }
+
+      input.addEventListener('input', () => {
+        clearTimeout(timer);
+        const q = input.value.trim();
+        if (q.length < 2) { close(); return; }
+        timer = setTimeout(async () => {
+          const res = await fetch(`/admin/api/clientes?q=${encodeURIComponent(q)}&limit=6`);
+          if (!res.ok) return;
+          const { clientes } = await res.json();
+          close();
+          if (!clientes.length) return;
+          dropEl = document.createElement('div');
+          dropEl.className = 'ac-list';
+          clientes.forEach(c => {
+            const item = document.createElement('div');
+            item.className = 'ac-item';
+            item.innerHTML = `<span>${esc(c.nombre)}</span><span class="ac-tel">${c.telefono || ''}</span>`;
+            item.addEventListener('mousedown', e => {
+              e.preventDefault();
+              input.value = c.nombre;
+              if (telEl) telEl.value = c.telefono || '';
+              close();
+            });
+            dropEl.appendChild(item);
+          });
+          input.closest('.ac-wrap').appendChild(dropEl);
+        }, 300);
+      });
+
+      input.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+      document.addEventListener('click', e => {
+        if (!input.closest('.ac-wrap')?.contains(e.target)) close();
+      }, { capture: true });
+    }
 
     // ── Utils ─────────────────────────────────────────────
     function getSelectedBarbero() {

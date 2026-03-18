@@ -1,4 +1,4 @@
-import { BARBEROS_CONFIG, SERVICIOS, sendWhatsAppNotification, getServicios, getGoogleAccessToken, createCalendarEvent } from '../admin/api/_gcal.js';
+import { BARBEROS_CONFIG, SERVICIOS, sendWhatsAppNotification, getServicios, getGoogleAccessToken, createCalendarEvent, normalizeTel } from '../admin/api/_gcal.js';
 
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
@@ -54,13 +54,35 @@ export async function onRequestPost({ request, env, waitUntil }) {
        VALUES (?, ?, ?, ?, ?, ?, NULL, ?)`
     ).bind(
       nombre.trim(),
-      telefono.trim().replace(/[\s\-().+]/g, ''),
+      normalizeTel(telefono),
       servicio,
       nombreBarbero,
       fecha,
       mensaje,
       new Date().toISOString()
     ).run();
+
+    // ── Upsert en clientes (best-effort, no bloquea) ─────────────────────────
+    const telNorm = normalizeTel(telefono);
+    const now = new Date().toISOString();
+    waitUntil(
+      (async () => {
+        try {
+          const existing = await env.barberia_db.prepare(
+            'SELECT id FROM clientes WHERE telefono = ?'
+          ).bind(telNorm).first();
+          if (existing) {
+            await env.barberia_db.prepare(
+              'UPDATE clientes SET nombre = ?, updated_at = ? WHERE id = ?'
+            ).bind(nombre.trim(), now, existing.id).run();
+          } else {
+            await env.barberia_db.prepare(
+              'INSERT INTO clientes (nombre, telefono, notas, created_at, updated_at) VALUES (?, ?, NULL, ?, ?)'
+            ).bind(nombre.trim(), telNorm, now, now).run();
+          }
+        } catch (e) { console.error('Clientes upsert error:', e); }
+      })()
+    );
 
     // ── Calendar + WA en background (no bloquean la respuesta) ───────────────
     waitUntil(Promise.all([

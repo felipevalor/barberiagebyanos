@@ -316,6 +316,19 @@ async function fetchD1BusySlots(barberoNombre, day, barberoId) {
   } catch { return []; }
 }
 
+function buildGcalUrl({ servicio, barbero, fecha, hora }) {
+  const pad2   = n => String(n).padStart(2, '0');
+  const [d, m, y] = fecha.split('/').map(Number);
+  const [h, min]  = hora.split(':').map(Number);
+  const dur    = SERVICIOS[servicio]?.duracion || 30;
+  const endMin = h * 60 + min + dur;
+  const dtStr  = `${y}${pad2(m)}${pad2(d)}`;
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE`
+    + `&text=${encodeURIComponent('Turno Gebyanos — ' + servicio)}`
+    + `&dates=${dtStr}T${pad2(h)}${pad2(min)}00/${dtStr}T${pad2(Math.floor(endMin/60))}${pad2(endMin%60)}00`
+    + `&details=${encodeURIComponent('Barbero: ' + barbero + '\nGebyanos — 1 de Mayo 1687, Rosario')}`;
+}
+
 /**
  * Google Calendar Picker
  */
@@ -538,19 +551,6 @@ async function initCalendarPicker() {
       btn.textContent = 'Confirmar turno';
     }
   });
-
-  function buildGcalUrl({ servicio, barbero, fecha, hora }) {
-    const pad2   = n => String(n).padStart(2, '0');
-    const [d, m, y] = fecha.split('/').map(Number);
-    const [h, min]  = hora.split(':').map(Number);
-    const dur    = SERVICIOS[servicio]?.duracion || 30;
-    const endMin = h * 60 + min + dur;
-    const dtStr  = `${y}${pad2(m)}${pad2(d)}`;
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE`
-      + `&text=${encodeURIComponent('Turno Gebyanos — ' + servicio)}`
-      + `&dates=${dtStr}T${pad2(h)}${pad2(min)}00/${dtStr}T${pad2(Math.floor(endMin/60))}${pad2(endMin%60)}00`
-      + `&details=${encodeURIComponent('Barbero: ' + barbero + '\nGebyanos — 1 de Mayo 1687, Rosario')}`;
-  }
 
   function showConfirmacion(turno) {
     // Guardar nombre y teléfono en cookie (90 días)
@@ -855,6 +855,9 @@ function initMiTurno() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error al modificar. Intentá de nuevo.');
+      t.fecha = newFecha;
+      t.hora  = newHora;
+      t.mensaje = `${newFecha} ${newHora}`;
       showEditConfirmacion(t, newFecha, newHora);
     } catch (e) {
       if (footerEl) footerEl.innerHTML = `<div class="mi-turno-none">${e.message || 'Error al modificar. Intentá de nuevo.'}</div>`;
