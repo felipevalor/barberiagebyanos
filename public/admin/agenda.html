@@ -435,7 +435,7 @@
 
       const sel = document.getElementById('barbero-select');
       if (role === 'owner') {
-        sel.style.display = 'block'; sel.value = sessionBarbero || 'gebyano';
+        sel.style.display = 'block'; sel.value = sessionBarbero;
         document.querySelector('.nav-tab-owner')?.style.removeProperty('display');
         document.querySelector('.bottom-nav-owner')?.style.removeProperty('display');
       }
