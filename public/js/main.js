@@ -420,6 +420,16 @@ function initReservaForm() {
   form.addEventListener('submit', (e) => e.preventDefault());
 }
 
+function updateFormSteps(activeStep) {
+  const steps = document.querySelectorAll('.form-step');
+  steps.forEach(step => {
+    const n = parseInt(step.getAttribute('data-step'), 10);
+    step.classList.remove('active', 'completed');
+    if (n < activeStep)  step.classList.add('completed');
+    if (n === activeStep) step.classList.add('active');
+  });
+}
+
 // ── Slots ocupados: D1 + Google Calendar del barbero ─────────────────────────
 async function fetchD1BusySlots(barberoNombre, day, barberoId) {
   const fecha    = `${day.getDate()}/${day.getMonth() + 1}/${day.getFullYear()}`;
@@ -473,6 +483,7 @@ async function initCalendarPicker() {
     slotPicker.innerHTML = '';
     slotPicker.style.display = 'none';
     validar();
+    updateFormSteps(4);
     // Cargar horario dinámico, feriados y precios desde D1
     try {
       const r = await fetch(`/api/horarios?barbero=${selectedBarbero.id}`);
@@ -500,6 +511,7 @@ async function initCalendarPicker() {
     selectedServicio = document.getElementById('servicio-value')?.value;
     selectedSlot = null;
     validar();
+    updateFormSteps(3);
     if (selectedBarbero && selectedDay) {
       await renderSlots(selectedDay);
     } else if (selectedBarbero) {
@@ -549,6 +561,7 @@ async function initCalendarPicker() {
         selectedDay = day;
         selectedSlot = null;
         validar();
+        updateFormSteps(5);
         renderSlots(day);
       });
       grid.appendChild(dayBtn);
@@ -638,12 +651,17 @@ async function initCalendarPicker() {
     btn.disabled = !(nombre && telefono && servicio && selectedBarbero && selectedDay && selectedSlot);
   }
 
+  const updateDatosStep = () => {
+    validar();
+    const nombre   = document.getElementById('reserva-nombre')?.value.trim();
+    const telefono = document.getElementById('reserva-telefono')?.value.trim();
+    if (nombre && telefono) updateFormSteps(2);
+    else updateFormSteps(1);
+  };
   document.getElementById('reserva-nombre')
-    ?.addEventListener('input', validar);
-
-  // Click en botón — confirmar turno directamente in-app
+    ?.addEventListener('input', updateDatosStep);
   document.getElementById('reserva-telefono')
-    ?.addEventListener('input', validar);
+    ?.addEventListener('input', updateDatosStep);
 
   btn.addEventListener('click', async () => {
     const nombre    = document.getElementById('reserva-nombre').value.trim();
