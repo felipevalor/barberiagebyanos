@@ -111,10 +111,11 @@ export async function sendWhatsAppNotification(barberoId, turno, env, tipo = 'nu
     } catch {}
     if (!tel) return;
 
-    const { nombre, servicio, fecha, hora } = turno;
+    const { nombre, servicio, fecha, hora, precio_ars } = turno;
+    const precioStr = precio_ars ? ` ($${Number(precio_ars).toLocaleString('es-AR')})` : '';
     const prefijos = { nuevo: '🔔 Nuevo turno', modificado: '✏️ Turno modificado', cancelado: '❌ Turno cancelado' };
     const prefijo  = prefijos[tipo] ?? prefijos.nuevo;
-    const texto    = `${prefijo}\n👤 ${nombre}\n✂️ ${servicio}\n📅 ${fecha} a las ${hora}`;
+    const texto    = `${prefijo}\n👤 ${nombre}\n✂️ ${servicio}${precioStr}\n📅 ${fecha} a las ${hora}`;
     const url      = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(tel)}&text=${encodeURIComponent(texto)}&apikey=${apiKey}`;
 
     await fetch(url).catch(() => {});

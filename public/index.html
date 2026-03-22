@@ -62,61 +62,12 @@
                 <div class="section-label">Servicios</div>
                 <h2>Qué <em>hacemos</em></h2>
 
-                <div class="servicios-grid reveal">
-                    <div class="servicio-card">
-                        <div class="servicio-nombre">Corte</div>
-                        <div class="servicio-incluye">Tijera o máquina · Perfilado de cejas · Café o bebida</div>
-                        <div class="servicio-precio">$20.000</div>
-                    </div>
-                    <div class="servicio-card">
-                        <div class="servicio-nombre">Corte + Barba</div>
-                        <div class="servicio-incluye">El combo completo · Perfilado de cejas · Café o bebida</div>
-                        <div class="servicio-precio">$25.000</div>
-                    </div>
-                    <div class="servicio-card">
-                        <div class="servicio-nombre">Barba</div>
-                        <div class="servicio-incluye">Perfilado y definición · Café o bebida</div>
-                        <div class="servicio-precio">$8.000</div>
-                    </div>
-                    <div class="servicio-card">
-                        <div class="servicio-nombre">Afeitado</div>
-                        <div class="servicio-incluye">Navaja · Toalla caliente · Café o bebida</div>
-                        <div class="servicio-precio">$6.000</div>
-                    </div>
-                    <div class="servicio-card">
-                        <div class="servicio-nombre">Niños (10–13 años)</div>
-                        <div class="servicio-incluye">Perfilado de cejas · Café o bebida</div>
-                        <div class="servicio-precio">$17.000</div>
-                    </div>
-                    <div class="servicio-card">
-                        <div class="servicio-nombre">Niños (0–9 años)</div>
-                        <div class="servicio-incluye">Perfilado de cejas · Café o bebida</div>
-                        <div class="servicio-precio">$15.000</div>
-                    </div>
-                </div>
+                <div id="servicios-grid" class="servicios-grid reveal"></div>
 
                 <!-- Promos -->
-                <div class="promos-wrapper reveal">
+                <div id="promos-wrapper" class="promos-wrapper reveal" style="display:none">
                     <div class="section-label" style="margin-top: 4rem;">Promos</div>
-                    <div class="promos-grid">
-                        <div class="promo-card">
-                            <div class="promo-nombre">2 o 3 cortes</div>
-                            <div class="promo-precio">$18.000 <span>c/u</span></div>
-                            <div class="promo-nota">Se abona al primer corte · No incluye barba</div>
-                        </div>
-                        <div class="promo-card">
-                            <div class="promo-nombre">4 cortes</div>
-                            <div class="promo-precio">$68.000</div>
-                            <div class="promo-nota">Se abona al primer corte · No incluye barba</div>
-                        </div>
-                        <div class="promo-card promo-especial">
-                            <div class="promo-badge">Especial</div>
-                            <div class="promo-nombre">Fuerzas Gebyanas</div>
-                            <div class="promo-precio">$15.000</div>
-                            <div class="promo-nota">Policía · Gendarmería · Prefectura · Perfilado + bebida incluidos
-                            </div>
-                        </div>
-                    </div>
+                    <div id="promos-grid" class="promos-grid"></div>
                 </div>
 
             </div>
@@ -154,17 +105,12 @@
                                 </svg>
                             </div>
                             <div class="custom-select-dropdown">
-                                <div class="select-option" data-value="Corte">Corte <span>$20.000</span></div>
-                                <div class="select-option" data-value="Corte + Barba">Corte + Barba <span>$25.000</span>
-                                </div>
-                                <div class="select-option" data-value="Barba">Barba <span>$8.000</span></div>
-                                <div class="select-option" data-value="Afeitado">Afeitado <span>$6.000</span></div>
-                                <div class="select-option" data-value="Niños 10-13 años">Niños 10–13 años
-                                    <span>$17.000</span>
-                                </div>
-                                <div class="select-option" data-value="Niños 0-9 años">Niños 0–9 años
-                                    <span>$15.000</span>
-                                </div>
+                                <div class="select-option" data-value="Corte">Corte</div>
+                                <div class="select-option" data-value="Corte + Barba">Corte + Barba</div>
+                                <div class="select-option" data-value="Barba">Barba</div>
+                                <div class="select-option" data-value="Afeitado">Afeitado</div>
+                                <div class="select-option" data-value="Niños 10-13 años">Niños 10–13 años</div>
+                                <div class="select-option" data-value="Niños 0-9 años">Niños 0–9 años</div>
                             </div>
                         </div>
                         <input type="hidden" name="servicio" id="servicio-value" required>

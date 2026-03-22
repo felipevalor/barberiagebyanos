@@ -4,8 +4,10 @@
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Iniciar fetch de barberos sin bloquear — las animaciones arrancan de inmediato
-    const barberosFetch = fetch('/api/barberos').catch(() => null);
+    // Iniciar fetches sin bloquear — las animaciones arrancan de inmediato
+    const barberosFetch  = fetch('/api/barberos').catch(() => null);
+    const catalogoFetch  = fetch('/api/catalogo').catch(() => null);
+    const promosFetch    = fetch('/api/promos').catch(() => null);
 
     initCustomCursor();
     initNavScroll();
@@ -21,10 +23,60 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (r?.ok) BARBEROS = await r.json();
     } catch { /* usa fallback hardcodeado */ }
 
+    // Render catálogo
+    try {
+        const r = await catalogoFetch;
+        if (r?.ok) renderCatalogo(await r.json());
+    } catch { /* grid queda vacío — fallback en CSS no requerido */ }
+
+    // Render promos
+    try {
+        const r = await promosFetch;
+        if (r?.ok) renderPromos(await r.json());
+    } catch { /* sección promos queda oculta */ }
+
     initReservaForm();
     initCalendarPicker();
     initMiTurno();
 });
+
+function renderCatalogo(items) {
+    const grid = document.getElementById('servicios-grid');
+    if (!grid || !items.length) return;
+    grid.innerHTML = items.map(s => {
+        const precio = s.precio_ars && s.precio_ars > 0
+            ? `<div class="servicio-precio">$${Number(s.precio_ars).toLocaleString('es-AR')}</div>`
+            : '';
+        return `<div class="servicio-card">
+            <div class="servicio-nombre">${s.nombre}</div>
+            <div class="servicio-incluye">${s.incluye || ''}</div>
+            ${precio}
+        </div>`;
+    }).join('');
+}
+
+function renderPromos(promos) {
+    const wrapper = document.getElementById('promos-wrapper');
+    const grid = document.getElementById('promos-grid');
+    if (!wrapper || !grid) return;
+    const activas = promos.filter(p => p.activo !== 0);
+    if (!activas.length) return;
+    grid.innerHTML = activas.map(p => {
+        const badge = p.badge ? `<div class="promo-badge">${p.badge}</div>` : '';
+        const especial = p.badge ? ' promo-especial' : '';
+        const precio = p.precio_ars && p.precio_ars > 0
+            ? `$${Number(p.precio_ars).toLocaleString('es-AR')}${p.unidad ? ` <span>${p.unidad}</span>` : ''}`
+            : '';
+        const nota = p.nota ? `<div class="promo-nota">${p.nota}</div>` : '';
+        return `<div class="promo-card${especial}">
+            ${badge}
+            <div class="promo-nombre">${p.nombre}</div>
+            ${precio ? `<div class="promo-precio">${precio}</div>` : ''}
+            ${nota}
+        </div>`;
+    }).join('');
+    wrapper.style.display = '';
+}
 
 /**
  * Custom Cursor Logic
@@ -201,25 +253,52 @@ function initCustomSelect() {
     select.classList.toggle('open');
   });
 
-  dropdown.querySelectorAll('.select-option').forEach(option => {
-    option.addEventListener('click', () => {
-      const value = option.getAttribute('data-value');
-      display.textContent = option.childNodes[0].textContent.trim();
-      display.style.color = 'var(--text)';
-      hiddenInput.value = value;
-      
-      // Disparar evento para validación
-      document.dispatchEvent(new Event('servicioSeleccionado'));
+  // Delegación: funciona con opciones re-renderizadas dinámicamente
+  dropdown.addEventListener('click', (e) => {
+    const option = e.target.closest('.select-option');
+    if (!option) return;
+    const value = option.getAttribute('data-value');
+    const nameText  = option.childNodes[0].textContent.trim();
+    const priceText = option.querySelector('.precio-tag')?.textContent;
+    display.textContent = priceText ? `${nameText} — ${priceText}` : nameText;
+    display.style.color = 'var(--text)';
+    hiddenInput.value = value;
 
-      dropdown.querySelectorAll('.select-option').forEach(o => o.classList.remove('selected'));
-      option.classList.add('selected');
-      select.classList.remove('open');
-    });
+    document.dispatchEvent(new Event('servicioSeleccionado'));
+
+    dropdown.querySelectorAll('.select-option').forEach(o => o.classList.remove('selected'));
+    option.classList.add('selected');
+    select.classList.remove('open');
   });
 
   // Cerrar al clickear afuera
   document.addEventListener('click', (e) => {
     if (!select.contains(e.target)) select.classList.remove('open');
+  });
+}
+
+// Actualiza el dropdown de servicios con precios del barbero seleccionado
+function updateServicioDropdown(servicios) {
+  const dropdown = document.querySelector('#custom-select-servicio .custom-select-dropdown');
+  const hiddenInput = document.getElementById('servicio-value');
+  if (!dropdown) return;
+
+  const currentValue = hiddenInput?.value;
+
+  dropdown.querySelectorAll('.select-option').forEach(opt => {
+    const nombre = opt.getAttribute('data-value');
+    const s = servicios.find(x => x.nombre === nombre);
+    const precio = s?.precio_ars;
+    // Limpiar spans de precio previos
+    opt.querySelectorAll('.precio-tag').forEach(el => el.remove());
+    // Reconstruir texto base (el primer text node)
+    // Si existe el primer text node lo actualizamos; si no, lo dejamos
+    if (precio && precio > 0) {
+      const tag = document.createElement('span');
+      tag.className = 'precio-tag';
+      tag.textContent = '$' + precio.toLocaleString('es-AR');
+      opt.appendChild(tag);
+    }
   });
 }
 
@@ -252,7 +331,7 @@ const SERVICIOS = {
  */
 // Poblado en DOMContentLoaded desde /api/barberos; fallback a hardcodeado si la API falla
 let BARBEROS = [
-  { id: 'gebyano', nombre: 'Gebyano', tel: '5493416021009', disponible: true,  calendarId: null,                      schedule: DEFAULT_SCHEDULE },
+  { id: 'gebyano', nombre: 'Gebyano', tel: '5493416021009', disponible: false, calendarId: null,                      schedule: DEFAULT_SCHEDULE },
   { id: 'lobo',    nombre: 'Lobo',    tel: '5493412754502', disponible: true,  calendarId: null,                      schedule: DEFAULT_SCHEDULE },
   { id: 'felipe',  nombre: 'Felipe',  tel: '5493416513207', disponible: true,  calendarId: 'felipevalor7@gmail.com',  schedule: DEFAULT_SCHEDULE },
   { id: 'ns',      nombre: 'NS',      tel: null,            disponible: false, calendarId: null,                      schedule: null },
@@ -316,11 +395,11 @@ async function fetchD1BusySlots(barberoNombre, day, barberoId) {
   } catch { return []; }
 }
 
-function buildGcalUrl({ servicio, barbero, fecha, hora }) {
+function buildGcalUrl({ servicio, barbero, fecha, hora, duracion }) {
   const pad2   = n => String(n).padStart(2, '0');
   const [d, m, y] = fecha.split('/').map(Number);
   const [h, min]  = hora.split(':').map(Number);
-  const dur    = SERVICIOS[servicio]?.duracion || 30;
+  const dur    = duracion || SERVICIOS[servicio]?.duracion || 30;
   const endMin = h * 60 + min + dur;
   const dtStr  = `${y}${pad2(m)}${pad2(d)}`;
   return `https://calendar.google.com/calendar/render?action=TEMPLATE`
@@ -342,6 +421,7 @@ async function initCalendarPicker() {
   let selectedServicio = null;
   let selectedDay      = null;
   let selectedSlot     = null;
+  let serviciosCache   = [];  // [{nombre, duracion_min, precio_ars}] del barbero actual
 
   // Escuchar selección de barbero
   document.addEventListener('barberoSeleccionado', async (e) => {
@@ -351,7 +431,7 @@ async function initCalendarPicker() {
     slotPicker.innerHTML = '';
     slotPicker.style.display = 'none';
     validar();
-    // Cargar horario dinámico y feriados desde D1
+    // Cargar horario dinámico, feriados y precios desde D1
     try {
       const r = await fetch(`/api/horarios?barbero=${selectedBarbero.id}`);
       if (r.ok) selectedBarbero.schedule = await r.json();
@@ -363,6 +443,13 @@ async function initCalendarPicker() {
         selectedBarbero.feriados = new Set(feriados);
       }
     } catch { selectedBarbero.feriados = new Set(); }
+    try {
+      const rs = await fetch(`/api/servicios?barbero_id=${selectedBarbero.id}`);
+      if (rs.ok) {
+        serviciosCache = await rs.json();
+        updateServicioDropdown(serviciosCache);
+      }
+    } catch { /* usa precios sin mostrar */ }
     if (selectedServicio) await renderDays();
   });
 
@@ -529,7 +616,8 @@ async function initCalendarPicker() {
           fecha,
           hora:       selectedSlot,
           calendarId: selectedBarbero.calendarId || null,
-          duracion:   SERVICIOS[servicio]?.duracion || 30,
+          duracion:   serviciosCache.find(s => s.nombre === servicio)?.duracion_min || SERVICIOS[servicio]?.duracion || 30,
+          precio_ars: serviciosCache.find(s => s.nombre === servicio)?.precio_ars || null,
         }),
       });
 
@@ -543,7 +631,8 @@ async function initCalendarPicker() {
       }
 
       // Mostrar pantalla de confirmación
-      showConfirmacion(data.turno || { nombre, telefono, servicio, barbero: selectedBarbero.nombre, fecha, hora: selectedSlot });
+      const duracionConfirm = serviciosCache.find(s => s.nombre === servicio)?.duracion_min || SERVICIOS[servicio]?.duracion || 30;
+      showConfirmacion({ ...(data.turno || { nombre, telefono, servicio, barbero: selectedBarbero.nombre, fecha, hora: selectedSlot }), duracion: duracionConfirm });
 
     } catch {
       alert('Error de red. Verificá tu conexión e intentá de nuevo.');

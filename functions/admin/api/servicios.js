@@ -1,8 +1,8 @@
 import { getToken } from './auth.js';
 import { SERVICIOS } from './_gcal.js';
 
-// GET /admin/api/servicios?barbero=X  → duraciones del barbero (D1 o fallback)
-// PUT /admin/api/servicios            → { barbero_id, servicios: [{nombre, duracion_min}] }
+// GET /admin/api/servicios?barbero=X  → duraciones + precios del barbero (D1 o fallback)
+// PUT /admin/api/servicios            → { barbero_id, servicios: [{nombre, duracion_min, precio_ars}] }
 
 export async function onRequestGet({ request, env }) {
   const token = getToken(request);
@@ -17,15 +17,16 @@ export async function onRequestGet({ request, env }) {
   const bId = session.role === 'owner' ? (url.searchParams.get('barbero') || session.barbero_id) : session.barbero_id;
 
   const { results } = await env.barberia_db.prepare(
-    'SELECT nombre, duracion_min FROM servicios_config WHERE barbero_id = ?'
+    'SELECT nombre, duracion_min, precio_ars FROM servicios_config WHERE barbero_id = ?'
   ).bind(bId).all();
 
   const dbMap = {};
-  for (const r of results) dbMap[r.nombre] = r.duracion_min;
+  for (const r of results) dbMap[r.nombre] = r;
 
   const servicios = Object.entries(SERVICIOS).map(([nombre, duracion]) => ({
     nombre,
-    duracion_min: dbMap[nombre] ?? duracion,
+    duracion_min: dbMap[nombre]?.duracion_min ?? duracion,
+    precio_ars:   dbMap[nombre]?.precio_ars ?? null,
   }));
 
   return json({ servicios });
@@ -51,12 +52,15 @@ export async function onRequestPut({ request, env }) {
     if (!Number.isInteger(s.duracion_min) || s.duracion_min < 15 || s.duracion_min % 15 !== 0) {
       return json({ error: `Duración inválida para "${s.nombre}": debe ser múltiplo de 15 y mínimo 15 min` }, 400);
     }
+    if (s.precio_ars != null && (!Number.isInteger(s.precio_ars) || s.precio_ars < 0)) {
+      return json({ error: `Precio inválido para "${s.nombre}": debe ser un entero positivo` }, 400);
+    }
   }
 
   const stmts = servicios.map(s =>
     env.barberia_db.prepare(
-      'INSERT OR REPLACE INTO servicios_config (barbero_id, nombre, duracion_min) VALUES (?, ?, ?)'
-    ).bind(bId, s.nombre, s.duracion_min)
+      'INSERT OR REPLACE INTO servicios_config (barbero_id, nombre, duracion_min, precio_ars) VALUES (?, ?, ?, ?)'
+    ).bind(bId, s.nombre, s.duracion_min, s.precio_ars ?? null)
   );
   await env.barberia_db.batch(stmts);
 

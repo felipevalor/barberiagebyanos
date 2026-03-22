@@ -10,7 +10,7 @@ const CORS = {
 export async function onRequestPost({ request, env, waitUntil }) {
   try {
     const body = await request.json();
-    const { nombre, telefono, servicio, barberoId, barbero: barberoNombre, fecha, hora, calendarId, duracion } = body;
+    const { nombre, telefono, servicio, barberoId, barbero: barberoNombre, fecha, hora, calendarId, duracion, precio_ars } = body;
 
     if (!nombre?.trim() || !telefono?.trim() || !servicio || !fecha || !hora) {
       return res({ success: false, error: 'Faltan campos obligatorios' }, 400);
@@ -101,7 +101,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
         } catch (e) { console.error('Calendar error:', e); }
       })(),
       // Notificar al barbero por WA
-      bId ? sendWhatsAppNotification(bId, { nombre: nombre.trim(), servicio, fecha, hora }, env).catch(() => {}) : Promise.resolve(),
+      bId ? sendWhatsAppNotification(bId, { nombre: nombre.trim(), servicio, fecha, hora, precio_ars: precio_ars ?? null }, env).catch(() => {}) : Promise.resolve(),
     ]));
 
     return res({ success: true, turno: { nombre: nombre.trim(), servicio, barbero: nombreBarbero, fecha, hora } });
