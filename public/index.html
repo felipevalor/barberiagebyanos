@@ -60,30 +60,30 @@
         <section id="prueba-social">
             <div class="container">
                 <div class="stats-row reveal">
-                    <div class="stat-item">
+                    <div class="stat-item" aria-label="15 o más años en el barrio">
                         <div class="stat-number">15+</div>
                         <div class="stat-label">años en<br>el barrio</div>
                     </div>
                     <div class="stat-divider"></div>
-                    <div class="stat-item">
+                    <div class="stat-item" aria-label="2 barberos disponibles">
                         <div class="stat-number">2</div>
                         <div class="stat-label">barberos<br>disponibles</div>
                     </div>
                     <div class="stat-divider"></div>
-                    <div class="stat-item">
+                    <div class="stat-item" aria-label="Horarios: lunes a viernes 9 a 20, sábados 9 a 17">
                         <div class="stat-number">Lun–Vie</div>
                         <div class="stat-label">9:00–20:00<br>Sáb 9:00–17:00</div>
                     </div>
                 </div>
                 <div class="testimonios-grid reveal" style="transition-delay: 100ms;">
-                    <div class="testimonio-card">
+                    <blockquote class="testimonio-card">
                         <p class="testimonio-texto">"El único lugar donde salgo contento. Llevo 4 años viniendo."</p>
-                        <div class="testimonio-autor">— Rodrigo M., cliente frecuente</div>
-                    </div>
-                    <div class="testimonio-card">
+                        <footer class="testimonio-autor"><cite>— Rodrigo M., cliente frecuente</cite></footer>
+                    </blockquote>
+                    <blockquote class="testimonio-card">
                         <p class="testimonio-texto">"Ambiente de barrio de verdad. Te atienden con tiempo."</p>
-                        <div class="testimonio-autor">— Matías F., cliente frecuente</div>
-                    </div>
+                        <footer class="testimonio-autor"><cite>— Matías F., cliente frecuente</cite></footer>
+                    </blockquote>
                 </div>
             </div>
         </section>
@@ -132,24 +132,24 @@
                 <p class="reservar-sub reveal">Elegí el servicio, el barbero y el horario. Sin app, sin registro.
                 </p>
 
-                <div class="form-steps reveal" id="form-steps">
-                    <div class="form-step active" data-step="1">
+                <div class="form-steps reveal" id="form-steps" role="list" aria-label="Pasos del formulario">
+                    <div class="form-step active" data-step="1" role="listitem" aria-current="step">
                         <span class="step-num">1</span>
                         <span class="step-label">Datos</span>
                     </div>
-                    <div class="form-step" data-step="2">
+                    <div class="form-step" data-step="2" role="listitem">
                         <span class="step-num">2</span>
                         <span class="step-label">Servicio</span>
                     </div>
-                    <div class="form-step" data-step="3">
+                    <div class="form-step" data-step="3" role="listitem">
                         <span class="step-num">3</span>
                         <span class="step-label">Barbero</span>
                     </div>
-                    <div class="form-step" data-step="4">
+                    <div class="form-step" data-step="4" role="listitem">
                         <span class="step-num">4</span>
                         <span class="step-label">Día</span>
                     </div>
-                    <div class="form-step" data-step="5">
+                    <div class="form-step" data-step="5" role="listitem">
                         <span class="step-num">5</span>
                         <span class="step-label">Horario</span>
                     </div>
@@ -215,10 +215,10 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="btn magnetic btn-incomplete" id="reserva-btn">
+                    <button type="submit" class="btn magnetic btn-incomplete" id="reserva-btn" aria-describedby="reserva-btn-tooltip">
                         Confirmar turno
                     </button>
-                    <div id="reserva-btn-tooltip" class="reserva-btn-tooltip" style="display:none;">
+                    <div id="reserva-btn-tooltip" class="reserva-btn-tooltip" role="tooltip" style="display:none;">
                         Completá los pasos anteriores para confirmar.
                     </div>
 
