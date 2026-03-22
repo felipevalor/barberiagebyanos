@@ -415,6 +415,7 @@
   <script>
     const SERVICIOS = ['Corte','Corte + Barba','Barba','Afeitado','Niños 10-13 años','Niños 0-9 años'];
     const FRECUENCIAS = { 7: 'Semanal', 14: 'Quincenal', 21: 'Cada 3 sem.', 28: 'Mensual' };
+    const DEFAULT_SCHEDULE = { 1:{start:9,end:20}, 2:{start:9,end:20}, 3:{start:9,end:20}, 4:{start:9,end:20}, 5:{start:9,end:20}, 6:{start:9,end:17} };
 
     let role           = null;
     let sessionBarbero = null;
@@ -517,20 +518,33 @@
     let agendarFecha   = null;
     let agendarHora    = null;
 
-    function agendar(c) {
+    async function agendar(c) {
       agendarCliente = c;
       agendarFecha   = null;
       agendarHora    = null;
 
       document.getElementById('ma-title').textContent = `Agendar — ${c.nombre}`;
       document.getElementById('ma-confirm').disabled = true;
+      document.getElementById('ma-dias').innerHTML = '<span class="slots-msg">Cargando...</span>';
+      document.getElementById('ma-slots').innerHTML = '<span class="slots-msg">Seleccioná un día</span>';
+      document.getElementById('modal-agendar').showModal();
 
-      const dias = getProximosDias(21);
+      const bId = getSelectedBarbero();
+      let schedule = { ...DEFAULT_SCHEDULE };
+      try {
+        const r = await fetch(`/api/horarios?barbero=${bId}`);
+        if (r.ok) schedule = await r.json();
+      } catch { /* usa DEFAULT_SCHEDULE */ }
+
+      const dias = getProximosDias(21, schedule);
       const suggested = c.proximo_turno;
 
       const diasRow = document.getElementById('ma-dias');
+      const hasSuggested = dias.some(d => d.fecha === suggested);
+      const fechaInicial = hasSuggested ? suggested : (dias[0]?.fecha || suggested);
+
       diasRow.innerHTML = dias.map(({ fecha, num, nom }) =>
-        `<button class="dia-chip${fecha === suggested ? ' active' : ''}" data-fecha="${fecha}">
+        `<button class="dia-chip${fecha === fechaInicial ? ' active' : ''}" data-fecha="${fecha}">
           <span class="dia-num">${num}</span>
           <span class="dia-nom">${nom}</span>
         </button>`
@@ -540,14 +554,12 @@
         btn.addEventListener('click', () => selectDia(btn.dataset.fecha));
       });
 
-      document.getElementById('ma-slots').innerHTML = '<span class="slots-msg">Cargando...</span>';
-      document.getElementById('modal-agendar').showModal();
-
-      // Scroll suggested chip into view
+      // Scroll active chip into view
       const activeChip = diasRow.querySelector('.dia-chip.active');
       if (activeChip) setTimeout(() => activeChip.scrollIntoView({ inline: 'center', behavior: 'smooth', block: 'nearest' }), 50);
 
-      selectDia(suggested);
+      document.getElementById('ma-slots').innerHTML = '<span class="slots-msg">Cargando...</span>';
+      selectDia(fechaInicial);
     }
 
     async function selectDia(fecha) {
@@ -601,12 +613,12 @@
       });
     }
 
-    function getProximosDias(n) {
+    function getProximosDias(n, schedule) {
       const DIAS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
       const result = [];
       const d = new Date();
       while (result.length < n) {
-        if (d.getDay() !== 0) {
+        if (schedule[d.getDay()]) {
           result.push({ fecha: `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`, num: d.getDate(), nom: DIAS[d.getDay()] });
         }
         d.setDate(d.getDate() + 1);

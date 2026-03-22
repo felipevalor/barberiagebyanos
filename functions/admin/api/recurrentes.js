@@ -1,5 +1,5 @@
 import { getToken } from './auth.js';
-import { BARBEROS_CONFIG } from './_gcal.js';
+import { BARBEROS_CONFIG, getSchedule } from './_gcal.js';
 
 // GET    /admin/api/recurrentes?barbero=X  → lista con próximo turno sugerido
 // POST   /admin/api/recurrentes            → { barbero_id, nombre, servicio, frecuencia_dias, hora_preferida, precio_especial, notas }
@@ -29,18 +29,22 @@ export async function onRequestGet({ request, env }) {
   for (const h of historial) ultimoMap[h.nombre.toLowerCase()] = h.ultimo_turno;
 
   const hoy = new Date();
+  const schedule = await getSchedule(bId, env);
+
   const data = clientes.map(c => {
     const ultimo = ultimoMap[c.nombre.toLowerCase()];
-    let proximo = null;
+    let dt;
     if (ultimo) {
       const [d, m, y] = ultimo.split('/').map(Number);
-      const dt = new Date(y, m - 1, d);
+      dt = new Date(y, m - 1, d);
       dt.setDate(dt.getDate() + c.frecuencia_dias);
-      proximo = dt < hoy ? formatFecha(hoy) : formatFecha(dt);
+      if (dt < hoy) dt = new Date(hoy);
     } else {
-      proximo = formatFecha(hoy);
+      dt = new Date(hoy);
     }
-    return { ...c, ultimo_turno: ultimo || null, proximo_turno: proximo };
+    // Advance to next working day if needed (max 7 iterations to avoid infinite loop)
+    for (let i = 0; i < 7 && !schedule[dt.getDay()]; i++) dt.setDate(dt.getDate() + 1);
+    return { ...c, ultimo_turno: ultimo || null, proximo_turno: formatFecha(dt) };
   });
 
   return json({ clientes: data });

@@ -2,9 +2,10 @@
 // Devuelve slots ocupados: reservas D1 + eventos de Google Calendar del barbero.
 // Si el barbero tiene calendarId configurado, los eventos personales también bloquean slots.
 
-import { getGoogleAccessToken, getCalendarEvents, BARBEROS_CONFIG } from '../admin/api/_gcal.js';
+import { getGoogleAccessToken, getCalendarEvents, BARBEROS_CONFIG, getServicios, SLOT_DURATION } from '../admin/api/_gcal.js';
 
-const SERVICIOS_DUR = {
+// Fallback durations if DB lookup fails or barberoId is not provided
+const SERVICIOS_DUR_FALLBACK = {
   'Corte': 30, 'Corte + Barba': 45, 'Barba': 15,
   'Afeitado': 15, 'Niños 10-13 años': 30, 'Niños 0-9 años': 30,
 };
@@ -17,13 +18,19 @@ export async function onRequestGet({ request, env }) {
 
   if (!barbero || !fecha) return json({ occupied: [] });
 
+  // ── Durations: DB-backed per barbero, fallback to static map ─────────────
+  let serviciosMap = SERVICIOS_DUR_FALLBACK;
+  if (barberoId) {
+    try { serviciosMap = await getServicios(env, barberoId); } catch { /* use fallback */ }
+  }
+
   // ── D1: reservas existentes ───────────────────────────────────────────────
   const { results } = await env.barberia_db.prepare(
     'SELECT mensaje, servicio FROM reservas WHERE barbero = ? AND fecha = ?'
   ).bind(barbero, fecha).all();
 
   const occupied = results
-    .map(r => ({ hora: r.mensaje?.split(' ')[1], duracion: SERVICIOS_DUR[r.servicio] || 30 }))
+    .map(r => ({ hora: r.mensaje?.split(' ')[1], duracion: serviciosMap[r.servicio] || SLOT_DURATION }))
     .filter(r => r.hora);
 
   // ── Google Calendar: eventos personales del barbero ───────────────────────
