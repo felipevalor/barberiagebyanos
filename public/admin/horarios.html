@@ -128,52 +128,7 @@
   </style>
 </head>
 <body>
-
-  <nav class="bottom-nav">
-    <a href="/admin/dashboard">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      Dashboard
-    </a>
-    <a href="/admin/agenda">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
-      Agenda
-    </a>
-    <a href="/admin/horarios" class="active">
-      <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/></svg>
-      Horarios
-    </a>
-    <a href="/admin/clientes">
-      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      Clientes
-    </a>
-    <a href="/admin/recurrentes">
-      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      Fijos
-    </a>
-    <a href="/admin/configuracion" class="bottom-nav-owner" style="display:none">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      Config
-    </a>
-  </nav>
-
-  <nav class="nav">
-    <div class="nav-brand">
-      <img src="/img/logo.jpg" alt="Gebyanos" class="nav-logo">
-      <span class="nav-title">Gebyanos</span>
-    </div>
-    <div class="nav-tabs">
-      <a href="/admin/dashboard"     class="nav-tab">Dashboard</a>
-      <a href="/admin/agenda"        class="nav-tab">Agenda</a>
-      <a href="/admin/horarios"      class="nav-tab active">Horarios</a>
-      <a href="/admin/clientes"      class="nav-tab">Clientes</a>
-      <a href="/admin/recurrentes"   class="nav-tab">Fijos</a>
-      <a href="/admin/configuracion" class="nav-tab nav-tab-owner" style="display:none">Config</a>
-    </div>
-    <div class="nav-right">
-      <span class="nav-user" id="nav-user"></span>
-      <button class="nav-logout" id="logout-btn">Salir</button>
-    </div>
-  </nav>
+  <div id="nav-placeholder"></div>
 
   <main class="main">
 
@@ -484,16 +439,28 @@
       setTimeout(() => { el.style.display = 'none'; }, 4000);
     }
 
-    document.getElementById('logout-btn').addEventListener('click', async () => {
-      await fetch('/admin/api/auth', { method: 'DELETE' });
-      location.href = '/admin/';
-    });
 
     function pad(n) { return String(n).padStart(2, '0'); }
     function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
     init();
+
+    // ── Nav compartido ──────────────────────────────────────────
+    (function () {
+      const path = location.pathname.replace(/\/$/, '');
+      fetch('/admin/_nav.html').then(r => r.text()).then(html => {
+        document.getElementById('nav-placeholder').innerHTML = html;
+        document.querySelector(`.nav-tab[href="${path}"]`)?.classList.add('active');
+        const bLink = document.querySelector(`.bottom-nav a[href="${path}"]`);
+        if (bLink) bLink.classList.add('active');
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+          await fetch('/admin/api/auth', { method: 'DELETE' });
+          location.href = '/admin/';
+        });
+      });
+    })();
   </script>
+  <script src="/js/toast.js"></script>
 
   <footer class="admin-footer">
     <span>© 2026 Barbería Gebyanos</span>
