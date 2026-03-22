@@ -361,6 +361,14 @@ function initReservaForm() {
     if (input && !input.value) input.value = decodeURIComponent(cookieMatch[1]);
   }
 
+  const ESPECIALIDADES = {
+    gebyano: 'Degradés y estilos',
+    lobo:    'Clásicos y barba',
+    felipe:  'Degradés y barba',
+    ns:      'Próximamente',
+    bql:     'Próximamente',
+  };
+
   const form = document.getElementById('reserva-form');
   const grid = document.getElementById('barberos-grid');
   const btn  = document.getElementById('reserva-btn');
@@ -377,9 +385,15 @@ function initReservaForm() {
     card.setAttribute('aria-checked', 'false');
     card.setAttribute('aria-disabled', b.disponible ? 'false' : 'true');
     card.setAttribute('tabindex', b.disponible ? '0' : '-1');
+    const inicial = b.nombre.charAt(0).toUpperCase();
+    const especialidad = ESPECIALIDADES[b.id] || '';
     card.innerHTML = `
+      <div class="barbero-avatar">${inicial}</div>
       <span class="barbero-nombre">${b.nombre}</span>
-      ${!b.disponible ? '<span class="barbero-badge">Próximamente</span>' : ''}
+      ${b.disponible
+        ? `<span class="barbero-especialidad">${especialidad}</span>`
+        : '<span class="barbero-badge">Próximamente</span>'
+      }
     `;
 
     if (b.disponible) {
