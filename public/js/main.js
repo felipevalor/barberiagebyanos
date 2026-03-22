@@ -253,8 +253,15 @@ function initCustomSelect() {
   const hiddenInput = document.getElementById('servicio-value');
   if (!select) return;
 
-  trigger.addEventListener('click', () => {
-    select.classList.toggle('open');
+  const open  = () => { select.classList.add('open');    trigger.setAttribute('aria-expanded', 'true'); };
+  const close = () => { select.classList.remove('open'); trigger.setAttribute('aria-expanded', 'false'); };
+
+  trigger.addEventListener('click', () => select.classList.contains('open') ? close() : open());
+
+  // Teclado: Enter/Space abren; Escape cierra
+  trigger.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select.classList.contains('open') ? close() : open(); }
+    if (e.key === 'Escape') close();
   });
 
   // Delegación: funciona con opciones re-renderizadas dinámicamente
@@ -270,14 +277,18 @@ function initCustomSelect() {
 
     document.dispatchEvent(new Event('servicioSeleccionado'));
 
-    dropdown.querySelectorAll('.select-option').forEach(o => o.classList.remove('selected'));
+    dropdown.querySelectorAll('.select-option').forEach(o => {
+      o.classList.remove('selected');
+      o.setAttribute('aria-selected', 'false');
+    });
     option.classList.add('selected');
-    select.classList.remove('open');
+    option.setAttribute('aria-selected', 'true');
+    close();
   });
 
   // Cerrar al clickear afuera
   document.addEventListener('click', (e) => {
-    if (!select.contains(e.target)) select.classList.remove('open');
+    if (!select.contains(e.target)) close();
   });
 }
 
@@ -357,20 +368,33 @@ function initReservaForm() {
 
   // Renderizar cards de barberos
   grid.innerHTML = '';
+  grid.setAttribute('role', 'radiogroup');
+  grid.setAttribute('aria-label', 'Barbero');
   BARBEROS.forEach(b => {
     const card = document.createElement('div');
     card.className = 'barbero-card' + (!b.disponible ? ' barbero-no-disponible' : '');
+    card.setAttribute('role', 'radio');
+    card.setAttribute('aria-checked', 'false');
+    card.setAttribute('aria-disabled', b.disponible ? 'false' : 'true');
+    card.setAttribute('tabindex', b.disponible ? '0' : '-1');
     card.innerHTML = `
       <span class="barbero-nombre">${b.nombre}</span>
       ${!b.disponible ? '<span class="barbero-badge">Próximamente</span>' : ''}
     `;
 
     if (b.disponible) {
-      card.addEventListener('click', () => {
-        grid.querySelectorAll('.barbero-card').forEach(c => c.classList.remove('selected'));
+      const select = () => {
+        grid.querySelectorAll('.barbero-card').forEach(c => {
+          c.classList.remove('selected');
+          c.setAttribute('aria-checked', 'false');
+        });
         card.classList.add('selected');
-        // Disparar evento para el calendar picker
+        card.setAttribute('aria-checked', 'true');
         document.dispatchEvent(new CustomEvent('barberoSeleccionado', { detail: b }));
+      };
+      card.addEventListener('click', select);
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(); }
       });
     }
 
@@ -490,19 +514,24 @@ async function initCalendarPicker() {
     dayPicker.innerHTML = '';
     const grid = document.createElement('div');
     grid.className = 'day-grid';
+    grid.setAttribute('role', 'group');
+    grid.setAttribute('aria-label', 'Seleccioná un día');
 
     for (const day of days) {
       const dayBtn = document.createElement('button');
       dayBtn.className = 'day-btn';
       dayBtn.type = 'button';
+      dayBtn.setAttribute('aria-pressed', 'false');
+      dayBtn.setAttribute('aria-label', day.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }));
       dayBtn.innerHTML = `
-        <span class="day-name">${day.toLocaleDateString('es-AR', { weekday: 'short' })}</span>
-        <span class="day-num">${day.getDate()}</span>
-        <span class="day-month">${day.toLocaleDateString('es-AR', { month: 'short' })}</span>
+        <span class="day-name" aria-hidden="true">${day.toLocaleDateString('es-AR', { weekday: 'short' })}</span>
+        <span class="day-num" aria-hidden="true">${day.getDate()}</span>
+        <span class="day-month" aria-hidden="true">${day.toLocaleDateString('es-AR', { month: 'short' })}</span>
       `;
       dayBtn.addEventListener('click', () => {
-        document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('selected'));
+        document.querySelectorAll('.day-btn').forEach(b => { b.classList.remove('selected'); b.setAttribute('aria-pressed', 'false'); });
         dayBtn.classList.add('selected');
+        dayBtn.setAttribute('aria-pressed', 'true');
         selectedDay = day;
         selectedSlot = null;
         validar();
@@ -534,6 +563,8 @@ async function initCalendarPicker() {
     slotPicker.innerHTML = '';
     const grid = document.createElement('div');
     grid.className = 'slot-grid';
+    grid.setAttribute('role', 'group');
+    grid.setAttribute('aria-label', 'Seleccioná un horario');
 
     const now = new Date();
     const duracionServicio = SERVICIOS[selectedServicio]?.duracion || SLOT_DURATION;
@@ -562,11 +593,15 @@ async function initCalendarPicker() {
       slotBtn.textContent = timeStr;
       slotBtn.disabled = isBusy;
       slotBtn.type = 'button';
-
-      if (!isBusy) {
+      slotBtn.setAttribute('aria-label', timeStr + (isBusy ? ' — no disponible' : ''));
+      if (isBusy) {
+        slotBtn.setAttribute('aria-disabled', 'true');
+      } else {
+        slotBtn.setAttribute('aria-pressed', 'false');
         slotBtn.addEventListener('click', () => {
-          document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+          document.querySelectorAll('.slot-btn').forEach(b => { b.classList.remove('selected'); if (!b.disabled) b.setAttribute('aria-pressed', 'false'); });
           slotBtn.classList.add('selected');
+          slotBtn.setAttribute('aria-pressed', 'true');
           selectedSlot = timeStr;
           validar();
         });
