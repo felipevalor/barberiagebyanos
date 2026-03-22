@@ -57,6 +57,37 @@
             </div>
         </section>
 
+        <section id="prueba-social">
+            <div class="container">
+                <div class="stats-row reveal">
+                    <div class="stat-item">
+                        <div class="stat-number">15+</div>
+                        <div class="stat-label">años en<br>el barrio</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-number">2</div>
+                        <div class="stat-label">barberos<br>disponibles</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-number">Lun–Vie</div>
+                        <div class="stat-label">9:00–20:00<br>Sáb 9:00–17:00</div>
+                    </div>
+                </div>
+                <div class="testimonios-grid reveal" style="transition-delay: 100ms;">
+                    <div class="testimonio-card">
+                        <p class="testimonio-texto">"El único lugar donde salgo contento. Llevo 4 años viniendo."</p>
+                        <div class="testimonio-autor">— Rodrigo M., cliente frecuente</div>
+                    </div>
+                    <div class="testimonio-card">
+                        <p class="testimonio-texto">"Ambiente de barrio de verdad. Te atienden con tiempo."</p>
+                        <div class="testimonio-autor">— Matías F., cliente frecuente</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section id="servicios">
             <div class="container">
                 <div class="section-label">Servicios</div>
@@ -73,12 +104,56 @@
             </div>
         </section>
 
+        <section id="galeria">
+            <div class="container">
+                <div class="section-label">Galería</div>
+                <h2>El <em>ambiente</em></h2>
+                <div class="galeria-grid reveal">
+                    <div class="galeria-item">
+                        <img src="img/foto-3.jpg" alt="Barbero en acción" loading="lazy">
+                    </div>
+                    <div class="galeria-item">
+                        <img src="img/foto-2.jpg" alt="Equipo Gebyanos" loading="lazy">
+                    </div>
+                    <div class="galeria-item">
+                        <img src="img/foto-1.jpg" alt="Interior del local" loading="lazy">
+                    </div>
+                    <div class="galeria-item">
+                        <img src="img/foto-4.jpg" alt="El local" loading="lazy">
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section id="reservar">
             <div class="container">
                 <div class="section-label">Reservas</div>
                 <h2>Elegí tu <em>turno</em></h2>
                 <p class="reservar-sub reveal">Elegí el servicio, el barbero y el horario. Sin app, sin registro.
                 </p>
+
+                <div class="form-steps reveal" id="form-steps">
+                    <div class="form-step active" data-step="1">
+                        <span class="step-num">1</span>
+                        <span class="step-label">Datos</span>
+                    </div>
+                    <div class="form-step" data-step="2">
+                        <span class="step-num">2</span>
+                        <span class="step-label">Servicio</span>
+                    </div>
+                    <div class="form-step" data-step="3">
+                        <span class="step-num">3</span>
+                        <span class="step-label">Barbero</span>
+                    </div>
+                    <div class="form-step" data-step="4">
+                        <span class="step-num">4</span>
+                        <span class="step-label">Día</span>
+                    </div>
+                    <div class="form-step" data-step="5">
+                        <span class="step-num">5</span>
+                        <span class="step-label">Horario</span>
+                    </div>
+                </div>
 
                 <form id="reserva-form" class="reserva-form reveal">
 
@@ -132,11 +207,20 @@
                     <div class="form-group" id="slot-picker-wrapper">
                         <label id="slot-picker-label">Horario</label>
                         <div id="slot-picker" aria-live="polite" aria-labelledby="slot-picker-label" style="display:none;"></div>
+                        <div id="slots-fallback" class="slots-fallback" style="display:none;">
+                            <p>No pudimos cargar los horarios disponibles.</p>
+                            <a id="slots-fallback-wa" href="#" target="_blank" rel="noopener" class="btn-slots-fallback">
+                                Escribinos por WhatsApp →
+                            </a>
+                        </div>
                     </div>
 
-                    <button type="submit" class="btn magnetic" id="reserva-btn" disabled>
+                    <button type="submit" class="btn magnetic btn-incomplete" id="reserva-btn">
                         Confirmar turno
                     </button>
+                    <div id="reserva-btn-tooltip" class="reserva-btn-tooltip" style="display:none;">
+                        Completá los pasos anteriores para confirmar.
+                    </div>
 
                 </form>
 
@@ -173,26 +257,6 @@
           </div>
         </section>
 
-        <section id="galeria">
-            <div class="container">
-                <div class="section-label">Galería</div>
-                <h2>El <em>ambiente</em></h2>
-                <div class="galeria-grid reveal">
-                    <div class="galeria-item">
-                        <img src="img/foto-3.jpg" alt="Barbero en acción" loading="lazy">
-                    </div>
-                    <div class="galeria-item">
-                        <img src="img/foto-2.jpg" alt="Equipo Gebyanos" loading="lazy">
-                    </div>
-                    <div class="galeria-item">
-                        <img src="img/foto-1.jpg" alt="Interior del local" loading="lazy">
-                    </div>
-                    <div class="galeria-item">
-                        <img src="img/foto-4.jpg" alt="El local" loading="lazy">
-                    </div>
-                </div>
-            </div>
-        </section>
     </main>
 
     <footer id="contacto">
