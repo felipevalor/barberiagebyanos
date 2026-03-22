@@ -1315,3 +1315,318 @@ body.nav-open .nav-hamburger span:nth-child(3) {
   opacity: 0.4;
   cursor: default;
 }
+
+/* ── Social Proof ──────────────────────────────────────────── */
+#prueba-social {
+  padding: 4rem 0 5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.stats-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 4rem;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 0 3rem;
+}
+
+.stat-number {
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 3rem;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.testimonios-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.testimonio-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.75rem 2rem;
+  margin: 0;
+}
+
+.testimonio-texto {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--text);
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+
+.testimonio-autor {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+@media (max-width: 600px) {
+  .stat-item {
+    padding: 0 1.5rem;
+  }
+  .stat-divider {
+    height: 2rem;
+  }
+}
+
+/* ── Barbero Cards — Avatar + Specialty ────────────────────── */
+.barberos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.barbero-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.barbero-card:hover:not(.barbero-no-disponible) {
+  border-color: var(--gold);
+}
+
+.barbero-card.selected {
+  border-color: var(--gold);
+  background: rgba(201, 168, 76, 0.07);
+}
+
+.barbero-card.barbero-no-disponible {
+  opacity: 0.4;
+  pointer-events: none;
+  cursor: default;
+}
+
+.barbero-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(201, 168, 76, 0.12);
+  border: 1px solid rgba(201, 168, 76, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.barbero-nombre {
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.barbero-especialidad {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+}
+
+.barbero-badge {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.15rem 0.4rem;
+}
+
+/* ── Form Steps Progress ───────────────────────────────────── */
+.form-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 2.5rem;
+  position: relative;
+}
+
+.form-steps::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: var(--border);
+  z-index: 0;
+}
+
+.form-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+
+.step-num {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+  transition: var(--transition);
+}
+
+.step-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition: color 0.3s ease;
+}
+
+.form-step.active .step-num {
+  background: rgba(201, 168, 76, 0.12);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.form-step.active .step-label {
+  color: var(--gold);
+}
+
+.form-step.completed .step-num {
+  background: rgba(201, 168, 76, 0.08);
+  border-color: rgba(201, 168, 76, 0.4);
+  color: rgba(201, 168, 76, 0.6);
+}
+
+.form-step.completed .step-num::before {
+  content: '✓';
+  font-size: 0.8rem;
+}
+
+.form-step.completed .step-num {
+  font-size: 0;
+}
+
+.form-step.completed .step-label {
+  color: rgba(201, 168, 76, 0.5);
+}
+
+@media (max-width: 500px) {
+  .step-label {
+    display: none;
+  }
+  .form-steps::before {
+    left: 5%;
+    right: 5%;
+  }
+}
+
+/* ── Slots Fallback ────────────────────────────────────────── */
+.slots-fallback {
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.slots-fallback p {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+
+.btn-slots-fallback {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  border-radius: 6px;
+  padding: 0.6rem 1.25rem;
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.btn-slots-fallback:hover {
+  background: rgba(201, 168, 76, 0.1);
+}
+
+/* ── Submit button incomplete state ───────────────────────── */
+#reserva-btn.btn-incomplete {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.reserva-btn-tooltip {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
