@@ -758,50 +758,99 @@
     let editingCatalogoId = null;
     let catalogoItems = [];
 
+    // ── Catálogo (cards) ──────────────────────────────────────────────────────
+    function buildCatalogoCard(item) {
+      const card = document.createElement('div');
+      card.className = 'barbero-card';
+      card.dataset.id = item.id;
+      const precioLabel = item.precio_ars ? `$${Number(item.precio_ars).toLocaleString('es-AR')}` : 'sin precio';
+      const inactivoBadge = item.activo ? '' : '<span class="badge badge-inactive" style="margin-left:0.5rem">Inactivo</span>';
+      card.innerHTML = `
+        <div class="barbero-summary">
+          <div class="barbero-left">
+            <span class="barbero-nombre">${item.nombre}</span>
+            <span class="barbero-id">${precioLabel}</span>
+            ${inactivoBadge}
+          </div>
+          <div class="barbero-badges">
+            <button class="btn-del-cat btn-delete" data-id="${item.id}"
+              style="padding:0.3rem 0.7rem;font-size:0.78rem;min-height:36px">✕</button>
+            <button class="btn-chevron" aria-label="Editar">
+              <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="barbero-edit">
+          <div class="edit-grid">
+            <div class="edit-group">
+              <label class="edit-label">Nombre</label>
+              <input class="edit-input cat-nombre" value="${item.nombre || ''}">
+            </div>
+            <div class="edit-group">
+              <label class="edit-label">Precio ($)</label>
+              <input class="edit-input cat-precio" type="number" min="0" step="100"
+                value="${item.precio_ars || ''}" placeholder="sin precio">
+            </div>
+            <div class="edit-group" style="grid-column:1/-1">
+              <label class="edit-label">Descripción / incluye</label>
+              <input class="edit-input cat-incluye" value="${item.incluye || ''}"
+                placeholder="ej: Tijera o máquina · Café o bebida">
+            </div>
+          </div>
+          <div class="edit-actions">
+            <button class="btn-save cat-save">Guardar</button>
+            <span class="feedback cat-feedback"></span>
+          </div>
+        </div>`;
+
+      card.querySelector('.barbero-summary').addEventListener('click', (e) => {
+        if (e.target.closest('.btn-del-cat')) return;
+        card.classList.toggle('editing');
+      });
+
+      card.querySelector('.btn-del-cat').addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteCatalogoItem(item.id);
+      });
+
+      card.querySelector('.cat-save').addEventListener('click', async () => {
+        const btn      = card.querySelector('.cat-save');
+        const feedback = card.querySelector('.cat-feedback');
+        const nombre   = card.querySelector('.cat-nombre').value.trim();
+        const precioV  = card.querySelector('.cat-precio').value.trim();
+        const precio   = precioV === '' ? null : parseInt(precioV, 10);
+        const incluye  = card.querySelector('.cat-incluye').value.trim();
+
+        if (!nombre) { showFeedback(feedback, 'El nombre es obligatorio', true); return; }
+        if (precio !== null && (isNaN(precio) || precio < 0)) { showFeedback(feedback, 'Precio inválido', true); return; }
+
+        btn.disabled = true; btn.textContent = 'Guardando...';
+        try {
+          const res  = await fetch(`/admin/api/catalogo?id=${item.id}`, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre, precio_ars: precio, incluye, activo: item.activo ?? 1 }),
+          });
+          const data = await res.json();
+          if (!res.ok) { showFeedback(feedback, data.error || 'Error', true); return; }
+          showFeedback(feedback, 'Guardado', false);
+          await loadCatalogo();
+        } catch { showFeedback(feedback, 'Error de red', true);
+        } finally { btn.disabled = false; btn.textContent = 'Guardar'; }
+      });
+
+      return card;
+    }
+
     async function loadCatalogo() {
       const list = document.getElementById('catalogo-list');
       list.innerHTML = '<div class="loading">Cargando...</div>';
-
       const r = await fetch('/admin/api/catalogo');
       if (!r.ok) { list.innerHTML = '<div class="loading">Error al cargar catálogo.</div>'; return; }
       const { items } = await r.json();
       catalogoItems = items;
-
       if (!items.length) { list.innerHTML = '<div class="loading" style="padding:1rem 0">Sin servicios aún.</div>'; return; }
-
       list.innerHTML = '';
-      items.forEach(item => {
-        const row = document.createElement('div');
-        row.className = 'precio-row';
-        row.dataset.id = item.id;
-        const precioStr = item.precio_ars ? `$${Number(item.precio_ars).toLocaleString('es-AR')}` : 'sin precio';
-        const activoBadge = item.activo ? '' : ' <span style="color:var(--muted);font-size:0.75rem">(inactivo)</span>';
-        row.innerHTML = `
-          <div style="flex:1;min-width:0">
-            <div style="font-size:1rem;font-weight:500">${item.nombre}${activoBadge}</div>
-            <div style="color:var(--muted);font-size:0.88rem;margin-top:3px">${precioStr}${item.incluye ? ` · ${item.incluye}` : ''}</div>
-          </div>
-          <div style="display:flex;gap:0.5rem;flex-shrink:0">
-            <button class="btn-edit-cat btn-save" style="padding:0.35rem 0.75rem;font-size:0.75rem" data-id="${item.id}">Editar</button>
-            <button class="btn-del-cat btn-delete" style="padding:0.35rem 0.75rem;font-size:0.75rem" data-id="${item.id}">✕</button>
-          </div>`;
-        list.appendChild(row);
-      });
-
-      list.querySelectorAll('.btn-edit-cat').forEach(btn => btn.addEventListener('click', () => openCatalogoForm(Number(btn.dataset.id))));
-      list.querySelectorAll('.btn-del-cat').forEach(btn => btn.addEventListener('click', () => deleteCatalogoItem(Number(btn.dataset.id))));
-    }
-
-    function openCatalogoForm(id) {
-      const item = catalogoItems.find(x => x.id === id);
-      if (!item) return;
-      editingCatalogoId = id;
-      document.getElementById('catalogo-form-title').textContent = 'Editar servicio';
-      document.getElementById('catalogo-edit-id').value  = id;
-      document.getElementById('catalogo-nombre').value  = item.nombre || '';
-      document.getElementById('catalogo-precio').value  = item.precio_ars || '';
-      document.getElementById('catalogo-incluye').value = item.incluye || '';
-      document.getElementById('catalogo-form').classList.add('open');
+      items.forEach(item => list.appendChild(buildCatalogoCard(item)));
     }
 
     document.getElementById('btn-add-catalogo').addEventListener('click', () => {
@@ -827,23 +876,19 @@
       if (!nombre) { showFeedback(feedback, 'El nombre es obligatorio', true); return; }
       if (precio !== null && (isNaN(precio) || precio < 0)) { showFeedback(feedback, 'Precio inválido', true); return; }
 
-      const body = { nombre, precio_ars: precio, incluye, activo: 1 };
       btn.disabled = true; btn.textContent = 'Guardando...';
-
       try {
-        const url    = editingCatalogoId ? `/admin/api/catalogo?id=${editingCatalogoId}` : '/admin/api/catalogo';
-        const method = editingCatalogoId ? 'PUT' : 'POST';
-        const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-        const data   = await res.json();
+        const res  = await fetch('/admin/api/catalogo', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre, precio_ars: precio, incluye, activo: 1 }),
+        });
+        const data = await res.json();
         if (!res.ok) { showFeedback(feedback, data.error || 'Error', true); return; }
-        showFeedback(feedback, editingCatalogoId ? 'Servicio actualizado' : 'Servicio creado', false);
+        showFeedback(feedback, 'Servicio creado', false);
         document.getElementById('catalogo-form').classList.remove('open');
         await loadCatalogo();
-      } catch {
-        showFeedback(feedback, 'Error de red', true);
-      } finally {
-        btn.disabled = false; btn.textContent = 'Guardar';
-      }
+      } catch { showFeedback(feedback, 'Error de red', true);
+      } finally { btn.disabled = false; btn.textContent = 'Guardar'; }
     });
 
     async function deleteCatalogoItem(id) {
@@ -852,58 +897,116 @@
       if (res.ok) await loadCatalogo();
     }
 
-    // ── Promos ────────────────────────────────────────────────────────────────
-    let editingPromoId = null;
+    // ── Promos (cards) ────────────────────────────────────────────────────────
+    function buildPromoCard(p) {
+      const card = document.createElement('div');
+      card.className = 'barbero-card';
+      card.dataset.id = p.id;
+      const precioLabel = p.precio_ars
+        ? `$${Number(p.precio_ars).toLocaleString('es-AR')}${p.unidad ? ` ${p.unidad}` : ''}`
+        : 'sin precio';
+      const badgeHtml = p.badge
+        ? `<span class="badge badge-owner" style="font-size:0.7rem">${p.badge}</span>`
+        : '';
+      const inactivoBadge = p.activo ? '' : '<span class="badge badge-inactive" style="margin-left:0.5rem">Inactiva</span>';
+      card.innerHTML = `
+        <div class="barbero-summary">
+          <div class="barbero-left">
+            <span class="barbero-nombre">${p.nombre}</span>
+            <span class="barbero-id">${precioLabel}</span>
+            ${badgeHtml}${inactivoBadge}
+          </div>
+          <div class="barbero-badges">
+            <button class="btn-del-promo btn-delete" data-id="${p.id}"
+              style="padding:0.3rem 0.7rem;font-size:0.78rem;min-height:36px">✕</button>
+            <button class="btn-chevron" aria-label="Editar">
+              <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="barbero-edit">
+          <div class="edit-grid">
+            <div class="edit-group">
+              <label class="edit-label">Nombre</label>
+              <input class="edit-input promo-nombre-in" value="${p.nombre || ''}">
+            </div>
+            <div class="edit-group">
+              <label class="edit-label">Precio ($)</label>
+              <input class="edit-input promo-precio-in" type="number" min="0" step="100"
+                value="${p.precio_ars || ''}" placeholder="sin precio">
+            </div>
+            <div class="edit-group">
+              <label class="edit-label">Unidad (opcional)</label>
+              <input class="edit-input promo-unidad-in" value="${p.unidad || ''}" placeholder="ej: c/u">
+            </div>
+            <div class="edit-group">
+              <label class="edit-label">Badge (opcional)</label>
+              <input class="edit-input promo-badge-in" value="${p.badge || ''}" placeholder="ej: Especial">
+            </div>
+            <div class="edit-group" style="grid-column:1/-1">
+              <label class="edit-label">Nota</label>
+              <input class="edit-input promo-nota-in" value="${p.nota || ''}"
+                placeholder="ej: Se abona al primer corte">
+            </div>
+          </div>
+          <div class="edit-actions">
+            <button class="btn-save promo-save">Guardar</button>
+            <span class="feedback promo-feedback"></span>
+          </div>
+        </div>`;
+
+      card.querySelector('.barbero-summary').addEventListener('click', (e) => {
+        if (e.target.closest('.btn-del-promo')) return;
+        card.classList.toggle('editing');
+      });
+
+      card.querySelector('.btn-del-promo').addEventListener('click', (e) => {
+        e.stopPropagation();
+        deletePromo(p.id);
+      });
+
+      card.querySelector('.promo-save').addEventListener('click', async () => {
+        const btn      = card.querySelector('.promo-save');
+        const feedback = card.querySelector('.promo-feedback');
+        const nombre   = card.querySelector('.promo-nombre-in').value.trim();
+        const precioV  = card.querySelector('.promo-precio-in').value.trim();
+        const precio   = precioV === '' ? null : parseInt(precioV, 10);
+        const unidad   = card.querySelector('.promo-unidad-in').value.trim();
+        const badge    = card.querySelector('.promo-badge-in').value.trim();
+        const nota     = card.querySelector('.promo-nota-in').value.trim();
+
+        if (!nombre) { showFeedback(feedback, 'El nombre es obligatorio', true); return; }
+        if (precio !== null && (isNaN(precio) || precio < 0)) { showFeedback(feedback, 'Precio inválido', true); return; }
+
+        btn.disabled = true; btn.textContent = 'Guardando...';
+        try {
+          const res  = await fetch(`/admin/api/promos?id=${p.id}`, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre, precio_ars: precio, unidad: unidad || null, badge: badge || null, nota: nota || null, activo: p.activo ?? 1 }),
+          });
+          const data = await res.json();
+          if (!res.ok) { showFeedback(feedback, data.error || 'Error', true); return; }
+          showFeedback(feedback, 'Guardado', false);
+          await loadPromos();
+        } catch { showFeedback(feedback, 'Error de red', true);
+        } finally { btn.disabled = false; btn.textContent = 'Guardar'; }
+      });
+
+      return card;
+    }
 
     async function loadPromos() {
       const list = document.getElementById('promos-list');
       list.innerHTML = '<div class="loading">Cargando...</div>';
-
       const r = await fetch('/admin/api/promos');
       if (!r.ok) { list.innerHTML = '<div class="loading">Error al cargar promos.</div>'; return; }
       const { promos } = await r.json();
-
       if (!promos.length) { list.innerHTML = '<div class="loading" style="padding:1rem 0">Sin promos aún.</div>'; return; }
-
       list.innerHTML = '';
-      promos.forEach(p => {
-        const row = document.createElement('div');
-        row.className = 'precio-row';
-        row.dataset.id = p.id;
-        const precioStr = p.precio_ars ? `$${Number(p.precio_ars).toLocaleString('es-AR')}${p.unidad ? ` ${p.unidad}` : ''}` : 'sin precio';
-        const activoBadge = p.activo ? '' : ' <span style="color:var(--muted);font-size:0.75rem">(inactiva)</span>';
-        row.innerHTML = `
-          <div style="flex:1;min-width:0">
-            <div style="font-size:1rem;font-weight:500">${p.badge ? `<span style="color:var(--gold);font-size:0.7rem;margin-right:6px">[${p.badge}]</span>` : ''}${p.nombre}${activoBadge}</div>
-            <div style="color:var(--muted);font-size:0.88rem;margin-top:3px">${precioStr}${p.nota ? ` · ${p.nota}` : ''}</div>
-          </div>
-          <div style="display:flex;gap:0.5rem;flex-shrink:0">
-            <button class="btn-edit-promo btn-save" style="padding:0.35rem 0.75rem;font-size:0.75rem" data-id="${p.id}">Editar</button>
-            <button class="btn-del-promo btn-delete" style="padding:0.35rem 0.75rem;font-size:0.75rem" data-id="${p.id}">✕</button>
-          </div>`;
-        list.appendChild(row);
-      });
-
-      list.querySelectorAll('.btn-edit-promo').forEach(btn => btn.addEventListener('click', () => openPromoForm(Number(btn.dataset.id), promos)));
-      list.querySelectorAll('.btn-del-promo').forEach(btn => btn.addEventListener('click', () => deletePromo(Number(btn.dataset.id))));
-    }
-
-    function openPromoForm(id, promos) {
-      const p = promos.find(x => x.id === id);
-      if (!p) return;
-      editingPromoId = id;
-      document.getElementById('promo-form-title').textContent = 'Editar promo';
-      document.getElementById('promo-edit-id').value = id;
-      document.getElementById('promo-nombre').value  = p.nombre || '';
-      document.getElementById('promo-precio').value  = p.precio_ars || '';
-      document.getElementById('promo-unidad').value  = p.unidad || '';
-      document.getElementById('promo-badge').value   = p.badge || '';
-      document.getElementById('promo-nota').value    = p.nota || '';
-      document.getElementById('promo-form').classList.add('open');
+      promos.forEach(p => list.appendChild(buildPromoCard(p)));
     }
 
     document.getElementById('btn-add-promo').addEventListener('click', () => {
-      editingPromoId = null;
       document.getElementById('promo-form-title').textContent = 'Nueva promo';
       ['promo-nombre','promo-precio','promo-unidad','promo-badge','promo-nota'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('promo-form').classList.add('open');
@@ -927,23 +1030,19 @@
       if (!nombre) { showFeedback(feedback, 'El nombre es obligatorio', true); return; }
       if (precio !== null && (isNaN(precio) || precio < 0)) { showFeedback(feedback, 'Precio inválido', true); return; }
 
-      const body = { nombre, precio_ars: precio, unidad: unidad || null, badge: badge || null, nota: nota || null, activo: 1 };
       btn.disabled = true; btn.textContent = 'Guardando...';
-
       try {
-        const url    = editingPromoId ? `/admin/api/promos?id=${editingPromoId}` : '/admin/api/promos';
-        const method = editingPromoId ? 'PUT' : 'POST';
-        const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-        const data   = await res.json();
+        const res  = await fetch('/admin/api/promos', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre, precio_ars: precio, unidad: unidad || null, badge: badge || null, nota: nota || null, activo: 1 }),
+        });
+        const data = await res.json();
         if (!res.ok) { showFeedback(feedback, data.error || 'Error', true); return; }
-        showFeedback(feedback, editingPromoId ? 'Promo actualizada' : 'Promo creada', false);
+        showFeedback(feedback, 'Promo creada', false);
         document.getElementById('promo-form').classList.remove('open');
         await loadPromos();
-      } catch {
-        showFeedback(feedback, 'Error de red', true);
-      } finally {
-        btn.disabled = false; btn.textContent = 'Guardar promo';
-      }
+      } catch { showFeedback(feedback, 'Error de red', true);
+      } finally { btn.disabled = false; btn.textContent = 'Guardar promo'; }
     });
 
     async function deletePromo(id) {
