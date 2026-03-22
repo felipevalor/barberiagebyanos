@@ -82,6 +82,13 @@ function renderPromos(promos) {
     wrapper.style.display = '';
 }
 
+function getWaFallbackUrl(barbero) {
+  const GEBYANO_TEL = '5493416021009';
+  const tel = barbero?.tel || GEBYANO_TEL;
+  const msg = encodeURIComponent('Hola, quiero reservar un turno');
+  return `https://wa.me/${tel}?text=${msg}`;
+}
+
 /**
  * Custom Cursor Logic
  */
@@ -467,6 +474,8 @@ async function initCalendarPicker() {
   const dayPicker  = document.getElementById('day-picker');
   const slotPicker = document.getElementById('slot-picker');
   const btn        = document.getElementById('reserva-btn');
+  // Initialize button as incomplete on load (HTML disabled attr was removed)
+  btn.classList.add('btn-incomplete');
   if (!dayPicker) return;
 
   let selectedBarbero  = null;
@@ -574,7 +583,30 @@ async function initCalendarPicker() {
     slotPicker.innerHTML = '<div class="calendar-loading">Cargando horarios...</div>';
     slotPicker.style.display = 'block';
 
-    const busySlots = await fetchBusySlots(day, selectedBarbero);
+    const fallbackEl = document.getElementById('slots-fallback');
+    const fallbackWa = document.getElementById('slots-fallback-wa');
+
+    const showFallback = () => {
+      slotPicker.innerHTML = '';
+      slotPicker.style.display = 'none';
+      if (fallbackEl) {
+        if (fallbackWa) fallbackWa.href = getWaFallbackUrl(selectedBarbero);
+        fallbackEl.style.display = 'block';
+      }
+    };
+
+    const timeoutId = setTimeout(showFallback, 5000);
+
+    let busySlots;
+    try {
+      busySlots = await fetchBusySlots(day, selectedBarbero);
+      clearTimeout(timeoutId);
+      if (fallbackEl) fallbackEl.style.display = 'none';
+    } catch {
+      clearTimeout(timeoutId);
+      showFallback();
+      return;
+    }
 
     const dow = day.getDay();
     const { start, end } = selectedBarbero.schedule[dow];
@@ -645,10 +677,11 @@ async function initCalendarPicker() {
   }
 
   function validar() {
-    const nombre    = document.getElementById('reserva-nombre')?.value.trim();
-    const telefono  = document.getElementById('reserva-telefono')?.value.trim();
-    const servicio  = document.getElementById('servicio-value')?.value;
-    btn.disabled = !(nombre && telefono && servicio && selectedBarbero && selectedDay && selectedSlot);
+    const nombre   = document.getElementById('reserva-nombre')?.value.trim();
+    const telefono = document.getElementById('reserva-telefono')?.value.trim();
+    const servicio = document.getElementById('servicio-value')?.value;
+    const completo = !!(nombre && telefono && servicio && selectedBarbero && selectedDay && selectedSlot);
+    btn.classList.toggle('btn-incomplete', !completo);
   }
 
   const updateDatosStep = () => {
@@ -664,12 +697,23 @@ async function initCalendarPicker() {
     ?.addEventListener('input', updateDatosStep);
 
   btn.addEventListener('click', async () => {
-    const nombre    = document.getElementById('reserva-nombre').value.trim();
-    const telefono  = document.getElementById('reserva-telefono').value.trim();
-    const servicio  = document.getElementById('servicio-value').value;
-    if (!nombre || !telefono || !servicio || !selectedBarbero || !selectedDay || !selectedSlot) return;
+    // If form incomplete, show tooltip instead of submitting
+    if (btn.classList.contains('btn-incomplete')) {
+      const tooltip = document.getElementById('reserva-btn-tooltip');
+      if (tooltip) {
+        tooltip.style.display = 'block';
+        setTimeout(() => { tooltip.style.display = 'none'; }, 3000);
+      }
+      return;
+    }
 
-    btn.disabled    = true;
+    const nombre   = document.getElementById('reserva-nombre').value.trim();
+    const telefono = document.getElementById('reserva-telefono').value.trim();
+    const servicio = document.getElementById('servicio-value').value;
+    if (!nombre || !telefono || !servicio || !selectedBarbero || !selectedDay || !selectedSlot) return; // safety net
+
+    btn.disabled = true;
+    btn.classList.remove('btn-incomplete');
     btn.textContent = 'Confirmando...';
 
     const fecha = selectedDay.toLocaleDateString('es-AR');
@@ -696,8 +740,9 @@ async function initCalendarPicker() {
 
       if (!res.ok || !data.success) {
         alert(data.error || 'No se pudo confirmar el turno. Intentá de nuevo.');
-        btn.disabled    = false;
+        btn.disabled = false;
         btn.textContent = 'Confirmar turno';
+        validar();
         return;
       }
 
@@ -707,8 +752,9 @@ async function initCalendarPicker() {
 
     } catch {
       alert('Error de red. Verificá tu conexión e intentá de nuevo.');
-      btn.disabled    = false;
+      btn.disabled = false;
       btn.textContent = 'Confirmar turno';
+      validar();
     }
   });
 
@@ -760,9 +806,10 @@ async function initCalendarPicker() {
     document.getElementById('reserva-nombre').value = '';
     document.getElementById('reserva-telefono').value = '';
     document.getElementById('servicio-value').value = '';
-    btn.disabled    = true;
+    btn.classList.add('btn-incomplete');
     btn.textContent = 'Confirmar turno';
     selectedBarbero = null; selectedDay = null; selectedSlot = null;
+    updateFormSteps(1);
     // Limpiar pickers (se re-renderizan al seleccionar de nuevo)
     const dayPicker  = document.getElementById('day-picker');
     const slotPicker = document.getElementById('slot-picker');
