@@ -200,29 +200,6 @@
     .add-form.open { display: block; }
     .add-form-title { font-family: var(--font-serif); font-size: 1rem; margin-bottom: 1.25rem; }
 
-    /* ── PRECIOS ── */
-    .precios-grid {
-      display: flex; flex-direction: column; gap: 0.5rem;
-    }
-    .precio-row {
-      display: flex; align-items: center; justify-content: space-between;
-      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-      padding: 0.75rem 1.25rem; gap: 1rem;
-    }
-    .precio-nombre { font-size: 0.9rem; flex: 1; }
-    .precio-input-wrap {
-      display: flex; align-items: center; gap: 0.375rem;
-    }
-    .precio-symbol { color: var(--gold); font-size: 0.85rem; }
-    .precio-input {
-      background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
-      color: var(--text); font-family: var(--font-mono); font-size: 0.875rem;
-      padding: 0.45rem 0.75rem; outline: none; transition: border-color 200ms;
-      width: 110px; text-align: right;
-    }
-    .precio-input:focus { border-color: var(--gold); }
-    .precio-input::placeholder { color: var(--muted); }
-
     .precios-actions {
       display: flex; align-items: center; gap: 0.75rem; margin-top: 1.25rem; flex-wrap: wrap;
     }
@@ -333,27 +310,6 @@
     <div class="section-title">Barberos</div>
     <div id="barbero-list" class="barbero-list">
       <div class="loading">Cargando...</div>
-    </div>
-
-    <!-- ── PRECIOS ── -->
-    <hr class="section-sep" id="sep-precios" style="display:none">
-    <div id="precios-section" style="display:none">
-      <div class="section-title">Precios</div>
-      <p class="page-sub" style="margin-bottom:1.25rem">
-        Los precios se muestran en el selector de servicio que ve el cliente al reservar.
-        Dejá el campo vacío para no mostrar precio en ese servicio.
-      </p>
-      <div id="barbero-selector-precios" style="display:none; margin-bottom:1rem">
-        <label class="edit-label" style="display:block; margin-bottom:0.4rem">Barbero</label>
-        <select class="edit-input" id="precios-barbero-select" style="max-width:200px"></select>
-      </div>
-      <div id="precios-grid" class="precios-grid">
-        <div class="loading">Cargando...</div>
-      </div>
-      <div class="precios-actions">
-        <button class="btn-save" id="btn-save-precios">Guardar precios</button>
-        <span class="feedback" id="precios-feedback"></span>
-      </div>
     </div>
 
     <!-- ── CATÁLOGO ── -->
@@ -733,84 +689,6 @@
       el._t = setTimeout(() => { el.className = 'feedback'; el.textContent = ''; }, 3500);
     }
 
-    // ── Precios ───────────────────────────────────────────────────────────────
-    let preciosBarberoId = null;
-
-    async function loadPrecios(bId) {
-      preciosBarberoId = bId;
-      const grid = document.getElementById('precios-grid');
-      grid.innerHTML = '<div class="loading">Cargando...</div>';
-
-      const r = await fetch(`/admin/api/servicios?barbero=${encodeURIComponent(bId)}`);
-      if (!r.ok) { grid.innerHTML = '<div class="loading">Error al cargar servicios.</div>'; return; }
-      const { servicios } = await r.json();
-
-      grid.innerHTML = '';
-      servicios.forEach(s => {
-        const row = document.createElement('div');
-        row.className = 'precio-row';
-        row.dataset.nombre = s.nombre;
-        row.innerHTML = `
-          <span class="precio-nombre">${s.nombre}</span>
-          <div class="precio-input-wrap">
-            <span class="precio-symbol">$</span>
-            <input class="precio-input" type="number" min="0" step="100"
-              placeholder="sin precio"
-              value="${s.precio_ars != null && s.precio_ars > 0 ? s.precio_ars : ''}">
-          </div>`;
-        grid.appendChild(row);
-      });
-    }
-
-    document.getElementById('btn-save-precios').addEventListener('click', async () => {
-      const btn      = document.getElementById('btn-save-precios');
-      const feedback = document.getElementById('precios-feedback');
-      if (!preciosBarberoId) return;
-
-      const rows = document.querySelectorAll('#precios-grid .precio-row');
-      const servicios = [];
-      for (const row of rows) {
-        const nombre = row.dataset.nombre;
-        const val    = row.querySelector('.precio-input').value.trim();
-        const precio = val === '' ? null : parseInt(val, 10);
-        if (precio !== null && (isNaN(precio) || precio < 0)) {
-          showFeedback(feedback, `Precio inválido para "${nombre}"`, true); return;
-        }
-        // Necesitamos duracion_min; la obtenemos del GET anterior que ya está renderizado
-        // Lo recuperamos del grid actual (value del input, pero no lo tenemos — necesitamos refetch)
-        servicios.push({ nombre, precio_ars: precio });
-      }
-
-      // Fetch duraciones actuales para no pisarlas
-      const r = await fetch(`/admin/api/servicios?barbero=${encodeURIComponent(preciosBarberoId)}`);
-      if (!r.ok) { showFeedback(feedback, 'Error al cargar duraciones', true); return; }
-      const { servicios: current } = await r.json();
-      const durMap = {};
-      for (const s of current) durMap[s.nombre] = s.duracion_min;
-
-      const payload = servicios.map(s => ({
-        nombre:      s.nombre,
-        duracion_min: durMap[s.nombre] || 30,
-        precio_ars:  s.precio_ars,
-      }));
-
-      btn.disabled = true; btn.textContent = 'Guardando...';
-      try {
-        const res = await fetch('/admin/api/servicios', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ barbero_id: preciosBarberoId, servicios: payload }),
-        });
-        const data = await res.json();
-        if (!res.ok) { showFeedback(feedback, data.error || 'Error al guardar', true); return; }
-        showFeedback(feedback, 'Precios guardados', false);
-      } catch {
-        showFeedback(feedback, 'Error de red', true);
-      } finally {
-        btn.disabled = false; btn.textContent = 'Guardar precios';
-      }
-    });
-
     // ── Catálogo ──────────────────────────────────────────────────────────────
     let editingCatalogoId = null;
     let catalogoItems = [];
@@ -1014,10 +892,6 @@
       const me = await checkAuth();
       if (!me) return;
 
-      // Mostrar sección precios para todos
-      document.getElementById('sep-precios').style.display = '';
-      document.getElementById('precios-section').style.display = '';
-
       // Mostrar catálogo y promos para todos
       document.getElementById('sep-catalogo').style.display = '';
       document.getElementById('catalogo-section').style.display = '';
@@ -1027,29 +901,11 @@
       await loadPromos();
 
       if (me.role === 'owner') {
-        // Owners: ver gestión de barberos + selector de barbero para precios
         await loadBarberos();
         document.getElementById('add-section-barberos').style.display = '';
-
-        // Cargar selector de barbero para precios
-        const rb = await fetch(API);
-        if (rb.ok) {
-          const { barberos } = await rb.json();
-          const sel = document.getElementById('precios-barbero-select');
-          barberos.filter(b => b.activo).forEach(b => {
-            const opt = document.createElement('option');
-            opt.value = b.id; opt.textContent = b.nombre;
-            sel.appendChild(opt);
-          });
-          document.getElementById('barbero-selector-precios').style.display = '';
-          sel.addEventListener('change', () => loadPrecios(sel.value));
-          if (sel.options.length) await loadPrecios(sel.value);
-        }
       } else {
-        // Barberos: solo ven su sección de precios
         document.getElementById('barbero-list').style.display = 'none';
         document.querySelector('.section-title').style.display = 'none';
-        await loadPrecios(me.barbero_id);
       }
     })();
   </script>
