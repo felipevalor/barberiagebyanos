@@ -14,17 +14,17 @@
 
 ## 🟠 ALTO
 
-- [ ] **[ALTO] Sin rate limiting en `/admin/api/auth`**
+- [x] **[ALTO] Sin rate limiting en `/admin/api/auth`**
   - **Archivo**: `functions/admin/api/auth.js`
   - **Problema**: El endpoint de login no limita intentos fallidos. Permite fuerza bruta ilimitada contra contraseñas de barberos.
   - **Fix**: Implementar counter en KV (`login_fails:{ip}`) con TTL de 15 min; bloquear tras 5 intentos.
 
-- [ ] **[ALTO] Contraseñas en plaintext en variable de entorno**
+- [x] **[ALTO] Contraseñas en plaintext en variable de entorno**
   - **Archivo**: `functions/admin/api/auth.js` — lee `env.ADMIN_PASSWORDS`
   - **Problema**: Las contraseñas se guardan en texto plano en el secret de Cloudflare. Si se filtra el env, todas las cuentas quedan expuestas.
   - **Fix**: Guardar hashes bcrypt/SHA-256 en el secret y comparar con hash en el Worker.
 
-- [ ] **[ALTO] Sin protección CSRF en endpoints admin que modifican estado**
+- [x] **[ALTO] Sin protección CSRF en endpoints admin que modifican estado**
   - **Archivos**: `functions/admin/api/reservas.js`, `recurrentes.js`, `horarios.js`, `config.js`
   - **Problema**: POST/PUT/DELETE admin no validan `Origin` ni usan tokens CSRF. Un sitio malicioso puede hacer requests autenticados si el admin tiene sesión activa.
   - **Fix**: Verificar `request.headers.get('Origin')` contra dominio propio, o exigir header `X-Admin-Request: 1` en todos los endpoints mutantes.
