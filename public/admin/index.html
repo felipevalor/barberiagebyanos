@@ -6,105 +6,34 @@
   <title>Gebyanos — Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
   <style>
-    :root {
-      --bg:      #0c0b09;
-      --surface: #141210;
-      --border:  #2a2620;
-      --gold:    #c9a84c;
-      --text:    #e8dcc8;
-      --muted:   #6b6055;
-      --font-serif: 'Playfair Display', serif;
-      --font-mono:  'DM Mono', monospace;
-    }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font-mono);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+    body { display: flex; align-items: center; justify-content: center; }
     .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 2.5rem 2rem;
-      width: 100%;
-      max-width: 380px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 2.5rem 2rem; width: 100%; max-width: 380px;
     }
-    .logo {
-      width: 72px;
-      height: 72px;
-      border-radius: 50%;
-      display: block;
-      margin: 0 auto 1.5rem;
-    }
-    h1 {
-      font-family: var(--font-serif);
-      font-size: 1.4rem;
-      text-align: center;
-      margin-bottom: 0.25rem;
-    }
-    .sub {
-      text-align: center;
-      color: var(--muted);
-      font-size: 0.8rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-bottom: 2rem;
-    }
-    label {
-      display: block;
-      font-size: 0.7rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 0.4rem;
-    }
+    .logo { width: 72px; height: 72px; border-radius: 50%; display: block; margin: 0 auto 1.5rem; }
+    h1   { font-family: var(--font-serif); font-size: 1.4rem; text-align: center; margin-bottom: 0.25rem; }
+    .sub { text-align: center; color: var(--muted); font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2rem; }
+    label { display: block; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem; }
     select, input[type="password"] {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      font-family: var(--font-mono);
-      font-size: 0.9rem;
-      padding: 0.7rem 0.875rem;
-      margin-bottom: 1.25rem;
-      outline: none;
-      transition: border-color 200ms;
-      appearance: none;
+      width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-family: var(--font-mono); font-size: 0.9rem;
+      padding: 0.7rem 0.875rem; margin-bottom: 1.25rem; outline: none;
+      transition: border-color 200ms; appearance: none;
     }
     select:focus, input:focus { border-color: var(--gold); }
     select option { background: var(--surface); }
     .btn {
-      width: 100%;
-      background: var(--gold);
-      color: #0c0b09;
-      border: none;
-      border-radius: 6px;
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      font-weight: 500;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      padding: 0.875rem;
-      cursor: pointer;
-      transition: opacity 200ms;
-      margin-top: 0.25rem;
+      width: 100%; background: var(--gold); color: #0c0b09; border: none; border-radius: 6px;
+      font-family: var(--font-mono); font-size: 0.8rem; font-weight: 500;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 0.875rem; cursor: pointer; transition: opacity 200ms; margin-top: 0.25rem;
     }
-    .btn:hover { opacity: 0.85; }
+    .btn:hover    { opacity: 0.85; }
     .btn:disabled { opacity: 0.45; cursor: default; }
-    .error {
-      color: #e57373;
-      font-size: 0.8rem;
-      text-align: center;
-      margin-top: 0.875rem;
-      min-height: 1em;
-    }
+    .error { color: #e57373; font-size: 0.8rem; text-align: center; margin-top: 0.875rem; min-height: 1em; }
   </style>
 </head>
 <body>

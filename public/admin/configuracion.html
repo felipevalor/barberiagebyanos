@@ -6,92 +6,34 @@
   <title>Gebyanos — Configuración</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
   <style>
-    :root {
-      --bg:      #0c0b09;
-      --surface: #141210;
-      --border:  #2a2620;
-      --gold:    #c9a84c;
-      --text:    #e8dcc8;
-      --muted:   #6b6055;
-      --green:   #6dbf7e;
-      --red:     #e57373;
-      --font-serif: 'Playfair Display', serif;
-      --font-mono:  'DM Mono', monospace;
-    }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--text); font-family: var(--font-mono); min-height: 100vh; }
-
-    /* ── NAV ── */
-    .nav {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0.5rem 1.5rem;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
-      position: sticky; top: 0; z-index: 10;
-      min-height: 64px;
-    }
-    .nav-brand { display: flex; align-items: center; gap: 0.75rem; }
-    .nav-logo  { width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; }
-    .nav-title { font-family: var(--font-serif); font-size: 1rem; white-space: nowrap; }
-    .nav-x     { color: var(--muted); font-size: 0.9rem; flex-shrink: 0; }
-    .nav-vs    { height: 96px; opacity: 0.9; flex-shrink: 0; }
-    .nav-tabs  { display: flex; gap: 0.25rem; }
-    .nav-tab {
-      color: var(--muted); text-decoration: none;
-      font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;
-      padding: 0.5rem 1rem; border-radius: 4px;
-      transition: color 200ms, background 200ms;
-    }
-    .nav-tab:hover  { color: var(--text); background: var(--border); }
-    .nav-tab.active { color: var(--gold); background: rgba(201,168,76,0.08); }
-    .nav-right { display: flex; align-items: center; gap: 0.75rem; }
-    .nav-user  { font-size: 0.8rem; color: var(--gold); letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
-    .nav-logout {
-      background: none; border: 1px solid var(--border); border-radius: 4px;
-      color: var(--muted); font-family: var(--font-mono); font-size: 0.7rem;
-      letter-spacing: 0.08em; text-transform: uppercase;
-      padding: 0.45rem 0.75rem; cursor: pointer; transition: color 200ms, border-color 200ms;
-      white-space: nowrap;
-    }
-    .nav-logout:hover { color: var(--text); border-color: var(--muted); }
-
     /* ── MAIN ── */
     .main { max-width: 680px; margin: 0 auto; padding: 2rem 1rem 5rem; }
-
     .page-header { margin-bottom: 2rem; }
     .page-title  { font-family: var(--font-serif); font-size: 1.75rem; font-weight: 600; margin-bottom: 0.375rem; }
     .page-sub    { font-size: 0.95rem; color: var(--muted); }
 
     /* ── BARBERO LIST ── */
-    .section-title {
-      font-family: var(--font-serif); font-size: 1.25rem; font-weight: 600;
-      margin-bottom: 1rem;
-    }
-
-    .barbero-list { display: flex; flex-direction: column; gap: 0.75rem; }
-
-    .barbero-card {
+    .section-title { font-family: var(--font-serif); font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; }
+    .barbero-list  { display: flex; flex-direction: column; gap: 0.75rem; }
+    .barbero-card  {
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 12px; overflow: hidden;
-      transition: border-color 200ms;
+      border-radius: 12px; overflow: hidden; transition: border-color 200ms;
     }
     .barbero-card.editing { border-color: var(--gold); }
-
     .barbero-summary {
       display: flex; align-items: center; justify-content: space-between;
       padding: 1rem 1.25rem; gap: 1rem; cursor: pointer;
     }
     .barbero-summary:hover .barbero-nombre { color: var(--gold); }
-
-    .barbero-left { display: flex; align-items: center; gap: 0.875rem; }
+    .barbero-left   { display: flex; align-items: center; gap: 0.875rem; }
     .barbero-nombre { font-size: 1.05rem; font-weight: 500; transition: color 150ms; }
     .barbero-id {
       font-size: 0.78rem; color: var(--muted);
       background: var(--bg); border: 1px solid var(--border);
       border-radius: 4px; padding: 0.15rem 0.5rem; letter-spacing: 0.06em;
     }
-
     .barbero-badges { display: flex; align-items: center; gap: 0.5rem; }
     .badge {
       font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase;
@@ -100,7 +42,6 @@
     .badge-active   { color: var(--green); background: rgba(109,191,126,0.12); border: 1px solid rgba(109,191,126,0.2); }
     .badge-inactive { color: var(--muted); background: var(--bg); border: 1px solid var(--border); }
     .badge-owner    { color: var(--gold);  background: rgba(201,168,76,0.12);  border: 1px solid rgba(201,168,76,0.3); }
-
     .btn-chevron {
       background: none; border: none; color: var(--muted); cursor: pointer;
       padding: 0.25rem; transition: color 150ms, transform 200ms;
@@ -110,16 +51,9 @@
     .barbero-card.editing .btn-chevron { color: var(--gold); transform: rotate(180deg); }
 
     /* ── EDIT FORM ── */
-    .barbero-edit {
-      display: none; padding: 0 1.25rem 1.25rem;
-      border-top: 1px solid var(--border);
-    }
+    .barbero-edit { display: none; padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); }
     .barbero-card.editing .barbero-edit { display: block; }
-
-    .edit-grid {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 1rem; margin-top: 1.25rem;
-    }
+    .edit-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.25rem; }
     .edit-group { display: flex; flex-direction: column; gap: 0.4rem; }
     .edit-group.full { grid-column: 1 / -1; }
     .edit-label { font-size: 0.78rem; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
@@ -128,61 +62,37 @@
       color: var(--text); font-family: var(--font-mono); font-size: 0.95rem;
       padding: 0.6rem 0.875rem; outline: none; transition: border-color 200ms;
     }
-    .edit-input:focus { border-color: var(--gold); }
+    .edit-input:focus    { border-color: var(--gold); }
     .edit-input:disabled { color: var(--muted); cursor: default; }
     .edit-hint { font-size: 0.7rem; color: var(--muted); margin-top: 0.25rem; }
 
-    .toggle-row { display: flex; align-items: center; gap: 0.75rem; margin-top: 1rem; }
+    .toggle-row       { display: flex; align-items: center; gap: 0.75rem; margin-top: 1rem; }
     .toggle-row-label { font-size: 0.8rem; color: var(--muted); }
-    .toggle {
-      position: relative; width: 44px; height: 24px; flex-shrink: 0;
-    }
-    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
-    .toggle-track {
-      position: absolute; inset: 0; border-radius: 12px;
-      background: var(--border); cursor: pointer; transition: background 200ms;
-    }
-    .toggle input:checked + .toggle-track { background: var(--green); }
-    .toggle-track::after {
-      content: ''; position: absolute;
-      width: 18px; height: 18px; border-radius: 50%;
-      background: white; top: 3px; left: 3px;
-      transition: transform 200ms;
-    }
-    .toggle input:checked + .toggle-track::after { transform: translateX(20px); }
+    /* toggle::after uses white here (vs var(--text) in admin.css) */
+    .toggle-track::after { background: white; }
 
-    .edit-actions {
-      display: flex; align-items: center; gap: 0.75rem;
-      margin-top: 1.25rem; flex-wrap: wrap;
-    }
+    .edit-actions { display: flex; align-items: center; gap: 0.75rem; margin-top: 1.25rem; flex-wrap: wrap; }
     .btn-save {
       background: var(--gold); border: none; border-radius: 8px;
       color: var(--bg); font-family: var(--font-mono); font-size: 0.78rem;
       font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
-      padding: 0.65rem 1.75rem; cursor: pointer; transition: opacity 200ms;
-      min-height: 44px;
+      padding: 0.65rem 1.75rem; cursor: pointer; transition: opacity 200ms; min-height: 44px;
     }
     .btn-save:hover    { opacity: 0.85; }
     .btn-save:disabled { opacity: 0.4; cursor: default; }
-
     .btn-delete {
       background: none; border: 1px solid var(--border); border-radius: 8px;
       color: var(--red); font-family: var(--font-mono); font-size: 0.78rem;
       letter-spacing: 0.08em; text-transform: uppercase;
-      padding: 0.65rem 1.25rem; cursor: pointer; transition: border-color 200ms, opacity 200ms;
-      min-height: 44px;
+      padding: 0.65rem 1.25rem; cursor: pointer; transition: border-color 200ms; min-height: 44px;
     }
     .btn-delete:hover { border-color: var(--red); }
-
-    .feedback {
-      font-size: 0.78rem; padding: 0.4rem 0.875rem; border-radius: 6px; display: none;
-    }
-    .feedback.ok  { display: inline-block; color: var(--green); background: rgba(109,191,126,0.1); border: 1px solid rgba(109,191,126,0.2); }
+    .feedback { font-size: 0.78rem; padding: 0.4rem 0.875rem; border-radius: 6px; display: none; }
+    .feedback.ok  { display: inline-block; color: var(--green); background: rgba(109,191,126,0.1);  border: 1px solid rgba(109,191,126,0.2); }
     .feedback.err { display: inline-block; color: var(--red);   background: rgba(229,115,115,0.1); border: 1px solid rgba(229,115,115,0.2); }
 
     /* ── ADD NEW ── */
     .add-section { margin-top: 2rem; }
-
     .btn-add {
       display: flex; align-items: center; gap: 0.5rem;
       background: none; border: 1px dashed var(--border); border-radius: 12px;
@@ -192,17 +102,13 @@
     }
     .btn-add:hover { border-color: var(--gold); color: var(--gold); }
     .btn-add svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
-
     .add-form {
       display: none; background: var(--surface); border: 1px solid var(--gold);
       border-radius: 12px; padding: 1.5rem; margin-top: 1rem;
     }
-    .add-form.open { display: block; }
-    .add-form-title { font-family: var(--font-serif); font-size: 1rem; margin-bottom: 1.25rem; }
-
-    .precios-actions {
-      display: flex; align-items: center; gap: 0.75rem; margin-top: 1.25rem; flex-wrap: wrap;
-    }
+    .add-form.open   { display: block; }
+    .add-form-title  { font-family: var(--font-serif); font-size: 1rem; margin-bottom: 1.25rem; }
+    .precios-actions { display: flex; align-items: center; gap: 0.75rem; margin-top: 1.25rem; flex-wrap: wrap; }
 
     /* ── CONFIRM MODAL ── */
     .modal-overlay {
@@ -223,76 +129,32 @@
       width: 44px; height: 44px; border-radius: 50%;
       background: rgba(229,115,115,0.12); border: 1px solid rgba(229,115,115,0.25);
       display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 1.25rem;
-      color: var(--red); font-size: 1.25rem;
+      margin: 0 auto 1.25rem; color: var(--red); font-size: 1.25rem;
     }
-    .modal-msg {
-      font-family: var(--font-serif); font-size: 1.1rem; margin-bottom: 0.6rem;
-    }
-    .modal-sub { font-size: 0.88rem; color: var(--muted); margin-bottom: 1.75rem; }
+    .modal-msg     { font-family: var(--font-serif); font-size: 1.1rem; margin-bottom: 0.6rem; }
+    .modal-sub     { font-size: 0.88rem; color: var(--muted); margin-bottom: 1.75rem; }
     .modal-actions { display: flex; gap: 0.75rem; justify-content: center; }
     .modal-cancel {
       background: none; border: 1px solid var(--border); border-radius: 8px;
       color: var(--muted); font-family: var(--font-mono); font-size: 0.8rem;
       letter-spacing: 0.08em; text-transform: uppercase;
-      padding: 0.65rem 1.5rem; cursor: pointer; transition: border-color 200ms;
-      min-height: 44px;
+      padding: 0.65rem 1.5rem; cursor: pointer; transition: border-color 200ms; min-height: 44px;
     }
     .modal-cancel:hover { border-color: var(--muted); color: var(--text); }
     .modal-confirm {
       background: var(--red); border: none; border-radius: 8px;
       color: #fff; font-family: var(--font-mono); font-size: 0.8rem;
       letter-spacing: 0.08em; text-transform: uppercase;
-      padding: 0.65rem 1.5rem; cursor: pointer; transition: opacity 200ms;
-      min-height: 44px;
+      padding: 0.65rem 1.5rem; cursor: pointer; transition: opacity 200ms; min-height: 44px;
     }
     .modal-confirm:hover { opacity: 0.85; }
 
     /* ── SECTION SEPARATOR ── */
     .section-sep { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
 
-    /* ── LOADING ── */
-    .loading { text-align: center; color: var(--muted); padding: 3rem 0; font-size: 0.875rem; }
-
-    .bottom-nav {
-      display: none;
-      position: fixed; bottom: 0; left: 0; right: 0;
-      background: var(--surface); border-top: 1px solid var(--border);
-      z-index: 20;
-    }
-    .bottom-nav a {
-      flex: 1; display: flex; flex-direction: column; align-items: center;
-      gap: 0.25rem; padding: 0.75rem 0.5rem 0.875rem;
-      text-decoration: none; color: var(--muted);
-      font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase;
-      transition: color 200ms;
-    }
-    .bottom-nav a.active { color: var(--gold); }
-    .bottom-nav a svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.5; }
-
-    /* ── RESPONSIVE ── */
     @media (max-width: 540px) {
-      .nav-tabs  { display: none; }
-      .nav-title { display: none; }
-      .nav-logo  { width: 36px; height: 36px; }
-      .nav { padding: 0.5rem 1rem; }
+      .main      { padding-bottom: 5.5rem; }
       .edit-grid { grid-template-columns: 1fr; }
-      .main { padding-bottom: 5.5rem; }
-      .bottom-nav { display: flex; }
-    }
-    .admin-footer {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 0.875rem 1.5rem; margin-top: 2rem;
-      border-top: 1px solid var(--border);
-      font-size: 0.8rem; color: var(--muted);
-    }
-    .admin-footer-credit { display: flex; align-items: center; gap: 0.5rem; }
-    .admin-footer-credit a { display: inline-flex; align-items: center; opacity: 0.7; transition: opacity 200ms; }
-    .admin-footer-credit a:hover { opacity: 1; }
-    .admin-footer-credit img { height: 140px; width: auto; }
-    @media (max-width: 540px) {
-      .admin-footer { flex-direction: column; gap: 0.75rem; text-align: center; padding: 1.25rem 1rem; }
-      .admin-footer-credit { flex-direction: column; gap: 0.375rem; }
     }
   </style>
 </head>
