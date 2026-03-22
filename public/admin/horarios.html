@@ -412,8 +412,11 @@
       document.getElementById('nav-user').textContent = cap(barbero_id);
 
       if (role === 'owner') {
+        const sel = document.getElementById('barbero-select');
+        sel.style.display = 'block';
+        sel.value = sessionBarbero;
+        sel.addEventListener('change', load);
         document.getElementById('barbero-row').style.display = 'flex';
-        document.getElementById('barbero-select').addEventListener('change', load);
         document.getElementById('servicios-card').style.display = 'block';
         document.querySelector('.nav-tab-owner')?.style.removeProperty('display');
         document.querySelector('.bottom-nav-owner')?.style.removeProperty('display');
