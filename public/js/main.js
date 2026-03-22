@@ -432,8 +432,12 @@ function updateFormSteps(activeStep) {
   steps.forEach(step => {
     const n = parseInt(step.getAttribute('data-step'), 10);
     step.classList.remove('active', 'completed');
+    step.removeAttribute('aria-current');
     if (n < activeStep)  step.classList.add('completed');
-    if (n === activeStep) step.classList.add('active');
+    if (n === activeStep) {
+      step.classList.add('active');
+      step.setAttribute('aria-current', 'step');
+    }
   });
 }
 
@@ -476,6 +480,7 @@ async function initCalendarPicker() {
   const btn        = document.getElementById('reserva-btn');
   // Initialize button as incomplete on load (HTML disabled attr was removed)
   btn.classList.add('btn-incomplete');
+  let tooltipTimer = null;
   if (!dayPicker) return;
 
   let selectedBarbero  = null;
@@ -701,8 +706,9 @@ async function initCalendarPicker() {
     if (btn.classList.contains('btn-incomplete')) {
       const tooltip = document.getElementById('reserva-btn-tooltip');
       if (tooltip) {
+        clearTimeout(tooltipTimer);
         tooltip.style.display = 'block';
-        setTimeout(() => { tooltip.style.display = 'none'; }, 3000);
+        tooltipTimer = setTimeout(() => { tooltip.style.display = 'none'; }, 3000);
       }
       return;
     }
@@ -815,6 +821,8 @@ async function initCalendarPicker() {
     const slotPicker = document.getElementById('slot-picker');
     if (dayPicker)  { dayPicker.innerHTML = '';  dayPicker.style.display  = 'none'; }
     if (slotPicker) { slotPicker.innerHTML = ''; slotPicker.style.display = 'none'; }
+    const fallbackElReset = document.getElementById('slots-fallback');
+    if (fallbackElReset) fallbackElReset.style.display = 'none';
   });
 }
 
