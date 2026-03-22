@@ -21,6 +21,8 @@ export async function onRequestGet({ request, env }) {
 
   // Último turno de cada cliente en una sola query
   const cfg = BARBEROS_CONFIG[bId];
+  // Limitación conocida: si dos clientes recurrentes del mismo barbero comparten
+  // nombre exacto, su historial se mezcla. Fix real requiere FK cliente_id en reservas.
   const { results: historial } = await env.barberia_db.prepare(
     `SELECT nombre, MAX(fecha) as ultimo_turno FROM reservas WHERE barbero = ? GROUP BY nombre`
   ).bind(cfg?.nombre || '').all();

@@ -67,32 +67,32 @@
 
 ## 🔵 BAJO
 
-- [ ] **[BAJO] `horarios.html` — inicialización de barbero-select inconsistente con otros admin pages**
+- [x] **[BAJO] `horarios.html` — inicialización de barbero-select inconsistente con otros admin pages**
   - **Archivo**: `public/admin/horarios.html` (recién corregido)
   - **Nota**: Ya corregido en esta sesión. Este ítem es para recordar verificar el patrón en cualquier página admin nueva que se cree.
   - **Patrón correcto**: `sel.value = sessionBarbero; sel.addEventListener('change', load);`
 
-- [ ] **[BAJO] `turnos.js` — fallback de servicios no incluye nombres canónicos de servicios nuevos**
+- [x] **[BAJO] `turnos.js` — fallback de servicios no incluye nombres canónicos de servicios nuevos**
   - **Archivo**: `functions/api/turnos.js` líneas 8-11
   - **Problema**: `SERVICIOS_DUR_FALLBACK` tiene `'Niños 10-13 años': 30` y `'Niños 0-9 años': 30`, pero `_gcal.js` tiene solo `'Niños': 30`. Si se agrega un servicio en D1 con nombre diferente, el fallback devuelve `undefined` y se usa `SLOT_DURATION` (30 min) por defecto.
   - **Fix**: Sincronizar nombres de servicios en fallback con los nombres canónicos de `_gcal.js::SERVICIOS`, o eliminar el fallback estático y siempre ir a D1.
 
-- [ ] **[BAJO] `_gcal.js::generateSlots` no valida que `schedule[dow]` exista antes de acceder**
+- [x] **[BAJO] `_gcal.js::generateSlots` no valida que `schedule[dow]` exista antes de acceder**
   - **Archivo**: `functions/admin/api/_gcal.js` línea 161
   - **Código actual**: `const s = schedule[dow]; if (!s) return [];` — esto sí está manejado.
   - **Nota**: Ya protegido. Ítem cancelado — sin acción requerida. ✅
 
-- [ ] **[BAJO] Fechas en `FERIADOS` usan formato `d/m/yyyy` sin padding — inconsistente con comparaciones**
+- [x] **[BAJO] Fechas en `FERIADOS` usan formato `d/m/yyyy` sin padding — inconsistente con comparaciones**
   - **Archivo**: `functions/admin/api/_gcal.js` líneas 41-77
   - **Problema**: Las fechas usan `'1/1/2026'` (sin cero inicial). La comparación `f.fecha === fecha` funciona siempre que el caller también use ese formato, pero si algún caller usa `'01/01/2026'` la comparación falla silenciosamente.
   - **Fix**: Normalizar todo a formato sin padding (ya es el caso), o agregar un helper `normalizeFecha` que garantice el formato antes de comparar.
 
-- [ ] **[BAJO] `recurrentes.js` — búsqueda de historial por `nombre` en lugar de ID**
+- [x] **[BAJO] `recurrentes.js` — búsqueda de historial por `nombre` en lugar de ID**
   - **Archivo**: `functions/admin/api/recurrentes.js` línea 25
   - **Código**: `SELECT nombre, MAX(fecha) ... GROUP BY nombre` — si dos clientes tienen el mismo nombre, el historial se mezcla.
   - **Fix**: Agregar campo `cliente_id` a `reservas` (o al menos un lookup por nombre+barbero), y vincular `clientes_recurrentes` con reservas por ID.
 
-- [ ] **[BAJO] Google Calendar — `getCalendarEvents` usa fecha local como string pero convierte a `Date` para calcular duración**
+- [x] **[BAJO] Google Calendar — `getCalendarEvents` usa fecha local como string pero convierte a `Date` para calcular duración**
   - **Archivo**: `functions/api/turnos.js` línea 57
   - **Código**: `const duracion = Math.round((new Date(ev.end) - new Date(ev.start)) / 60000);` — esto convierte ISO strings a UTC. Funciona correctamente para calcular duración (diff es invariante a timezone), pero puede confundir a futuros mantenedores.
   - **Fix**: Agregar comentario explicando que el diff de timestamps es correcto independientemente del timezone.

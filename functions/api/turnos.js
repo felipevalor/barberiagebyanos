@@ -2,12 +2,16 @@
 // Devuelve slots ocupados: reservas D1 + eventos de Google Calendar del barbero.
 // Si el barbero tiene calendarId configurado, los eventos personales también bloquean slots.
 
-import { getGoogleAccessToken, getCalendarEvents, BARBEROS_CONFIG, getServicios, SLOT_DURATION } from '../admin/api/_gcal.js';
+import { getGoogleAccessToken, getCalendarEvents, BARBEROS_CONFIG, getServicios, SLOT_DURATION, SERVICIOS } from '../admin/api/_gcal.js';
 
-// Fallback durations if DB lookup fails or barberoId is not provided
+// Fallback cuando D1 no responde o barberoId no se provee.
+// Mergea los nombres canónicos de _gcal.js::SERVICIOS con los nombres
+// extendidos que el frontend puede enviar (ej: "Niños 10-13 años").
+// Así si SERVICIOS se actualiza, el fallback lo recoge automáticamente.
 const SERVICIOS_DUR_FALLBACK = {
-  'Corte': 30, 'Corte + Barba': 45, 'Barba': 15,
-  'Afeitado': 15, 'Niños 10-13 años': 30, 'Niños 0-9 años': 30,
+  ...SERVICIOS,
+  'Niños 10-13 años': 30,
+  'Niños 0-9 años':   30,
 };
 
 export async function onRequestGet({ request, env }) {
@@ -54,6 +58,7 @@ export async function onRequestGet({ request, env }) {
           // Extraer hora local directamente del ISO string (-03:00) para evitar
           // conversiones UTC incorrectas dentro del Worker
           const hora     = ev.start.slice(11, 16); // "17:30"
+          // diff de timestamps es correcto independientemente del timezone (UTC invariante)
           const duracion = Math.round((new Date(ev.end) - new Date(ev.start)) / 60000);
           occupied.push({ hora, duracion });
         }

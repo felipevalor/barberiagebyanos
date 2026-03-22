@@ -76,7 +76,9 @@ export const FERIADOS = {
   ],
 };
 
-// Devuelve true si la fecha es feriado no trabajado para ese barbero
+// Devuelve true si la fecha es feriado no trabajado para ese barbero.
+// Contrato de formato: fecha debe ser 'd/m/yyyy' sin padding (ej: '1/3/2026').
+// Todos los callers usan formatFecha() que produce exactamente ese formato.
 export async function checkFeriado(fecha, barbero_id, env) {
   const lista = FERIADOS[fecha.split('/')[2]] || [];
   const esFeriado = lista.some(f => f.fecha === fecha);
