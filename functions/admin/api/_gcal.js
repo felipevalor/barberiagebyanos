@@ -78,8 +78,7 @@ export const FERIADOS = {
 
 // Devuelve true si la fecha es feriado no trabajado para ese barbero
 export async function checkFeriado(fecha, barbero_id, env) {
-  const [d, m, y] = fecha.split('/').map(Number);
-  const lista = FERIADOS[y] || [];
+  const lista = FERIADOS[fecha.split('/')[2]] || [];
   const esFeriado = lista.some(f => f.fecha === fecha);
   if (!esFeriado) return false;
 

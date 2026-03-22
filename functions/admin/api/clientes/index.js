@@ -3,7 +3,7 @@
 // PUT    /admin/api/clientes              → editar cliente
 // DELETE /admin/api/clientes              → eliminar cliente
 
-import { getToken } from '../auth.js';
+import { getSession } from '../_session.js';
 import { normalizeTel } from '../_gcal.js';
 
 export async function onRequestGet({ request, env }) {
@@ -107,13 +107,6 @@ export async function onRequestDelete({ request, env }) {
   return json({ ok: true });
 }
 
-async function getSession(request, env) {
-  const token = getToken(request);
-  if (!token) return null;
-  return env.barberia_db.prepare(
-    "SELECT barbero_id, role FROM admin_sessions WHERE token = ? AND expires_at > datetime('now')"
-  ).bind(token).first();
-}
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });

@@ -1,4 +1,4 @@
-import { getToken } from './auth.js';
+import { getSession } from './_session.js';
 import { BARBEROS_CONFIG, DEFAULT_SCHEDULE } from './_gcal.js';
 
 const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -60,13 +60,6 @@ export async function onRequestPut({ request, env }) {
   return json({ success: true });
 }
 
-async function getSession(request, env) {
-  const token = getToken(request);
-  if (!token) return null;
-  return env.barberia_db.prepare(
-    "SELECT barbero_id, role FROM admin_sessions WHERE token = ? AND expires_at > datetime('now')"
-  ).bind(token).first();
-}
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });

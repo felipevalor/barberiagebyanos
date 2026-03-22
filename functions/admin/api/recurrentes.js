@@ -1,4 +1,4 @@
-import { getToken } from './auth.js';
+import { getSession } from './_session.js';
 import { BARBEROS_CONFIG, getSchedule } from './_gcal.js';
 
 // GET    /admin/api/recurrentes?barbero=X  → lista con próximo turno sugerido
@@ -116,14 +116,6 @@ export async function onRequestDelete({ request, env }) {
   return json({ ok: true });
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-async function getSession(request, env) {
-  const token = getToken(request);
-  if (!token) return null;
-  return env.barberia_db.prepare(
-    "SELECT barbero_id, role FROM admin_sessions WHERE token = ? AND expires_at > datetime('now')"
-  ).bind(token).first();
-}
 
 function formatFecha(d) {
   return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;

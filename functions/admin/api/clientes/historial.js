@@ -1,6 +1,6 @@
 // GET /admin/api/clientes/historial?id=X → reservas del cliente (por tel o nombre)
 
-import { getToken } from '../auth.js';
+import { getSession } from '../_session.js';
 
 export async function onRequestGet({ request, env }) {
   const session = await getSession(request, env);
@@ -39,13 +39,6 @@ export async function onRequestGet({ request, env }) {
   return json({ historial });
 }
 
-async function getSession(request, env) {
-  const token = getToken(request);
-  if (!token) return null;
-  return env.barberia_db.prepare(
-    "SELECT barbero_id, role FROM admin_sessions WHERE token = ? AND expires_at > datetime('now')"
-  ).bind(token).first();
-}
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });

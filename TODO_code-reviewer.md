@@ -43,22 +43,22 @@
   - **Problema**: `BARBEROS_CONFIG` hardcodea nombres, teléfonos y calendarIds. La tabla `barberos_config` en D1 guarda lo mismo. El código hace fallback al hardcodeado, lo que significa que si se cambia en D1 pero no en el código, puede usarse el valor stale.
   - **Fix**: Eliminar gradualmente `BARBEROS_CONFIG` hardcodeado; hacer que todas las funciones lean siempre de D1 primero (como ya hace `sendWhatsAppNotification`).
 
-- [ ] **[MEDIO] Dead code en `checkFeriado` — variables `d`, `m`, `y` nunca usadas**
+- [x] **[MEDIO] Dead code en `checkFeriado` — variables `d`, `m`, `y` nunca usadas**
   - **Archivo**: `functions/admin/api/_gcal.js` línea 81
   - **Código**: `const [d, m, y] = fecha.split('/').map(Number);` — las variables se desestructuran pero nunca se usan en la función.
   - **Fix**: Eliminar la línea. La comparación usa directamente `f.fecha === fecha` (string).
 
-- [ ] **[MEDIO] `agenda.html` — dos funciones `renderSlots` casi idénticas**
+- [x] **[MEDIO] `agenda.html` — dos funciones `renderSlots` casi idénticas**
   - **Archivo**: `public/admin/agenda.html`
   - **Problema**: Hay dos copias casi idénticas de la lógica de render de slots: una para el modal "agregar turno" y otra para "editar turno". Cualquier cambio hay que hacerlo dos veces.
   - **Fix**: Extraer una única función `renderSlots(slots, targetElementId, onSelect)` reutilizable.
 
-- [ ] **[MEDIO] `recurrentes.html` — `selectDia()` llamado antes de que el DOM del modal esté renderizado**
+- [x] **[MEDIO] `recurrentes.html` — `selectDia()` llamado antes de que el DOM del modal esté renderizado** *(falso positivo — innerHTML es síncrono, no hay race condition)*
   - **Archivo**: `public/admin/recurrentes.html`
   - **Problema**: En `agendar()`, se llama `selectDia(fechaInicial)` inmediatamente después de hacer `innerHTML = ...` con los chips. Si `selectDia` hace un `querySelector` sobre el chip, puede no encontrarlo si el render no fue síncrono.
   - **Fix**: Envolver el `selectDia()` inicial en `requestAnimationFrame(() => selectDia(fechaInicial))` o hacer que `agendar()` use `await` con una promesa que resuelva después del render.
 
-- [ ] **[MEDIO] Sesiones sin refresh — expiran a las 24hs sin renovación**
+- [x] **[MEDIO] Sesiones sin refresh — expiran a las 24hs sin renovación**
   - **Archivo**: `functions/admin/api/auth.js`
   - **Problema**: Las sesiones se crean con `expires_at = datetime('now', '+1 day')` sin ningún mecanismo de renovación. Un admin activo será desconectado a las 24hs exactas de haber logueado.
   - **Fix**: Actualizar `expires_at` en cada request autenticado exitoso (`UPDATE admin_sessions SET expires_at = datetime('now', '+1 day') WHERE token = ?`).

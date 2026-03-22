@@ -2,7 +2,7 @@
 // Body: { csv: "nombre;celular\n..." }
 // Upsert: si el teléfono ya existe → actualiza nombre. Si no → crea nuevo.
 
-import { getToken } from '../auth.js';
+import { getSession } from '../_session.js';
 import { normalizeTel } from '../_gcal.js';
 
 export async function onRequestPost({ request, env }) {
@@ -57,13 +57,6 @@ export async function onRequestPost({ request, env }) {
   return json({ ok: true, created, updated, errors });
 }
 
-async function getSession(request, env) {
-  const token = getToken(request);
-  if (!token) return null;
-  return env.barberia_db.prepare(
-    "SELECT barbero_id, role FROM admin_sessions WHERE token = ? AND expires_at > datetime('now')"
-  ).bind(token).first();
-}
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });

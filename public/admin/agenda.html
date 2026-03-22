@@ -529,6 +529,91 @@
       if (slot.status === 'bloqueado') openModalDesbloquear(slot);
     }
 
+    // ── Helpers compartidos para modales con selector de día/hora ────────────
+    // Usado tanto en "Agregar turno" como en "Editar turno".
+
+    function buildDayChips(containerEl, schedule, selectedFecha, onDayClick) {
+      containerEl.innerHTML = '';
+      const today = new Date();
+      for (let i = 0; i < 14; i++) {
+        const d = new Date(today); d.setDate(today.getDate() + i);
+        if (!schedule[d.getDay()]) continue;
+        const fechaStr = formatFecha(d);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'edit-day-btn' + (fechaStr === selectedFecha ? ' selected' : '');
+        btn.innerHTML = `${DIAS_ABR[d.getDay()]}<br><strong>${d.getDate()}</strong>`;
+        btn.addEventListener('click', () => {
+          containerEl.querySelectorAll('.edit-day-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          onDayClick(fechaStr);
+        });
+        containerEl.appendChild(btn);
+      }
+    }
+
+    // currentSlot: { hora, fecha, barberoId } del turno que se está editando,
+    // para que su propio horario no aparezca como ocupado.
+    async function buildSlotChips(containerEl, { barberoId, fecha, selectedHora, schedule, onSelect, currentSlot = null }) {
+      containerEl.innerHTML = '<span class="edit-loading">Cargando...</span>';
+
+      const barberoNombre = BARBEROS.find(b => b.id === barberoId)?.nombre || barberoId;
+      let occupied = [];
+      try {
+        const r = await fetch(`/api/turnos?barbero=${encodeURIComponent(barberoNombre)}&fecha=${encodeURIComponent(fecha)}&barberoId=${barberoId}`);
+        if (r.ok) ({ occupied } = await r.json());
+      } catch {}
+
+      const [dd, mm, yy] = fecha.split('/').map(Number);
+      const dow = new Date(yy, mm - 1, dd).getDay();
+      const daySchedule = schedule[dow];
+      containerEl.innerHTML = '';
+
+      if (!daySchedule) {
+        containerEl.innerHTML = '<span class="edit-loading">Día no laborable.</span>';
+        return;
+      }
+
+      const SLOT_DUR = 30;
+      const now = new Date();
+      for (let h = daySchedule.start; h < daySchedule.end; h++) {
+        for (let m = 0; m < 60; m += SLOT_DUR) {
+          const timeStr   = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+          const slotStart = h * 60 + m;
+          const slotEnd   = slotStart + SLOT_DUR;
+          const slotDate  = new Date(yy, mm - 1, dd, h, m);
+
+          const isCurrentSlot = currentSlot &&
+            timeStr   === currentSlot.hora &&
+            fecha     === currentSlot.fecha &&
+            barberoId === currentSlot.barberoId;
+
+          const isBusy = !isCurrentSlot && (
+            slotDate < now ||
+            occupied.some(b => {
+              const [bh, bm] = b.hora.split(':').map(Number);
+              const bStart = bh * 60 + bm;
+              return slotStart < bStart + b.duracion && slotEnd > bStart;
+            })
+          );
+
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'edit-slot-btn' + (timeStr === selectedHora ? ' selected' : '');
+          btn.textContent = timeStr;
+          btn.disabled = isBusy;
+          if (!isBusy) {
+            btn.addEventListener('click', () => {
+              containerEl.querySelectorAll('.edit-slot-btn').forEach(b => b.classList.remove('selected'));
+              btn.classList.add('selected');
+              onSelect(timeStr);
+            });
+          }
+          containerEl.appendChild(btn);
+        }
+      }
+    }
+
     // ── Modal: Agregar turno ──────────────────────────────
     async function openModalAgregar(slot, preNombre = '', preServicio = '') {
       const initBarberoId = getSelectedBarbero();
@@ -591,79 +676,18 @@
       function renderDays() {
         const daysEl = document.getElementById('m-edit-days');
         if (!daysEl) return;
-        daysEl.innerHTML = '';
-        const today = new Date();
-        for (let i = 0; i < 14; i++) {
-          const d = new Date(today); d.setDate(today.getDate() + i);
-          if (!cachedSchedule[d.getDay()]) continue;
-          const fechaStr = formatFecha(d);
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'edit-day-btn' + (fechaStr === addFecha ? ' selected' : '');
-          btn.innerHTML = `${DIAS_ABR[d.getDay()]}<br><strong>${d.getDate()}</strong>`;
-          btn.addEventListener('click', async () => {
-            daysEl.querySelectorAll('.edit-day-btn').forEach(b => b.classList.remove('selected'));
-            btn.classList.add('selected');
-            addFecha = fechaStr;
-            addHora  = null;
-            await renderSlots();
-          });
-          daysEl.appendChild(btn);
-        }
+        buildDayChips(daysEl, cachedSchedule, addFecha, async (fecha) => {
+          addFecha = fecha; addHora = null; await renderSlots();
+        });
       }
 
       async function renderSlots() {
         const slotsEl = document.getElementById('m-edit-slots');
         if (!slotsEl) return;
-        slotsEl.innerHTML = '<span class="edit-loading">Cargando...</span>';
-
-        const barberoNombre = BARBEROS.find(b => b.id === addBarberoId)?.nombre || addBarberoId;
-        let occupied = [];
-        try {
-          const r = await fetch(`/api/turnos?barbero=${encodeURIComponent(barberoNombre)}&fecha=${encodeURIComponent(addFecha)}&barberoId=${addBarberoId}`);
-          if (r.ok) ({ occupied } = await r.json());
-        } catch {}
-
-        const [dd, mm, yy] = addFecha.split('/').map(Number);
-        const dow = new Date(yy, mm - 1, dd).getDay();
-        const daySchedule = cachedSchedule[dow];
-        slotsEl.innerHTML = '';
-
-        if (!daySchedule) {
-          slotsEl.innerHTML = '<span class="edit-loading">Día no laborable.</span>';
-          return;
-        }
-
-        const SLOT_DUR = 30;
-        const now = new Date();
-        for (let h = daySchedule.start; h < daySchedule.end; h++) {
-          for (let m = 0; m < 60; m += SLOT_DUR) {
-            const timeStr   = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-            const slotStart = h * 60 + m;
-            const slotEnd   = slotStart + SLOT_DUR;
-            const slotDate  = new Date(yy, mm - 1, dd, h, m);
-
-            const isBusy = slotDate < now || occupied.some(b => {
-              const [bh, bm] = b.hora.split(':').map(Number);
-              const bStart = bh * 60 + bm;
-              return slotStart < bStart + b.duracion && slotEnd > bStart;
-            });
-
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'edit-slot-btn' + (timeStr === addHora ? ' selected' : '');
-            btn.textContent = timeStr;
-            btn.disabled = isBusy;
-            if (!isBusy) {
-              btn.addEventListener('click', () => {
-                slotsEl.querySelectorAll('.edit-slot-btn').forEach(b => b.classList.remove('selected'));
-                btn.classList.add('selected');
-                addHora = timeStr;
-              });
-            }
-            slotsEl.appendChild(btn);
-          }
-        }
+        await buildSlotChips(slotsEl, {
+          barberoId: addBarberoId, fecha: addFecha, selectedHora: addHora,
+          schedule: cachedSchedule, onSelect: (h) => { addHora = h; },
+        });
       }
 
       if (role === 'owner') {
@@ -766,88 +790,19 @@
       function renderDays() {
         const daysEl = document.getElementById('m-edit-days');
         if (!daysEl) return;
-        daysEl.innerHTML = '';
-        const today = new Date();
-        for (let i = 0; i < 14; i++) {
-          const d = new Date(today); d.setDate(today.getDate() + i);
-          if (!cachedSchedule[d.getDay()]) continue;
-          const fechaStr = formatFecha(d);
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'edit-day-btn' + (fechaStr === editFecha ? ' selected' : '');
-          btn.innerHTML = `${DIAS_ABR[d.getDay()]}<br><strong>${d.getDate()}</strong>`;
-          btn.addEventListener('click', async () => {
-            daysEl.querySelectorAll('.edit-day-btn').forEach(b => b.classList.remove('selected'));
-            btn.classList.add('selected');
-            editFecha = fechaStr;
-            editHora  = null;
-            await renderSlots();
-          });
-          daysEl.appendChild(btn);
-        }
+        buildDayChips(daysEl, cachedSchedule, editFecha, async (fecha) => {
+          editFecha = fecha; editHora = null; await renderSlots();
+        });
       }
 
       async function renderSlots() {
         const slotsEl = document.getElementById('m-edit-slots');
         if (!slotsEl) return;
-        slotsEl.innerHTML = '<span class="edit-loading">Cargando...</span>';
-
-        const barberoNombre = BARBEROS.find(b => b.id === editBarberoId)?.nombre || editBarberoId;
-        let occupied = [];
-        try {
-          const r = await fetch(`/api/turnos?barbero=${encodeURIComponent(barberoNombre)}&fecha=${encodeURIComponent(editFecha)}&barberoId=${editBarberoId}`);
-          if (r.ok) ({ occupied } = await r.json());
-        } catch {}
-
-        const [dd, mm, yy] = editFecha.split('/').map(Number);
-        const dow = new Date(yy, mm - 1, dd).getDay();
-        const daySchedule = cachedSchedule[dow];
-        slotsEl.innerHTML = '';
-
-        if (!daySchedule) {
-          slotsEl.innerHTML = '<span class="edit-loading">Día no laborable.</span>';
-          return;
-        }
-
-        const SLOT_DUR = 30;
-        const now = new Date();
-        for (let h = daySchedule.start; h < daySchedule.end; h++) {
-          for (let m = 0; m < 60; m += SLOT_DUR) {
-            const timeStr = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-            const slotStart = h * 60 + m;
-            const slotEnd   = slotStart + SLOT_DUR;
-            const slotDate  = new Date(yy, mm - 1, dd, h, m);
-
-            // El slot actual del turno sigue disponible aunque esté en DB
-            const isCurrentSlot = timeStr === slot.hora
-              && editFecha     === formatFecha(currentDate)
-              && editBarberoId === slotBarberoId;
-
-            const isBusy = !isCurrentSlot && (
-              slotDate < now ||
-              occupied.some(b => {
-                const [bh, bm] = b.hora.split(':').map(Number);
-                const bStart = bh * 60 + bm;
-                const bEnd   = bStart + b.duracion;
-                return slotStart < bEnd && slotEnd > bStart;
-              })
-            );
-
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'edit-slot-btn' + (timeStr === editHora ? ' selected' : '');
-            btn.textContent = timeStr;
-            btn.disabled = isBusy;
-            if (!isBusy) {
-              btn.addEventListener('click', () => {
-                slotsEl.querySelectorAll('.edit-slot-btn').forEach(b => b.classList.remove('selected'));
-                btn.classList.add('selected');
-                editHora = timeStr;
-              });
-            }
-            slotsEl.appendChild(btn);
-          }
-        }
+        await buildSlotChips(slotsEl, {
+          barberoId: editBarberoId, fecha: editFecha, selectedHora: editHora,
+          schedule: cachedSchedule, onSelect: (h) => { editHora = h; },
+          currentSlot: { hora: slot.hora, fecha: formatFecha(currentDate), barberoId: slotBarberoId },
+        });
       }
 
       if (role === 'owner') {

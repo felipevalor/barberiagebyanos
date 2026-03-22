@@ -1,4 +1,4 @@
-import { getToken } from './auth.js';
+import { getSession } from './_session.js';
 import { BARBEROS_CONFIG, SLOT_DURATION, getServicios, getGoogleAccessToken, createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, normalizeTel } from './_gcal.js';
 
 // ── Crear turno manual ────────────────────────────────────────────────────────
@@ -227,14 +227,6 @@ export async function onRequestDelete({ request, env }) {
   return json({ success: true });
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-async function getSession(request, env) {
-  const token = getToken(request);
-  if (!token) return null;
-  return env.barberia_db.prepare(
-    "SELECT barbero_id, role FROM admin_sessions WHERE token = ? AND expires_at > datetime('now')"
-  ).bind(token).first();
-}
 
 function getBarberoConfigByNombre(nombre) {
   for (const [id, cfg] of Object.entries(BARBEROS_CONFIG)) {

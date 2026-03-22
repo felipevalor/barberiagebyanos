@@ -1,17 +1,10 @@
-import { getToken } from './auth.js';
+import { getSession } from './_session.js';
 
 // GET    /admin/api/promos         → todas las promos
 // POST   /admin/api/promos         → crear promo
 // PUT    /admin/api/promos?id=X    → editar promo
 // DELETE /admin/api/promos?id=X    → eliminar promo
 
-async function getSession(request, env) {
-  const token = getToken(request);
-  if (!token) return null;
-  return env.barberia_db.prepare(
-    "SELECT barbero_id FROM admin_sessions WHERE token = ? AND expires_at > datetime('now')"
-  ).bind(token).first();
-}
 
 export async function onRequestGet({ request, env }) {
   const session = await getSession(request, env);
