@@ -61,11 +61,11 @@
 
     .page-header { margin-bottom: 2rem; }
     .page-title  { font-family: var(--font-serif); font-size: 1.75rem; font-weight: 600; margin-bottom: 0.375rem; }
-    .page-sub    { font-size: 0.85rem; color: var(--muted); }
+    .page-sub    { font-size: 0.95rem; color: var(--muted); }
 
     /* ── BARBERO LIST ── */
     .section-title {
-      font-family: var(--font-serif); font-size: 1.1rem; font-weight: 600;
+      font-family: var(--font-serif); font-size: 1.25rem; font-weight: 600;
       margin-bottom: 1rem;
     }
 
@@ -85,17 +85,17 @@
     .barbero-summary:hover .barbero-nombre { color: var(--gold); }
 
     .barbero-left { display: flex; align-items: center; gap: 0.875rem; }
-    .barbero-nombre { font-size: 0.95rem; font-weight: 500; transition: color 150ms; }
+    .barbero-nombre { font-size: 1.05rem; font-weight: 500; transition: color 150ms; }
     .barbero-id {
-      font-size: 0.72rem; color: var(--muted);
+      font-size: 0.78rem; color: var(--muted);
       background: var(--bg); border: 1px solid var(--border);
       border-radius: 4px; padding: 0.15rem 0.5rem; letter-spacing: 0.06em;
     }
 
     .barbero-badges { display: flex; align-items: center; gap: 0.5rem; }
     .badge {
-      font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase;
-      padding: 0.2rem 0.6rem; border-radius: 4px;
+      font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.25rem 0.65rem; border-radius: 4px;
     }
     .badge-active   { color: var(--green); background: rgba(109,191,126,0.12); border: 1px solid rgba(109,191,126,0.2); }
     .badge-inactive { color: var(--muted); background: var(--bg); border: 1px solid var(--border); }
@@ -122,10 +122,10 @@
     }
     .edit-group { display: flex; flex-direction: column; gap: 0.4rem; }
     .edit-group.full { grid-column: 1 / -1; }
-    .edit-label { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+    .edit-label { font-size: 0.78rem; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
     .edit-input {
       background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
-      color: var(--text); font-family: var(--font-mono); font-size: 0.875rem;
+      color: var(--text); font-family: var(--font-mono); font-size: 0.95rem;
       padding: 0.6rem 0.875rem; outline: none; transition: border-color 200ms;
     }
     .edit-input:focus { border-color: var(--gold); }
@@ -203,6 +203,50 @@
     .precios-actions {
       display: flex; align-items: center; gap: 0.75rem; margin-top: 1.25rem; flex-wrap: wrap;
     }
+
+    /* ── CONFIRM MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 999;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 180ms;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 2rem 2rem 1.5rem;
+      max-width: 380px; width: 90%; text-align: center;
+      transform: translateY(8px); transition: transform 180ms;
+    }
+    .modal-overlay.open .modal-box { transform: translateY(0); }
+    .modal-icon {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: rgba(229,115,115,0.12); border: 1px solid rgba(229,115,115,0.25);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1.25rem;
+      color: var(--red); font-size: 1.25rem;
+    }
+    .modal-msg {
+      font-family: var(--font-serif); font-size: 1.1rem; margin-bottom: 0.6rem;
+    }
+    .modal-sub { font-size: 0.88rem; color: var(--muted); margin-bottom: 1.75rem; }
+    .modal-actions { display: flex; gap: 0.75rem; justify-content: center; }
+    .modal-cancel {
+      background: none; border: 1px solid var(--border); border-radius: 8px;
+      color: var(--muted); font-family: var(--font-mono); font-size: 0.8rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.65rem 1.5rem; cursor: pointer; transition: border-color 200ms;
+      min-height: 44px;
+    }
+    .modal-cancel:hover { border-color: var(--muted); color: var(--text); }
+    .modal-confirm {
+      background: var(--red); border: none; border-radius: 8px;
+      color: #fff; font-family: var(--font-mono); font-size: 0.8rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.65rem 1.5rem; cursor: pointer; transition: opacity 200ms;
+      min-height: 44px;
+    }
+    .modal-confirm:hover { opacity: 0.85; }
 
     /* ── SECTION SEPARATOR ── */
     .section-sep { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
@@ -459,6 +503,27 @@
   <script>
     const API = '/admin/api/config/barberos';
 
+    // ── Modal confirm ─────────────────────────────────────────────────────────
+    function showConfirm(msg, sub) {
+      return new Promise(resolve => {
+        const overlay = document.getElementById('confirm-modal');
+        document.getElementById('modal-msg').textContent = msg;
+        document.getElementById('modal-sub').textContent = sub || 'Esta acción no se puede deshacer.';
+        overlay.classList.add('open');
+        const ok     = document.getElementById('modal-confirm');
+        const cancel = document.getElementById('modal-cancel');
+        function cleanup(val) {
+          overlay.classList.remove('open');
+          ok.replaceWith(ok.cloneNode(true));
+          cancel.replaceWith(cancel.cloneNode(true));
+          resolve(val);
+        }
+        document.getElementById('modal-confirm').addEventListener('click', () => cleanup(true),  { once: true });
+        document.getElementById('modal-cancel').addEventListener('click',  () => cleanup(false), { once: true });
+        overlay.addEventListener('click', e => { if (e.target === overlay) cleanup(false); }, { once: true });
+      });
+    }
+
     // ── Auth ──────────────────────────────────────────────────────────────────
     async function checkAuth() {
       const res = await fetch('/admin/api/me');
@@ -604,7 +669,7 @@
     }
 
     async function deleteBarbero(card, id, nombre) {
-      if (!confirm(`¿Eliminar a "${nombre}"? Esta acción no se puede deshacer.`)) return;
+      if (!await showConfirm(`Eliminar barbero`, `¿Eliminar a "${nombre}"? Esta acción no se puede deshacer.`)) return;
 
       const btn = card.querySelector('.btn-delete-barbero');
       btn.disabled = true;
@@ -713,8 +778,8 @@
         const activoBadge = item.activo ? '' : ' <span style="color:var(--muted);font-size:0.75rem">(inactivo)</span>';
         row.innerHTML = `
           <div style="flex:1;min-width:0">
-            <div style="font-size:0.9rem;font-weight:500">${item.nombre}${activoBadge}</div>
-            <div style="color:var(--muted);font-size:0.78rem;margin-top:2px">${precioStr}${item.incluye ? ` · ${item.incluye}` : ''}</div>
+            <div style="font-size:1rem;font-weight:500">${item.nombre}${activoBadge}</div>
+            <div style="color:var(--muted);font-size:0.88rem;margin-top:3px">${precioStr}${item.incluye ? ` · ${item.incluye}` : ''}</div>
           </div>
           <div style="display:flex;gap:0.5rem;flex-shrink:0">
             <button class="btn-edit-cat btn-save" style="padding:0.35rem 0.75rem;font-size:0.75rem" data-id="${item.id}">Editar</button>
@@ -782,7 +847,7 @@
     });
 
     async function deleteCatalogoItem(id) {
-      if (!confirm('¿Eliminar este servicio del catálogo?')) return;
+      if (!await showConfirm('Eliminar servicio', '¿Eliminar este servicio del catálogo? Esta acción no se puede deshacer.')) return;
       const res = await fetch(`/admin/api/catalogo?id=${id}`, { method: 'DELETE' });
       if (res.ok) await loadCatalogo();
     }
@@ -809,8 +874,8 @@
         const activoBadge = p.activo ? '' : ' <span style="color:var(--muted);font-size:0.75rem">(inactiva)</span>';
         row.innerHTML = `
           <div style="flex:1;min-width:0">
-            <div style="font-size:0.9rem;font-weight:500">${p.badge ? `<span style="color:var(--gold);font-size:0.7rem;margin-right:6px">[${p.badge}]</span>` : ''}${p.nombre}${activoBadge}</div>
-            <div style="color:var(--muted);font-size:0.78rem;margin-top:2px">${precioStr}${p.nota ? ` · ${p.nota}` : ''}</div>
+            <div style="font-size:1rem;font-weight:500">${p.badge ? `<span style="color:var(--gold);font-size:0.7rem;margin-right:6px">[${p.badge}]</span>` : ''}${p.nombre}${activoBadge}</div>
+            <div style="color:var(--muted);font-size:0.88rem;margin-top:3px">${precioStr}${p.nota ? ` · ${p.nota}` : ''}</div>
           </div>
           <div style="display:flex;gap:0.5rem;flex-shrink:0">
             <button class="btn-edit-promo btn-save" style="padding:0.35rem 0.75rem;font-size:0.75rem" data-id="${p.id}">Editar</button>
@@ -882,7 +947,7 @@
     });
 
     async function deletePromo(id) {
-      if (!confirm('¿Eliminar esta promo?')) return;
+      if (!await showConfirm('Eliminar promo', '¿Eliminar esta promo? Esta acción no se puede deshacer.')) return;
       const res = await fetch(`/admin/api/promos?id=${id}`, { method: 'DELETE' });
       if (res.ok) await loadPromos();
     }
@@ -909,6 +974,19 @@
       }
     })();
   </script>
+
+  <!-- ── CONFIRM MODAL ── -->
+  <div id="confirm-modal" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <div class="modal-icon">✕</div>
+      <div class="modal-msg" id="modal-msg">¿Confirmar acción?</div>
+      <div class="modal-sub" id="modal-sub">Esta acción no se puede deshacer.</div>
+      <div class="modal-actions">
+        <button class="modal-cancel" id="modal-cancel">Cancelar</button>
+        <button class="modal-confirm" id="modal-confirm">Eliminar</button>
+      </div>
+    </div>
+  </div>
 
   <footer class="admin-footer">
     <span>© 2026 Barbería Gebyanos</span>

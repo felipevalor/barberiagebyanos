@@ -23,10 +23,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (r?.ok) BARBEROS = await r.json();
     } catch { /* usa fallback hardcodeado */ }
 
-    // Render catálogo
+    // Render catálogo + precios iniciales en el dropdown de reserva
     try {
         const r = await catalogoFetch;
-        if (r?.ok) renderCatalogo(await r.json());
+        if (r?.ok) {
+            const items = await r.json();
+            renderCatalogo(items);
+            updateServicioDropdown(items); // mostrar precios antes de elegir barbero
+        }
     } catch { /* grid queda vacío — fallback en CSS no requerido */ }
 
     // Render promos
