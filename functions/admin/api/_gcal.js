@@ -42,6 +42,7 @@ export const FERIADOS = {
     { fecha: '1/1/2026',   nombre: 'Año Nuevo' },
     { fecha: '16/2/2026',  nombre: 'Carnaval' },
     { fecha: '17/2/2026',  nombre: 'Carnaval' },
+    { fecha: '23/3/2026',  nombre: 'Puente turístico' },
     { fecha: '24/3/2026',  nombre: 'Día Nacional de la Memoria por la Verdad y la Justicia' },
     { fecha: '2/4/2026',   nombre: 'Día del Veterano y de los Caídos en la Guerra de Malvinas' },
     { fecha: '3/4/2026',   nombre: 'Viernes Santo' },
