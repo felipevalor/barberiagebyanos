@@ -22,8 +22,8 @@ Full conversion audit identified 6 friction points. User approved 5 improvements
 
 **Stats data:**
 ```
-15+          2              Lunes a Sábado
-años en      barberos       9:00 – 20:00
+15+          2              Lun–Vie 9–20
+años en      barberos       Sáb 9–17
 el barrio    disponibles
 ```
 
@@ -65,7 +65,7 @@ Change is purely structural in `index.html` — move the `<section id="galeria">
 - NS: "Próximamente"
 - BQL: "Próximamente"
 
-**JS:** The `BARBEROS` array already drives this section. Card rendering replaces the existing `.barberos-grid` logic in `initReservaForm()`. Selected state managed via `data-selected` attribute + CSS.
+**JS:** The `BARBEROS` array already drives this section. Card rendering replaces the existing `.barberos-grid` logic in `initReservaForm()`. On card click: set `data-selected` on the card AND update the existing JS variable used by the submit handler to identify the selected barbero. Cards with `disponible: false` get `pointer-events: none` in CSS AND are skipped by the submit handler guard — both layers needed.
 
 ---
 
@@ -79,14 +79,16 @@ Change is purely structural in `index.html` — move the `<section id="galeria">
 
 **Activation logic (JS):**
 - Step 1 active: always (on load)
-- Step 2 active: nombre + telefono filled
-- Step 3 active: servicio selected
-- Step 4 active: barbero selected
-- Step 5 active: día selected
+- Step 2 active: nombre + telefono filled → Step 1 transitions to `completed`
+- Step 3 active: servicio selected → Step 2 transitions to `completed`
+- Step 4 active: barbero selected → Step 3 transitions to `completed`
+- Step 5 active: día selected → Step 4 transitions to `completed`
+
+A step is `completed` when the next step becomes `active`. CSS handles the visual distinction between `active` (current) and `completed` (checkmark, dimmer gold).
 
 **CSS:** `.form-steps`, `.form-step`, `.form-step.active`, `.form-step.completed`. Active step uses `--gold`. Completed steps show a checkmark.
 
-**Submit button tooltip:** If clicked while disabled, show inline message "Completá los pasos anteriores para confirmar."
+**Submit button incomplete state:** Remove the HTML `disabled` attribute. Instead, apply a CSS class `.btn-incomplete` that visually dims the button. In the JS submit handler, check if all required fields are filled; if not, show an inline message "Completá los pasos anteriores para confirmar." below the button and return early. This avoids the `disabled` button not firing click events.
 
 ---
 
@@ -105,8 +107,8 @@ Change is purely structural in `index.html` — move the `<section id="galeria">
 ```
 
 **WA link logic:**
-- If barbero selected: use that barbero's `tel`
-- If no barbero selected: default to Gebyano's `tel` (5493416021009)
+- If barbero selected AND `tel` is not null: use that barbero's `tel`
+- If no barbero selected OR selected barbero's `tel` is null: default to Gebyano's `tel` (5493416021009)
 - Pre-composed message: `"Hola, quiero reservar un turno"`
 
 **Timeout:** `setTimeout` of 5000ms set when slot fetch begins, cleared on success.

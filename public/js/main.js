@@ -356,6 +356,7 @@ let BARBEROS = [
   { id: 'gebyano', nombre: 'Gebyano', tel: '5493416021009', disponible: false, calendarId: null,                      schedule: DEFAULT_SCHEDULE },
   { id: 'lobo',    nombre: 'Lobo',    tel: '5493412754502', disponible: true,  calendarId: null,                      schedule: DEFAULT_SCHEDULE },
   { id: 'felipe',  nombre: 'Felipe',  tel: '5493416513207', disponible: true,  calendarId: 'felipevalor7@gmail.com',  schedule: DEFAULT_SCHEDULE },
+  { id: 'lisandro', nombre: 'Lisandro', tel: '5493412751752', disponible: true, calendarId: 'blascolisandro@gmail.com', schedule: DEFAULT_SCHEDULE },
   { id: 'ns',      nombre: 'NS',      tel: null,            disponible: false, calendarId: null,                      schedule: null },
   { id: 'bql',     nombre: 'BQL',     tel: null,            disponible: false, calendarId: null,                      schedule: null }
 ];
