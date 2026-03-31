@@ -159,36 +159,39 @@
 
                     <div class="form-group">
                         <label>Nombre y apellido</label>
-                        <input type="text" id="reserva-nombre" placeholder="Juan García" autocomplete="off"
-                            required>
+                        <input type="text" id="reserva-nombre" placeholder="Juan García" autocomplete="off" required>
                     </div>
 
                     <div class="form-group">
                         <label>Celular / WhatsApp</label>
-                        <input type="tel" id="reserva-telefono" placeholder="341 602 1009" autocomplete="tel"
-                            required>
+                        <input type="tel" id="reserva-telefono" placeholder="341 602 1009" autocomplete="tel" required>
                     </div>
 
                     <div class="form-group">
                         <label>Servicio</label>
                         <div class="custom-select" id="custom-select-servicio">
-                            <div class="custom-select-trigger" role="button" tabindex="0"
-                                 aria-haspopup="listbox" aria-expanded="false"
-                                 aria-controls="select-servicio-dropdown">
+                            <div class="custom-select-trigger" role="button" tabindex="0" aria-haspopup="listbox"
+                                aria-expanded="false" aria-controls="select-servicio-dropdown">
                                 <span id="select-servicio-display">Seleccioná un servicio</span>
                                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                                     <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5"
                                         stroke-linecap="round" />
                                 </svg>
                             </div>
-                            <div class="custom-select-dropdown" role="listbox"
-                                 id="select-servicio-dropdown" aria-label="Servicio">
-                                <div class="select-option" role="option" aria-selected="false" data-value="Corte">Corte</div>
-                                <div class="select-option" role="option" aria-selected="false" data-value="Corte + Barba">Corte + Barba</div>
-                                <div class="select-option" role="option" aria-selected="false" data-value="Barba">Barba</div>
-                                <div class="select-option" role="option" aria-selected="false" data-value="Afeitado">Afeitado</div>
-                                <div class="select-option" role="option" aria-selected="false" data-value="Niños 10-13 años">Niños 10–13 años</div>
-                                <div class="select-option" role="option" aria-selected="false" data-value="Niños 0-9 años">Niños 0–9 años</div>
+                            <div class="custom-select-dropdown" role="listbox" id="select-servicio-dropdown"
+                                aria-label="Servicio">
+                                <div class="select-option" role="option" aria-selected="false" data-value="Corte">Corte
+                                </div>
+                                <div class="select-option" role="option" aria-selected="false"
+                                    data-value="Corte + Barba">Corte + Barba</div>
+                                <div class="select-option" role="option" aria-selected="false" data-value="Barba">Barba
+                                </div>
+                                <div class="select-option" role="option" aria-selected="false" data-value="Afeitado">
+                                    Afeitado</div>
+                                <div class="select-option" role="option" aria-selected="false"
+                                    data-value="Niños 10-13 años">Niños 10–13 años</div>
+                                <div class="select-option" role="option" aria-selected="false"
+                                    data-value="Niños 0-9 años">Niños 0–9 años</div>
                             </div>
                         </div>
                         <input type="hidden" name="servicio" id="servicio-value" required>
@@ -201,21 +204,25 @@
 
                     <div class="form-group" id="day-picker-wrapper">
                         <label id="day-picker-label">Día</label>
-                        <div id="day-picker" aria-live="polite" aria-labelledby="day-picker-label" style="display:none;"></div>
+                        <div id="day-picker" aria-live="polite" aria-labelledby="day-picker-label"
+                            style="display:none;"></div>
                     </div>
 
                     <div class="form-group" id="slot-picker-wrapper">
                         <label id="slot-picker-label">Horario</label>
-                        <div id="slot-picker" aria-live="polite" aria-labelledby="slot-picker-label" style="display:none;"></div>
+                        <div id="slot-picker" aria-live="polite" aria-labelledby="slot-picker-label"
+                            style="display:none;"></div>
                         <div id="slots-fallback" class="slots-fallback" style="display:none;">
                             <p>No pudimos cargar los horarios disponibles.</p>
-                            <a id="slots-fallback-wa" href="#" target="_blank" rel="noopener" class="btn-slots-fallback">
+                            <a id="slots-fallback-wa" href="#" target="_blank" rel="noopener"
+                                class="btn-slots-fallback">
                                 Escribinos por WhatsApp →
                             </a>
                         </div>
                     </div>
 
-                    <button type="submit" class="btn magnetic btn-incomplete" id="reserva-btn" aria-describedby="reserva-btn-tooltip">
+                    <button type="submit" class="btn magnetic btn-incomplete" id="reserva-btn"
+                        aria-describedby="reserva-btn-tooltip">
                         Confirmar turno
                     </button>
                     <div id="reserva-btn-tooltip" class="reserva-btn-tooltip" role="tooltip" style="display:none;">
@@ -226,35 +233,40 @@
 
                 <!-- ── Pantalla de confirmación ── -->
                 <div id="reserva-confirmacion" style="display:none">
-                  <div class="confirm-wrap">
-                    <div class="confirm-icon">✓</div>
-                    <h3 class="confirm-title">Turno confirmado</h3>
-                    <div class="confirm-details" id="confirm-details"></div>
-                    <div class="confirm-actions">
-                      <a id="btn-gcal" href="#" target="_blank" rel="noopener" class="btn-confirm-cal">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                        Agregar al calendario
-                      </a>
-                      <button class="btn-confirm-new" id="btn-nueva-reserva">Hacer otra reserva</button>
+                    <div class="confirm-wrap">
+                        <div class="confirm-icon">✓</div>
+                        <h3 class="confirm-title">Turno confirmado</h3>
+                        <div class="confirm-details" id="confirm-details"></div>
+                        <div class="confirm-actions">
+                            <a id="btn-gcal" href="#" target="_blank" rel="noopener" class="btn-confirm-cal">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                                    <line x1="16" y1="2" x2="16" y2="6" />
+                                    <line x1="8" y1="2" x2="8" y2="6" />
+                                    <line x1="3" y1="10" x2="21" y2="10" />
+                                </svg>
+                                Agregar al calendario
+                            </a>
+                            <button class="btn-confirm-new" id="btn-nueva-reserva">Hacer otra reserva</button>
+                        </div>
                     </div>
-                  </div>
                 </div>
             </div>
         </section>
 
         <!-- ── Consultar mi turno ── -->
         <section id="mi-turno">
-          <div class="container">
-            <div class="mi-turno-wrap">
-              <div class="mi-turno-label">Consultá tu turno</div>
-              <div class="mi-turno-form">
-                <input type="text" id="mi-turno-nombre" placeholder="Juan García" autocomplete="off">
-                <input type="tel" id="mi-turno-tel" placeholder="341 602 1009" autocomplete="tel">
-                <button id="mi-turno-btn">Consultar</button>
-              </div>
-              <div id="mi-turno-result"></div>
+            <div class="container">
+                <div class="mi-turno-wrap">
+                    <div class="mi-turno-label">Consultá tu turno</div>
+                    <div class="mi-turno-form">
+                        <input type="text" id="mi-turno-nombre" placeholder="Juan García" autocomplete="off">
+                        <input type="tel" id="mi-turno-tel" placeholder="341 602 1009" autocomplete="tel">
+                        <button id="mi-turno-btn">Consultar</button>
+                    </div>
+                    <div id="mi-turno-result"></div>
+                </div>
             </div>
-          </div>
         </section>
 
     </main>
@@ -292,21 +304,17 @@
                 </div>
             </div>
             <div class="footer-map">
-                <iframe
-                    src="https://maps.google.com/maps?q=1+de+Mayo+1687,+Rosario,+Santa+Fe,+Argentina&output=embed"
-                    loading="lazy"
-                    allowfullscreen
-                    referrerpolicy="no-referrer-when-downgrade"
+                <iframe src="https://maps.google.com/maps?q=1+de+Mayo+1687,+Rosario,+Santa+Fe,+Argentina&output=embed"
+                    loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"
                     title="Ubicación Barbería Gebyanos">
                 </iframe>
             </div>
             <div class="footer-bottom">
                 <p>© 2026 Barbería Gebyanos</p>
                 <span class="footer-credit">
-                    Diseñado y desarrollado con ♥ por
-                    <a href="https://valor-solutions.pages.dev" target="_blank">
+                    Diseñado y desarrollado con <3 por <a href="https://valor-solutions.pages.dev" target="_blank">
                         <img src="img/ValorSolutions-blanca.svg" alt="Valor Solutions" class="footer-vs-logo">
-                    </a>
+                        </a>
                 </span>
             </div>
         </div>
