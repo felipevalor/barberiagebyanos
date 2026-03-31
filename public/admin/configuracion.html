@@ -1,163 +1,496 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gebyanos — Configuración</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="/css/admin.css">
   <style>
     /* ── MAIN ── */
-    .main { max-width: 680px; margin: 0 auto; padding: 2rem 1rem 5rem; }
-    .page-header { margin-bottom: 2rem; }
-    .page-title  { font-family: var(--font-serif); font-size: 1.75rem; font-weight: 600; margin-bottom: 0.375rem; }
-    .page-sub    { font-size: 0.95rem; color: var(--muted); }
+    .main {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 2rem 1rem 5rem;
+    }
+
+    .page-header {
+      margin-bottom: 2rem;
+    }
+
+    .page-title {
+      font-family: var(--font-serif);
+      font-size: 1.75rem;
+      font-weight: 600;
+      margin-bottom: 0.375rem;
+    }
+
+    .page-sub {
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
 
     /* ── BARBERO LIST ── */
-    .section-title { font-family: var(--font-serif); font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; }
-    .barbero-list  { display: flex; flex-direction: column; gap: 0.75rem; }
-    .barbero-card  {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 12px; overflow: hidden; transition: border-color 200ms;
+    .section-title {
+      font-family: var(--font-serif);
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
     }
-    .barbero-card.editing { border-color: var(--gold); }
+
+    .barbero-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .barbero-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: border-color 200ms;
+    }
+
+    .barbero-card.editing {
+      border-color: var(--gold);
+    }
+
     .barbero-summary {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 1rem 1.25rem; gap: 1rem; cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      gap: 1rem;
+      cursor: pointer;
     }
-    .barbero-summary:hover .barbero-nombre { color: var(--gold); }
-    .barbero-left   { display: flex; align-items: center; gap: 0.875rem; }
-    .barbero-nombre { font-size: 1.05rem; font-weight: 500; transition: color 150ms; }
+
+    .barbero-summary:hover .barbero-nombre {
+      color: var(--gold);
+    }
+
+    .barbero-left {
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
+    }
+
+    .barbero-nombre {
+      font-size: 1.05rem;
+      font-weight: 500;
+      transition: color 150ms;
+    }
+
     .barbero-id {
-      font-size: 0.78rem; color: var(--muted);
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 4px; padding: 0.15rem 0.5rem; letter-spacing: 0.06em;
+      font-size: 0.78rem;
+      color: var(--muted);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.15rem 0.5rem;
+      letter-spacing: 0.06em;
     }
-    .barbero-badges { display: flex; align-items: center; gap: 0.5rem; }
+
+    .barbero-badges {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
     .badge {
-      font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase;
-      padding: 0.25rem 0.65rem; border-radius: 4px;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.65rem;
+      border-radius: 4px;
     }
-    .badge-active   { color: var(--green); background: rgba(109,191,126,0.12); border: 1px solid rgba(109,191,126,0.2); }
-    .badge-inactive { color: var(--muted); background: var(--bg); border: 1px solid var(--border); }
-    .badge-owner    { color: var(--gold);  background: rgba(201,168,76,0.12);  border: 1px solid rgba(201,168,76,0.3); }
+
+    .badge-active {
+      color: var(--green);
+      background: rgba(109, 191, 126, 0.12);
+      border: 1px solid rgba(109, 191, 126, 0.2);
+    }
+
+    .badge-inactive {
+      color: var(--muted);
+      background: var(--bg);
+      border: 1px solid var(--border);
+    }
+
+    .badge-owner {
+      color: var(--gold);
+      background: rgba(201, 168, 76, 0.12);
+      border: 1px solid rgba(201, 168, 76, 0.3);
+    }
+
     .btn-chevron {
-      background: none; border: none; color: var(--muted); cursor: pointer;
-      padding: 0.25rem; transition: color 150ms, transform 200ms;
-      display: flex; align-items: center; justify-content: center;
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 0.25rem;
+      transition: color 150ms, transform 200ms;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .btn-chevron svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
-    .barbero-card.editing .btn-chevron { color: var(--gold); transform: rotate(180deg); }
+
+    .btn-chevron svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    .barbero-card.editing .btn-chevron {
+      color: var(--gold);
+      transform: rotate(180deg);
+    }
 
     /* ── EDIT FORM ── */
-    .barbero-edit { display: none; padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); }
-    .barbero-card.editing .barbero-edit { display: block; }
-    .edit-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.25rem; }
-    .edit-group { display: flex; flex-direction: column; gap: 0.4rem; }
-    .edit-group.full { grid-column: 1 / -1; }
-    .edit-label { font-size: 0.78rem; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+    .barbero-edit {
+      display: none;
+      padding: 0 1.25rem 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .barbero-card.editing .barbero-edit {
+      display: block;
+    }
+
+    .edit-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1.25rem;
+    }
+
+    .edit-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .edit-group.full {
+      grid-column: 1 / -1;
+    }
+
+    .edit-label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
     .edit-input {
-      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
-      color: var(--text); font-family: var(--font-mono); font-size: 0.95rem;
-      padding: 0.6rem 0.875rem; outline: none; transition: border-color 200ms;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      padding: 0.6rem 0.875rem;
+      outline: none;
+      transition: border-color 200ms;
     }
-    .edit-input:focus    { border-color: var(--gold); }
-    .edit-input:disabled { color: var(--muted); cursor: default; }
-    .edit-hint { font-size: 0.7rem; color: var(--muted); margin-top: 0.25rem; }
 
-    .toggle-row       { display: flex; align-items: center; gap: 0.75rem; margin-top: 1rem; }
-    .toggle-row-label { font-size: 0.8rem; color: var(--muted); }
+    .edit-input:focus {
+      border-color: var(--gold);
+    }
+
+    .edit-input:disabled {
+      color: var(--muted);
+      cursor: default;
+    }
+
+    .edit-hint {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 0.25rem;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .toggle-row-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
     /* toggle::after uses white here (vs var(--text) in admin.css) */
-    .toggle-track::after { background: white; }
+    .toggle-track::after {
+      background: white;
+    }
 
-    .edit-actions { display: flex; align-items: center; gap: 0.75rem; margin-top: 1.25rem; flex-wrap: wrap; }
+    .edit-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+      flex-wrap: wrap;
+    }
+
     .btn-save {
-      background: var(--gold); border: none; border-radius: 8px;
-      color: var(--bg); font-family: var(--font-mono); font-size: 0.78rem;
-      font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
-      padding: 0.65rem 1.75rem; cursor: pointer; transition: opacity 200ms; min-height: 44px;
+      background: var(--gold);
+      border: none;
+      border-radius: 8px;
+      color: var(--bg);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.65rem 1.75rem;
+      cursor: pointer;
+      transition: opacity 200ms;
+      min-height: 44px;
     }
-    .btn-save:hover    { opacity: 0.85; }
-    .btn-save:disabled { opacity: 0.4; cursor: default; }
+
+    .btn-save:hover {
+      opacity: 0.85;
+    }
+
+    .btn-save:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
     .btn-delete {
-      background: none; border: 1px solid var(--border); border-radius: 8px;
-      color: var(--red); font-family: var(--font-mono); font-size: 0.78rem;
-      letter-spacing: 0.08em; text-transform: uppercase;
-      padding: 0.65rem 1.25rem; cursor: pointer; transition: border-color 200ms; min-height: 44px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--red);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.65rem 1.25rem;
+      cursor: pointer;
+      transition: border-color 200ms;
+      min-height: 44px;
     }
-    .btn-delete:hover { border-color: var(--red); }
-    .feedback { font-size: 0.78rem; padding: 0.4rem 0.875rem; border-radius: 6px; display: none; }
-    .feedback.ok  { display: inline-block; color: var(--green); background: rgba(109,191,126,0.1);  border: 1px solid rgba(109,191,126,0.2); }
-    .feedback.err { display: inline-block; color: var(--red);   background: rgba(229,115,115,0.1); border: 1px solid rgba(229,115,115,0.2); }
+
+    .btn-delete:hover {
+      border-color: var(--red);
+    }
+
+    .feedback {
+      font-size: 0.78rem;
+      padding: 0.4rem 0.875rem;
+      border-radius: 6px;
+      display: none;
+    }
+
+    .feedback.ok {
+      display: inline-block;
+      color: var(--green);
+      background: rgba(109, 191, 126, 0.1);
+      border: 1px solid rgba(109, 191, 126, 0.2);
+    }
+
+    .feedback.err {
+      display: inline-block;
+      color: var(--red);
+      background: rgba(229, 115, 115, 0.1);
+      border: 1px solid rgba(229, 115, 115, 0.2);
+    }
 
     /* ── ADD NEW ── */
-    .add-section { margin-top: 2rem; }
+    .add-section {
+      margin-top: 2rem;
+    }
+
     .btn-add {
-      display: flex; align-items: center; gap: 0.5rem;
-      background: none; border: 1px dashed var(--border); border-radius: 12px;
-      color: var(--muted); font-family: var(--font-mono); font-size: 0.85rem;
-      padding: 0.875rem 1.25rem; cursor: pointer; width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: none;
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      padding: 0.875rem 1.25rem;
+      cursor: pointer;
+      width: 100%;
       transition: border-color 200ms, color 200ms;
     }
-    .btn-add:hover { border-color: var(--gold); color: var(--gold); }
-    .btn-add svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
-    .add-form {
-      display: none; background: var(--surface); border: 1px solid var(--gold);
-      border-radius: 12px; padding: 1.5rem; margin-top: 1rem;
+
+    .btn-add:hover {
+      border-color: var(--gold);
+      color: var(--gold);
     }
-    .add-form.open   { display: block; }
-    .add-form-title  { font-family: var(--font-serif); font-size: 1rem; margin-bottom: 1.25rem; }
-    .precios-actions { display: flex; align-items: center; gap: 0.75rem; margin-top: 1.25rem; flex-wrap: wrap; }
+
+    .btn-add svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    .add-form {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--gold);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    .add-form.open {
+      display: block;
+    }
+
+    .add-form-title {
+      font-family: var(--font-serif);
+      font-size: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .precios-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+      flex-wrap: wrap;
+    }
 
     /* ── CONFIRM MODAL ── */
     .modal-overlay {
-      position: fixed; inset: 0; z-index: 999;
-      background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
-      display: flex; align-items: center; justify-content: center;
-      opacity: 0; pointer-events: none; transition: opacity 180ms;
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms;
     }
-    .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
     .modal-box {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px; padding: 2rem 2rem 1.5rem;
-      max-width: 380px; width: 90%; text-align: center;
-      transform: translateY(8px); transition: transform 180ms;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem 2rem 1.5rem;
+      max-width: 380px;
+      width: 90%;
+      text-align: center;
+      transform: translateY(8px);
+      transition: transform 180ms;
     }
-    .modal-overlay.open .modal-box { transform: translateY(0); }
+
+    .modal-overlay.open .modal-box {
+      transform: translateY(0);
+    }
+
     .modal-icon {
-      width: 44px; height: 44px; border-radius: 50%;
-      background: rgba(229,115,115,0.12); border: 1px solid rgba(229,115,115,0.25);
-      display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 1.25rem; color: var(--red); font-size: 1.25rem;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(229, 115, 115, 0.12);
+      border: 1px solid rgba(229, 115, 115, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.25rem;
+      color: var(--red);
+      font-size: 1.25rem;
     }
-    .modal-msg     { font-family: var(--font-serif); font-size: 1.1rem; margin-bottom: 0.6rem; }
-    .modal-sub     { font-size: 0.88rem; color: var(--muted); margin-bottom: 1.75rem; }
-    .modal-actions { display: flex; gap: 0.75rem; justify-content: center; }
+
+    .modal-msg {
+      font-family: var(--font-serif);
+      font-size: 1.1rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .modal-sub {
+      font-size: 0.88rem;
+      color: var(--muted);
+      margin-bottom: 1.75rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+    }
+
     .modal-cancel {
-      background: none; border: 1px solid var(--border); border-radius: 8px;
-      color: var(--muted); font-family: var(--font-mono); font-size: 0.8rem;
-      letter-spacing: 0.08em; text-transform: uppercase;
-      padding: 0.65rem 1.5rem; cursor: pointer; transition: border-color 200ms; min-height: 44px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.65rem 1.5rem;
+      cursor: pointer;
+      transition: border-color 200ms;
+      min-height: 44px;
     }
-    .modal-cancel:hover { border-color: var(--muted); color: var(--text); }
+
+    .modal-cancel:hover {
+      border-color: var(--muted);
+      color: var(--text);
+    }
+
     .modal-confirm {
-      background: var(--red); border: none; border-radius: 8px;
-      color: #fff; font-family: var(--font-mono); font-size: 0.8rem;
-      letter-spacing: 0.08em; text-transform: uppercase;
-      padding: 0.65rem 1.5rem; cursor: pointer; transition: opacity 200ms; min-height: 44px;
+      background: var(--red);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.65rem 1.5rem;
+      cursor: pointer;
+      transition: opacity 200ms;
+      min-height: 44px;
     }
-    .modal-confirm:hover { opacity: 0.85; }
+
+    .modal-confirm:hover {
+      opacity: 0.85;
+    }
 
     /* ── SECTION SEPARATOR ── */
-    .section-sep { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+    .section-sep {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 2rem 0;
+    }
 
     @media (max-width: 540px) {
-      .main      { padding-bottom: 5.5rem; }
-      .edit-grid { grid-template-columns: 1fr; }
+      .main {
+        padding-bottom: 5.5rem;
+      }
+
+      .edit-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
+
 <body>
 
   <div id="nav-placeholder"></div>
@@ -187,7 +520,10 @@
       </div>
       <div class="precios-actions" style="margin-top:0">
         <button class="btn-add" id="btn-add-catalogo" style="font-size:0.8rem; padding:0.6rem 1.2rem">
-          <svg viewBox="0 0 24 24" width="14" height="14" style="vertical-align:middle;margin-right:4px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <svg viewBox="0 0 24 24" width="14" height="14" style="vertical-align:middle;margin-right:4px">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
           Nuevo servicio
         </button>
       </div>
@@ -229,7 +565,10 @@
       </div>
       <div class="precios-actions" style="margin-top:0">
         <button class="btn-add" id="btn-add-promo" style="font-size:0.8rem; padding:0.6rem 1.2rem">
-          <svg viewBox="0 0 24 24" width="14" height="14" style="vertical-align:middle;margin-right:4px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <svg viewBox="0 0 24 24" width="14" height="14" style="vertical-align:middle;margin-right:4px">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
           Nueva promo
         </button>
       </div>
@@ -270,7 +609,10 @@
     <!-- ── AGREGAR NUEVO ── -->
     <div class="add-section" id="add-section-barberos" style="display:none">
       <button class="btn-add" id="btn-add-new">
-        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <svg viewBox="0 0 24 24">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
         Agregar barbero
       </button>
       <div class="add-form" id="add-form">
@@ -328,7 +670,7 @@
         document.getElementById('modal-msg').textContent = msg;
         document.getElementById('modal-sub').textContent = sub || 'Esta acción no se puede deshacer.';
         overlay.classList.add('open');
-        const ok     = document.getElementById('modal-confirm');
+        const ok = document.getElementById('modal-confirm');
         const cancel = document.getElementById('modal-cancel');
         function cleanup(val) {
           overlay.classList.remove('open');
@@ -336,8 +678,8 @@
           cancel.replaceWith(cancel.cloneNode(true));
           resolve(val);
         }
-        document.getElementById('modal-confirm').addEventListener('click', () => cleanup(true),  { once: true });
-        document.getElementById('modal-cancel').addEventListener('click',  () => cleanup(false), { once: true });
+        document.getElementById('modal-confirm').addEventListener('click', () => cleanup(true), { once: true });
+        document.getElementById('modal-cancel').addEventListener('click', () => cleanup(false), { once: true });
         overlay.addEventListener('click', e => { if (e.target === overlay) cleanup(false); }, { once: true });
       });
     }
@@ -425,11 +767,11 @@
           </div>
           <div class="edit-actions">
             ${isOwner
-              ? '<span style="font-size:0.78rem;color:var(--muted)">🔒 Entrada de administrador — no editable</span>'
-              : `<button class="btn-save btn-save-edit">Guardar</button>
+          ? '<span style="font-size:0.78rem;color:var(--muted)">🔒 Entrada de administrador — no editable</span>'
+          : `<button class="btn-save btn-save-edit">Guardar</button>
                  <button class="btn-delete btn-delete-barbero">Eliminar</button>
                  <span class="feedback edit-feedback"></span>`
-            }
+        }
           </div>
         </div>`;
 
@@ -446,13 +788,13 @@
     }
 
     async function saveEdit(card, id) {
-      const btn      = card.querySelector('.btn-save-edit');
+      const btn = card.querySelector('.btn-save-edit');
       const feedback = card.querySelector('.edit-feedback');
-      const nombre   = card.querySelector('.edit-nombre').value.trim();
-      const tel      = card.querySelector('.edit-tel').value.trim();
-      const cal      = card.querySelector('.edit-cal').value.trim();
-      const activo   = card.querySelector('.edit-activo').checked;
-      const orden    = parseInt(card.querySelector('.edit-orden').value) || 0;
+      const nombre = card.querySelector('.edit-nombre').value.trim();
+      const tel = card.querySelector('.edit-tel').value.trim();
+      const cal = card.querySelector('.edit-cal').value.trim();
+      const activo = card.querySelector('.edit-activo').checked;
+      const orden = parseInt(card.querySelector('.edit-orden').value) || 0;
 
       if (!nombre) { showFeedback(feedback, 'El nombre no puede estar vacío.', true); return; }
 
@@ -515,16 +857,16 @@
     });
 
     document.getElementById('btn-save-new').addEventListener('click', async () => {
-      const btn      = document.getElementById('btn-save-new');
+      const btn = document.getElementById('btn-save-new');
       const feedback = document.getElementById('new-feedback');
-      const id       = document.getElementById('new-id').value.trim().toLowerCase().replace(/\s+/g, '-');
-      const nombre   = document.getElementById('new-nombre').value.trim();
-      const tel      = document.getElementById('new-tel').value.trim();
-      const cal      = document.getElementById('new-cal').value.trim();
-      const activo   = document.getElementById('new-activo').checked;
-      const orden    = parseInt(document.getElementById('new-orden').value) || 0;
+      const id = document.getElementById('new-id').value.trim().toLowerCase().replace(/\s+/g, '-');
+      const nombre = document.getElementById('new-nombre').value.trim();
+      const tel = document.getElementById('new-tel').value.trim();
+      const cal = document.getElementById('new-cal').value.trim();
+      const activo = document.getElementById('new-activo').checked;
+      const orden = parseInt(document.getElementById('new-orden').value) || 0;
 
-      if (!id)     { showFeedback(feedback, 'El ID es obligatorio.', true);     return; }
+      if (!id) { showFeedback(feedback, 'El ID es obligatorio.', true); return; }
       if (!nombre) { showFeedback(feedback, 'El nombre es obligatorio.', true); return; }
 
       btn.disabled = true;
@@ -553,7 +895,7 @@
     });
 
     function clearAddForm() {
-      ['new-id','new-nombre','new-tel','new-cal'].forEach(id => document.getElementById(id).value = '');
+      ['new-id', 'new-nombre', 'new-tel', 'new-cal'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('new-orden').value = '0';
       document.getElementById('new-activo').checked = true;
       const f = document.getElementById('new-feedback');
@@ -628,19 +970,19 @@
       });
 
       card.querySelector('.cat-save').addEventListener('click', async () => {
-        const btn      = card.querySelector('.cat-save');
+        const btn = card.querySelector('.cat-save');
         const feedback = card.querySelector('.cat-feedback');
-        const nombre   = card.querySelector('.cat-nombre').value.trim();
-        const precioV  = card.querySelector('.cat-precio').value.trim();
-        const precio   = precioV === '' ? null : parseInt(precioV, 10);
-        const incluye  = card.querySelector('.cat-incluye').value.trim();
+        const nombre = card.querySelector('.cat-nombre').value.trim();
+        const precioV = card.querySelector('.cat-precio').value.trim();
+        const precio = precioV === '' ? null : parseInt(precioV, 10);
+        const incluye = card.querySelector('.cat-incluye').value.trim();
 
         if (!nombre) { showFeedback(feedback, 'El nombre es obligatorio', true); return; }
         if (precio !== null && (isNaN(precio) || precio < 0)) { showFeedback(feedback, 'Precio inválido', true); return; }
 
         btn.disabled = true; btn.textContent = 'Guardando...';
         try {
-          const res  = await fetch(`/admin/api/catalogo?id=${item.id}`, {
+          const res = await fetch(`/admin/api/catalogo?id=${item.id}`, {
             method: 'PUT', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nombre, precio_ars: precio, incluye, activo: item.activo ?? 1 }),
           });
@@ -648,7 +990,8 @@
           if (!res.ok) { showFeedback(feedback, data.error || 'Error', true); return; }
           showFeedback(feedback, 'Guardado', false);
           await loadCatalogo();
-        } catch { showFeedback(feedback, 'Error de red', true);
+        } catch {
+          showFeedback(feedback, 'Error de red', true);
         } finally { btn.disabled = false; btn.textContent = 'Guardar'; }
       });
 
@@ -670,7 +1013,7 @@
     document.getElementById('btn-add-catalogo').addEventListener('click', () => {
       editingCatalogoId = null;
       document.getElementById('catalogo-form-title').textContent = 'Nuevo servicio';
-      ['catalogo-nombre','catalogo-precio','catalogo-incluye'].forEach(id => document.getElementById(id).value = '');
+      ['catalogo-nombre', 'catalogo-precio', 'catalogo-incluye'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('catalogo-form').classList.add('open');
       document.getElementById('catalogo-nombre').focus();
     });
@@ -680,19 +1023,19 @@
     });
 
     document.getElementById('btn-save-catalogo-form').addEventListener('click', async () => {
-      const btn      = document.getElementById('btn-save-catalogo-form');
+      const btn = document.getElementById('btn-save-catalogo-form');
       const feedback = document.getElementById('catalogo-form-feedback');
-      const nombre   = document.getElementById('catalogo-nombre').value.trim();
-      const precioV  = document.getElementById('catalogo-precio').value.trim();
-      const precio   = precioV === '' ? null : parseInt(precioV, 10);
-      const incluye  = document.getElementById('catalogo-incluye').value.trim();
+      const nombre = document.getElementById('catalogo-nombre').value.trim();
+      const precioV = document.getElementById('catalogo-precio').value.trim();
+      const precio = precioV === '' ? null : parseInt(precioV, 10);
+      const incluye = document.getElementById('catalogo-incluye').value.trim();
 
       if (!nombre) { showFeedback(feedback, 'El nombre es obligatorio', true); return; }
       if (precio !== null && (isNaN(precio) || precio < 0)) { showFeedback(feedback, 'Precio inválido', true); return; }
 
       btn.disabled = true; btn.textContent = 'Guardando...';
       try {
-        const res  = await fetch('/admin/api/catalogo', {
+        const res = await fetch('/admin/api/catalogo', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ nombre, precio_ars: precio, incluye, activo: 1 }),
         });
@@ -701,7 +1044,8 @@
         showFeedback(feedback, 'Servicio creado', false);
         document.getElementById('catalogo-form').classList.remove('open');
         await loadCatalogo();
-      } catch { showFeedback(feedback, 'Error de red', true);
+      } catch {
+        showFeedback(feedback, 'Error de red', true);
       } finally { btn.disabled = false; btn.textContent = 'Guardar'; }
     });
 
@@ -780,21 +1124,21 @@
       });
 
       card.querySelector('.promo-save').addEventListener('click', async () => {
-        const btn      = card.querySelector('.promo-save');
+        const btn = card.querySelector('.promo-save');
         const feedback = card.querySelector('.promo-feedback');
-        const nombre   = card.querySelector('.promo-nombre-in').value.trim();
-        const precioV  = card.querySelector('.promo-precio-in').value.trim();
-        const precio   = precioV === '' ? null : parseInt(precioV, 10);
-        const unidad   = card.querySelector('.promo-unidad-in').value.trim();
-        const badge    = card.querySelector('.promo-badge-in').value.trim();
-        const nota     = card.querySelector('.promo-nota-in').value.trim();
+        const nombre = card.querySelector('.promo-nombre-in').value.trim();
+        const precioV = card.querySelector('.promo-precio-in').value.trim();
+        const precio = precioV === '' ? null : parseInt(precioV, 10);
+        const unidad = card.querySelector('.promo-unidad-in').value.trim();
+        const badge = card.querySelector('.promo-badge-in').value.trim();
+        const nota = card.querySelector('.promo-nota-in').value.trim();
 
         if (!nombre) { showFeedback(feedback, 'El nombre es obligatorio', true); return; }
         if (precio !== null && (isNaN(precio) || precio < 0)) { showFeedback(feedback, 'Precio inválido', true); return; }
 
         btn.disabled = true; btn.textContent = 'Guardando...';
         try {
-          const res  = await fetch(`/admin/api/promos?id=${p.id}`, {
+          const res = await fetch(`/admin/api/promos?id=${p.id}`, {
             method: 'PUT', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nombre, precio_ars: precio, unidad: unidad || null, badge: badge || null, nota: nota || null, activo: p.activo ?? 1 }),
           });
@@ -802,7 +1146,8 @@
           if (!res.ok) { showFeedback(feedback, data.error || 'Error', true); return; }
           showFeedback(feedback, 'Guardado', false);
           await loadPromos();
-        } catch { showFeedback(feedback, 'Error de red', true);
+        } catch {
+          showFeedback(feedback, 'Error de red', true);
         } finally { btn.disabled = false; btn.textContent = 'Guardar'; }
       });
 
@@ -822,7 +1167,7 @@
 
     document.getElementById('btn-add-promo').addEventListener('click', () => {
       document.getElementById('promo-form-title').textContent = 'Nueva promo';
-      ['promo-nombre','promo-precio','promo-unidad','promo-badge','promo-nota'].forEach(id => document.getElementById(id).value = '');
+      ['promo-nombre', 'promo-precio', 'promo-unidad', 'promo-badge', 'promo-nota'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('promo-form').classList.add('open');
       document.getElementById('promo-nombre').focus();
     });
@@ -832,21 +1177,21 @@
     });
 
     document.getElementById('btn-save-promo').addEventListener('click', async () => {
-      const btn      = document.getElementById('btn-save-promo');
+      const btn = document.getElementById('btn-save-promo');
       const feedback = document.getElementById('promo-feedback');
-      const nombre   = document.getElementById('promo-nombre').value.trim();
-      const precioV  = document.getElementById('promo-precio').value.trim();
-      const precio   = precioV === '' ? null : parseInt(precioV, 10);
-      const unidad   = document.getElementById('promo-unidad').value.trim();
-      const badge    = document.getElementById('promo-badge').value.trim();
-      const nota     = document.getElementById('promo-nota').value.trim();
+      const nombre = document.getElementById('promo-nombre').value.trim();
+      const precioV = document.getElementById('promo-precio').value.trim();
+      const precio = precioV === '' ? null : parseInt(precioV, 10);
+      const unidad = document.getElementById('promo-unidad').value.trim();
+      const badge = document.getElementById('promo-badge').value.trim();
+      const nota = document.getElementById('promo-nota').value.trim();
 
       if (!nombre) { showFeedback(feedback, 'El nombre es obligatorio', true); return; }
       if (precio !== null && (isNaN(precio) || precio < 0)) { showFeedback(feedback, 'Precio inválido', true); return; }
 
       btn.disabled = true; btn.textContent = 'Guardando...';
       try {
-        const res  = await fetch('/admin/api/promos', {
+        const res = await fetch('/admin/api/promos', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ nombre, precio_ars: precio, unidad: unidad || null, badge: badge || null, nota: nota || null, activo: 1 }),
         });
@@ -855,7 +1200,8 @@
         showFeedback(feedback, 'Promo creada', false);
         document.getElementById('promo-form').classList.remove('open');
         await loadPromos();
-      } catch { showFeedback(feedback, 'Error de red', true);
+      } catch {
+        showFeedback(feedback, 'Error de red', true);
       } finally { btn.disabled = false; btn.textContent = 'Guardar promo'; }
     });
 
@@ -923,11 +1269,11 @@
   <footer class="admin-footer">
     <span>© 2026 Barbería Gebyanos</span>
     <span class="admin-footer-credit">
-      Diseñado y desarrollado con ♥ por
-      <a href="https://valor-solutions.pages.dev" target="_blank">
-        <img src="/img/Valor Solutions-blanca.png" alt="Valor Solutions">
-      </a>
+      Diseñado y desarrollado con <3 por <a href="https://valor-solutions.pages.dev" target="_blank">
+        <img src="/public/img/ValorSolutions-blanca.svg" alt="Valor Solutions">
+        </a>
     </span>
   </footer>
 </body>
+
 </html>
