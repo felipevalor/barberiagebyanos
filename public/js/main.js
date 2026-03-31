@@ -52,8 +52,8 @@ function renderCatalogo(items) {
             ? `<div class="servicio-precio">$${Number(s.precio_ars).toLocaleString('es-AR')}</div>`
             : '';
         return `<div class="servicio-card">
-            <div class="servicio-nombre">${s.nombre}</div>
-            <div class="servicio-incluye">${s.incluye || ''}</div>
+            <div class="servicio-nombre">${escapeHtml(s.nombre)}</div>
+            <div class="servicio-incluye">${escapeHtml(s.incluye || '')}</div>
             ${precio}
         </div>`;
     }).join('');
@@ -66,15 +66,15 @@ function renderPromos(promos) {
     const activas = promos.filter(p => p.activo !== 0);
     if (!activas.length) return;
     grid.innerHTML = activas.map(p => {
-        const badge = p.badge ? `<div class="promo-badge">${p.badge}</div>` : '';
+        const badge = p.badge ? `<div class="promo-badge">${escapeHtml(p.badge)}</div>` : '';
         const especial = p.badge ? ' promo-especial' : '';
         const precio = p.precio_ars && p.precio_ars > 0
-            ? `$${Number(p.precio_ars).toLocaleString('es-AR')}${p.unidad ? ` <span>${p.unidad}</span>` : ''}`
+            ? `$${Number(p.precio_ars).toLocaleString('es-AR')}${p.unidad ? ` <span>${escapeHtml(p.unidad)}</span>` : ''}`
             : '';
-        const nota = p.nota ? `<div class="promo-nota">${p.nota}</div>` : '';
+        const nota = p.nota ? `<div class="promo-nota">${escapeHtml(p.nota)}</div>` : '';
         return `<div class="promo-card${especial}">
             ${badge}
-            <div class="promo-nombre">${p.nombre}</div>
+            <div class="promo-nombre">${escapeHtml(p.nombre)}</div>
             ${precio ? `<div class="promo-precio">${precio}</div>` : ''}
             ${nota}
         </div>`;
@@ -785,19 +785,19 @@ async function initCalendarPicker() {
     document.getElementById('confirm-details').innerHTML = `
       <div class="confirm-row">
         <span class="confirm-row-label">Barbero</span>
-        <span class="confirm-row-value">${turno.barbero}</span>
+        <span class="confirm-row-value">${escapeHtml(turno.barbero)}</span>
       </div>
       <div class="confirm-row">
         <span class="confirm-row-label">Servicio</span>
-        <span class="confirm-row-value">${turno.servicio}</span>
+        <span class="confirm-row-value">${escapeHtml(turno.servicio)}</span>
       </div>
       <div class="confirm-row">
         <span class="confirm-row-label">Día</span>
-        <span class="confirm-row-value">${fechaLabel}</span>
+        <span class="confirm-row-value">${escapeHtml(fechaLabel)}</span>
       </div>
       <div class="confirm-row">
         <span class="confirm-row-label">Hora</span>
-        <span class="confirm-row-value">${turno.hora}</span>
+        <span class="confirm-row-value">${escapeHtml(turno.hora)}</span>
       </div>`;
 
     document.getElementById('btn-gcal').href = buildGcalUrl(turno);
@@ -895,10 +895,10 @@ function initMiTurno() {
 
     result.innerHTML = `
       <div class="mi-turno-card">
-        <div class="mi-turno-card-fecha">${fechaLabel} · ${t.hora}</div>
+        <div class="mi-turno-card-fecha">${escapeHtml(fechaLabel)} · ${escapeHtml(t.hora)}</div>
         <div class="mi-turno-card-rows">
-          <div class="mi-turno-card-row"><span>Barbero</span><span>${t.barbero}</span></div>
-          <div class="mi-turno-card-row"><span>Servicio</span><span>${t.servicio}</span></div>
+          <div class="mi-turno-card-row"><span>Barbero</span><span>${escapeHtml(t.barbero)}</span></div>
+          <div class="mi-turno-card-row"><span>Servicio</span><span>${escapeHtml(t.servicio)}</span></div>
         </div>
         <div class="mi-turno-actions">
           <button class="mi-turno-edit-btn" id="btn-editar-turno">Modificar</button>
