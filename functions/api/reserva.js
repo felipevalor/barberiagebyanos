@@ -1,11 +1,21 @@
 import { BARBEROS_CONFIG, SERVICIOS, sendWhatsAppNotification, getServicios, getGoogleAccessToken, createCalendarEvent, normalizeTel } from '../admin/api/_gcal.js';
 
-const CORS = {
-  'Access-Control-Allow-Origin':  '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-  'Content-Type':                 'application/json',
-};
+const ALLOWED_ORIGINS = [
+  'https://gebyanos.com.ar',
+  'https://barberia-d8q.pages.dev',
+];
+
+function getCors(request) {
+  const origin = request?.headers?.get('Origin') || '';
+  const allowed = ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.pages.dev');
+  const allowedOrigin = allowed ? origin : ALLOWED_ORIGINS[0];
+  return {
+    'Access-Control-Allow-Origin':  allowedOrigin,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Content-Type':                 'application/json',
+  };
+}
 
 export async function onRequestPost({ request, env, waitUntil }) {
   try {
@@ -13,7 +23,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
     const { nombre, telefono, servicio, barberoId, barbero: barberoNombre, fecha, hora, calendarId, duracion, precio_ars } = body;
 
     if (!nombre?.trim() || !telefono?.trim() || !servicio || !fecha || !hora) {
-      return res({ success: false, error: 'Faltan campos obligatorios' }, 400);
+      return res({ success: false, error: 'Faltan campos obligatorios' }, 400, request);
     }
 
     // Resolver barberoId desde nombre si no viene
@@ -42,7 +52,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
       const rStart = rh * 60 + rm;
       const rEnd   = rStart + (serviciosMap[r.servicio] ?? 30);
       if (newStart < rEnd && newEnd > rStart) {
-        return res({ success: false, error: 'Ese horario ya fue tomado. Elegí otro.' }, 409);
+        return res({ success: false, error: 'Ese horario ya fue tomado. Elegí otro.' }, 409, request);
       }
     }
 
@@ -104,21 +114,22 @@ export async function onRequestPost({ request, env, waitUntil }) {
       bId ? sendWhatsAppNotification(bId, { nombre: nombre.trim(), servicio, fecha, hora, precio_ars: precio_ars ?? null }, env).catch(() => {}) : Promise.resolve(),
     ]));
 
-    return res({ success: true, turno: { nombre: nombre.trim(), servicio, barbero: nombreBarbero, fecha, hora } });
+    return res({ success: true, turno: { nombre: nombre.trim(), servicio, barbero: nombreBarbero, fecha, hora } }, 200, request);
 
   } catch (error) {
     const isDouble = error?.message?.includes('UNIQUE constraint failed');
     return res(
       { success: false, error: isDouble ? 'Ese horario ya fue tomado. Elegí otro.' : 'Error interno' },
-      isDouble ? 409 : 500
+      isDouble ? 409 : 500,
+      request
     );
   }
 }
 
-export async function onRequestOptions() {
-  return new Response(null, { status: 204, headers: CORS });
+export async function onRequestOptions({ request }) {
+  return new Response(null, { status: 204, headers: getCors(request) });
 }
 
-function res(data, status = 200) {
-  return new Response(JSON.stringify(data), { status, headers: CORS });
+function res(data, status = 200, request = null) {
+  return new Response(JSON.stringify(data), { status, headers: getCors(request) });
 }
