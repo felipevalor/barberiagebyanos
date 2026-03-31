@@ -93,8 +93,7 @@ export async function onRequestPost({ request, env }) {
   const { barbero_id, password } = await request.json();
 
   // ── Verificación de contraseña (SHA-256) ─────────────────────────────────────
-  // ADMIN_PASSWORDS puede tener hashes o texto plano (compatibilidad).
-  // Para migrar: cambiar el secret a { "id": "sha256hex(password)" }
+  // ADMIN_PASSWORDS debe tener hashes SHA-256: { "id": "sha256hex(password)" }
   const passwords = JSON.parse(env.ADMIN_PASSWORDS || '{}');
   const stored    = passwords[barbero_id];
 
@@ -103,12 +102,13 @@ export async function onRequestPost({ request, env }) {
     return json({ error: 'Credenciales inválidas' }, 401);
   }
 
-  // Si el valor almacenado es un hex SHA-256 (64 chars), comparar con hash del input.
-  // Si no (plaintext legacy), comparar directo.
-  const isHashed       = /^[0-9a-f]{64}$/.test(stored);
-  const inputToCompare = isHashed ? await sha256(password) : password;
+  // El valor almacenado DEBE ser un hash SHA-256 (64 chars hex).
+  // Texto plano no está soportado — rechazar si el formato no es válido.
+  if (!/^[0-9a-f]{64}$/.test(stored)) {
+    return json({ error: 'Configuración de credenciales inválida' }, 500);
+  }
 
-  if (stored !== inputToCompare) {
+  if (stored !== await sha256(password)) {
     await recordFailedAttempt(ip, env);
     return json({ error: 'Credenciales inválidas' }, 401);
   }
