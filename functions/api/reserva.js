@@ -59,9 +59,10 @@ export async function onRequestPost({ request, env, waitUntil }) {
     // ── Guardar en D1 (sin calendar_event_id por ahora) ──────────────────────
     const mensaje = `${fecha} ${hora}`;
     const calId   = calendarId || cfg?.calendarId;
+    const cancelToken = crypto.randomUUID();
     await env.barberia_db.prepare(
-      `INSERT INTO reservas (nombre, telefono, servicio, barbero, fecha, mensaje, calendar_event_id, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, NULL, ?)`
+      `INSERT INTO reservas (nombre, telefono, servicio, barbero, fecha, mensaje, calendar_event_id, cancel_token, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?)`
     ).bind(
       nombre.trim(),
       normalizeTel(telefono),
@@ -69,6 +70,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
       nombreBarbero,
       fecha,
       mensaje,
+      cancelToken,
       new Date().toISOString()
     ).run();
 
@@ -114,7 +116,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
       bId ? sendWhatsAppNotification(bId, { nombre: nombre.trim(), servicio, fecha, hora, precio_ars: precio_ars ?? null }, env).catch(() => {}) : Promise.resolve(),
     ]));
 
-    return res({ success: true, turno: { nombre: nombre.trim(), servicio, barbero: nombreBarbero, fecha, hora } }, 200, request);
+    return res({ success: true, turno: { nombre: nombre.trim(), servicio, barbero: nombreBarbero, fecha, hora }, cancel_token: cancelToken }, 200, request);
 
   } catch (error) {
     const isDouble = error?.message?.includes('UNIQUE constraint failed');
