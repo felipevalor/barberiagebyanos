@@ -21,10 +21,10 @@ export const DEFAULT_SCHEDULE = {
 };
 
 export const BARBEROS_CONFIG = {
-  gebyano: { nombre: 'Gebyano', tel: '+5493416021009', calendarId: null,                     schedule: DEFAULT_SCHEDULE },
-  lobo:    { nombre: 'Lobo',    tel: '+5493412754502', calendarId: null,                     schedule: DEFAULT_SCHEDULE },
-  felipe:   { nombre: 'Felipe',   tel: '+5493416513207',  calendarId: 'felipevalor7@gmail.com',  schedule: DEFAULT_SCHEDULE },
-  lisandro: { nombre: 'Lisandro', tel: '+5493412751752', calendarId: 'blascolisandro@gmail.com', schedule: DEFAULT_SCHEDULE },
+  gebyano:  { nombre: 'Gebyano',  tel: null, calendarId: null,                       schedule: DEFAULT_SCHEDULE },
+  lobo:     { nombre: 'Lobo',     tel: null, calendarId: null,                       schedule: DEFAULT_SCHEDULE },
+  felipe:   { nombre: 'Felipe',   tel: null, calendarId: 'felipevalor7@gmail.com',   schedule: DEFAULT_SCHEDULE },
+  lisandro: { nombre: 'Lisandro', tel: null, calendarId: 'blascolisandro@gmail.com', schedule: DEFAULT_SCHEDULE },
 };
 
 export const SLOT_DURATION = 30;
