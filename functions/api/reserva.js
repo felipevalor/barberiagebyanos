@@ -1,4 +1,5 @@
 import { BARBEROS_CONFIG, SERVICIOS, sendWhatsAppNotification, getServicios, getGoogleAccessToken, createCalendarEvent, normalizeTel, checkOverlap } from '../admin/api/_gcal.js';
+import { isRateLimited } from './_ratelimit.js';
 
 const ALLOWED_ORIGINS = [
   'https://gebyanos.com.ar',
@@ -18,6 +19,9 @@ function getCors(request) {
 }
 
 export async function onRequestPost({ request, env, waitUntil }) {
+  if (await isRateLimited(request, env, 'reserva-post', 5, 60)) {
+    return res({ success: false, error: 'Demasiadas solicitudes. Intentá en un momento.' }, 429, request);
+  }
   try {
     const body = await request.json();
     const { nombre, telefono, servicio, barberoId, barbero: barberoNombre, fecha, hora, calendarId, duracion, precio_ars } = body;

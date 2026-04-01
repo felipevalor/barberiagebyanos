@@ -3,6 +3,7 @@
 // PUT  /api/mi-turno  body:{nombre,old_mensaje,new_fecha,new_hora} → modificar turno
 
 import { BARBEROS_CONFIG, sendWhatsAppNotification, deleteCalendarEvent, createCalendarEvent, getGoogleAccessToken, SLOT_DURATION, checkOverlap } from '../admin/api/_gcal.js';
+import { isRateLimited } from './_ratelimit.js';
 
 const SERVICIOS_DUR = {
   'Corte': 30, 'Corte + Barba': 45, 'Barba': 15,
@@ -14,6 +15,9 @@ function barberoIdByNombre(nombre) {
 }
 
 export async function onRequestGet({ request, env }) {
+  if (await isRateLimited(request, env, 'mi-turno-get', 15, 60)) {
+    return json({ error: 'Demasiadas solicitudes. Intentá en un momento.' }, 429);
+  }
   const url      = new URL(request.url);
   const nombre   = url.searchParams.get('nombre')?.trim();
   const telefono = url.searchParams.get('telefono')?.trim();
@@ -52,6 +56,9 @@ export async function onRequestGet({ request, env }) {
 }
 
 export async function onRequestDelete({ request, env, waitUntil }) {
+  if (await isRateLimited(request, env, 'mi-turno-delete', 5, 300)) {
+    return json({ error: 'Demasiadas solicitudes. Intentá en un momento.' }, 429);
+  }
   const url         = new URL(request.url);
   const nombre      = url.searchParams.get('nombre')?.trim();
   const mensaje     = url.searchParams.get('mensaje')?.trim();
@@ -102,6 +109,9 @@ export async function onRequestDelete({ request, env, waitUntil }) {
 }
 
 export async function onRequestPut({ request, env, waitUntil }) {
+  if (await isRateLimited(request, env, 'mi-turno-put', 5, 300)) {
+    return json({ error: 'Demasiadas solicitudes. Intentá en un momento.' }, 429);
+  }
   let body;
   try { body = await request.json(); }
   catch { return json({ error: 'JSON inválido' }, 400); }

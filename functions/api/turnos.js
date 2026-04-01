@@ -3,6 +3,7 @@
 // Si el barbero tiene calendarId configurado, los eventos personales también bloquean slots.
 
 import { getGoogleAccessToken, getCalendarEvents, BARBEROS_CONFIG, getServicios, SLOT_DURATION, SERVICIOS } from '../admin/api/_gcal.js';
+import { isRateLimited } from './_ratelimit.js';
 
 // Fallback cuando D1 no responde o barberoId no se provee.
 // Mergea los nombres canónicos de _gcal.js::SERVICIOS con los nombres
@@ -15,6 +16,9 @@ const SERVICIOS_DUR_FALLBACK = {
 };
 
 export async function onRequestGet({ request, env }) {
+  if (await isRateLimited(request, env, 'turnos-get', 30, 60)) {
+    return json({ error: 'Demasiadas solicitudes.' }, 429);
+  }
   const url       = new URL(request.url);
   const barbero   = url.searchParams.get('barbero')?.trim();
   const barberoId = url.searchParams.get('barberoId')?.trim();
@@ -69,6 +73,6 @@ export async function onRequestGet({ request, env }) {
   return json({ occupied });
 }
 
-function json(data) {
-  return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json' } });
+function json(data, status = 200) {
+  return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
 }
