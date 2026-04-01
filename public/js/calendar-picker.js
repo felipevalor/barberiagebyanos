@@ -354,8 +354,8 @@ export async function initCalendarPicker() {
 
   function showConfirmacion(turno) {
     // Guardar nombre y teléfono en cookie (90 días)
-    document.cookie = `gb_nombre=${encodeURIComponent(turno.nombre)}; max-age=${60*60*24*90}; SameSite=Lax; Path=/`;
-    if (turno.telefono) document.cookie = `gb_tel=${encodeURIComponent(turno.telefono)}; max-age=${60*60*24*90}; SameSite=Lax; Path=/`;
+    document.cookie = `gb_nombre=${encodeURIComponent(turno.nombre)}; max-age=${60*60*24*90}; Secure; SameSite=Lax; Path=/`;
+    if (turno.telefono) document.cookie = `gb_tel=${encodeURIComponent(turno.telefono)}; max-age=${60*60*24*90}; Secure; SameSite=Lax; Path=/`;
 
     // Ocultar form, mostrar confirmación
     document.getElementById('reserva-form').style.display = 'none';
