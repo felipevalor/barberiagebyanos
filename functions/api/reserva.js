@@ -1,4 +1,4 @@
-import { BARBEROS_CONFIG, SERVICIOS, sendWhatsAppNotification, getServicios, getGoogleAccessToken, createCalendarEvent, normalizeTel } from '../admin/api/_gcal.js';
+import { BARBEROS_CONFIG, SERVICIOS, sendWhatsAppNotification, getServicios, getGoogleAccessToken, createCalendarEvent, normalizeTel, checkOverlap } from '../admin/api/_gcal.js';
 
 const ALLOWED_ORIGINS = [
   'https://gebyanos.com.ar',
@@ -36,24 +36,10 @@ export async function onRequestPost({ request, env, waitUntil }) {
     const serviciosMap = bId ? await getServicios(env, bId) : { ...SERVICIOS };
     const durMin       = duracion ?? serviciosMap[servicio] ?? 30;
 
-    const [hNew, mNew] = hora.split(':').map(Number);
-    const newStart = hNew * 60 + mNew;
-    const newEnd   = newStart + durMin;
-
     const nombreBarbero = cfg?.nombre || barberoNombre || '';
-    const { results: existentes } = await env.barberia_db.prepare(
-      'SELECT mensaje, servicio FROM reservas WHERE mensaje LIKE ? AND barbero = ?'
-    ).bind(`${fecha} %`, nombreBarbero).all();
-
-    for (const r of existentes) {
-      const rHora = r.mensaje?.split(' ')[1];
-      if (!rHora) continue;
-      const [rh, rm] = rHora.split(':').map(Number);
-      const rStart = rh * 60 + rm;
-      const rEnd   = rStart + (serviciosMap[r.servicio] ?? 30);
-      if (newStart < rEnd && newEnd > rStart) {
-        return res({ success: false, error: 'Ese horario ya fue tomado. Elegí otro.' }, 409, request);
-      }
+    const { overlap } = await checkOverlap(env, nombreBarbero, fecha, hora, durMin, serviciosMap);
+    if (overlap) {
+      return res({ success: false, error: 'Ese horario ya fue tomado. Elegí otro.' }, 409, request);
     }
 
     // ── Guardar en D1 (sin calendar_event_id por ahora) ──────────────────────

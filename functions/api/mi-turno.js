@@ -2,7 +2,7 @@
 // DELETE /api/mi-turno?nombre=X&mensaje=Y → cancelar turno
 // PUT  /api/mi-turno  body:{nombre,old_mensaje,new_fecha,new_hora} → modificar turno
 
-import { BARBEROS_CONFIG, sendWhatsAppNotification, deleteCalendarEvent, createCalendarEvent, getGoogleAccessToken } from '../admin/api/_gcal.js';
+import { BARBEROS_CONFIG, sendWhatsAppNotification, deleteCalendarEvent, createCalendarEvent, getGoogleAccessToken, SLOT_DURATION, checkOverlap } from '../admin/api/_gcal.js';
 
 const SERVICIOS_DUR = {
   'Corte': 30, 'Corte + Barba': 45, 'Barba': 15,
@@ -131,24 +131,11 @@ export async function onRequestPut({ request, env, waitUntil }) {
   }
 
   // Verificar que el nuevo horario no esté ocupado
-  const durMin = SERVICIOS_DUR[existing.servicio] || 30;
-  const [hNew, mNew] = new_hora.split(':').map(Number);
-  const newStart = hNew * 60 + mNew;
-  const newEnd   = newStart + durMin;
-
-  const { results: existentes } = await env.barberia_db.prepare(
-    'SELECT mensaje, servicio FROM reservas WHERE barbero = ? AND fecha = ? AND mensaje != ?'
-  ).bind(existing.barbero, new_fecha, old_mensaje).all();
-
-  for (const r of existentes) {
-    const rHora = r.mensaje?.split(' ')[1];
-    if (!rHora) continue;
-    const [rh, rm] = rHora.split(':').map(Number);
-    const rStart = rh * 60 + rm;
-    const rEnd   = rStart + (SERVICIOS_DUR[r.servicio] || 30);
-    if (newStart < rEnd && newEnd > rStart) {
-      return json({ error: 'Ese horario ya fue tomado. Elegí otro.' }, 409);
-    }
+  const durMin = SERVICIOS_DUR[existing.servicio] || SLOT_DURATION;
+  const sMap = { ...SERVICIOS_DUR };
+  const { overlap, conflicto } = await checkOverlap(env, existing.barbero, new_fecha, new_hora, durMin, sMap, old_mensaje);
+  if (overlap) {
+    return json({ error: 'Ese horario ya fue tomado. Elegí otro.' }, 409);
   }
 
   // Actualizar

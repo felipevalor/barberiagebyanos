@@ -279,3 +279,41 @@ export async function deleteCalendarEvent(calendarId, eventId, accessToken) {
     throw new Error(`Calendar delete failed: ${res.status}`);
   }
 }
+
+/**
+ * Verifica si un slot nuevo se superpone con reservas existentes.
+ * @param {Object} env - Cloudflare env con binding barberia_db
+ * @param {string} barberoNombre - Nombre del barbero (ej: "Lobo")
+ * @param {string} fecha - Formato "D/M/YYYY" (ej: "1/5/2026")
+ * @param {string} hora - Formato "HH:MM" (ej: "10:00")
+ * @param {number} durMin - Duración del servicio en minutos
+ * @param {Object} serviciosMap - Mapa servicio→duracionMin para calcular duración de existentes
+ * @param {string|null} excludeMensaje - mensaje a excluir (para PUT — no comparar consigo mismo)
+ * @returns {Promise<{overlap: boolean, conflicto: string|null}>}
+ */
+export async function checkOverlap(env, barberoNombre, fecha, hora, durMin, serviciosMap, excludeMensaje = null) {
+  const [hNew, mNew] = hora.split(':').map(Number);
+  const newStart = hNew * 60 + mNew;
+  const newEnd   = newStart + durMin;
+
+  let query = 'SELECT mensaje, servicio FROM reservas WHERE mensaje LIKE ? AND barbero = ?';
+  const params = [`${fecha} %`, barberoNombre];
+  if (excludeMensaje) {
+    query += ' AND mensaje != ?';
+    params.push(excludeMensaje);
+  }
+
+  const { results } = await env.barberia_db.prepare(query).bind(...params).all();
+
+  for (const r of results) {
+    const rHora = r.mensaje?.split(' ')[1];
+    if (!rHora) continue;
+    const [rh, rm] = rHora.split(':').map(Number);
+    const rStart = rh * 60 + rm;
+    const rEnd   = rStart + (serviciosMap[r.servicio] ?? SLOT_DURATION);
+    if (newStart < rEnd && newEnd > rStart) {
+      return { overlap: true, conflicto: `${rHora} · ${r.servicio}` };
+    }
+  }
+  return { overlap: false, conflicto: null };
+}

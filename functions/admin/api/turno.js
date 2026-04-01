@@ -1,5 +1,5 @@
 import { getSession } from './_session.js';
-import { BARBEROS_CONFIG, SLOT_DURATION, getServicios, getGoogleAccessToken, createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, normalizeTel } from './_gcal.js';
+import { BARBEROS_CONFIG, SLOT_DURATION, getServicios, getGoogleAccessToken, createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, normalizeTel, checkOverlap } from './_gcal.js';
 
 // ── Crear turno manual ────────────────────────────────────────────────────────
 export async function onRequestPost({ request, env }) {
@@ -20,23 +20,9 @@ export async function onRequestPost({ request, env }) {
   const duracion = serviciosMap[servicio] ?? SLOT_DURATION;
 
   // Validar overlap con reservas existentes del mismo día y barbero
-  const [hNew, minNew] = hora.split(':').map(Number);
-  const newStart = hNew * 60 + minNew;
-  const newEnd   = newStart + duracion;
-
-  const { results: existentes } = await env.barberia_db.prepare(
-    'SELECT mensaje, servicio FROM reservas WHERE mensaje LIKE ? AND barbero = ?'
-  ).bind(`${fecha} %`, cfg.nombre).all();
-
-  for (const r of existentes) {
-    const rHora = r.mensaje?.split(' ')[1];
-    if (!rHora) continue;
-    const [rh, rm] = rHora.split(':').map(Number);
-    const rStart = rh * 60 + rm;
-    const rEnd   = rStart + (serviciosMap[r.servicio] ?? SLOT_DURATION);
-    if (newStart < rEnd && newEnd > rStart) {
-      return json({ error: `Ese horario se superpone con un turno existente (${rHora} · ${r.servicio})` }, 409);
-    }
+  const { overlap, conflicto } = await checkOverlap(env, cfg.nombre, fecha, hora, duracion, serviciosMap);
+  if (overlap) {
+    return json({ error: `Ese horario se superpone con un turno existente (${conflicto})` }, 409);
   }
 
   // Crear evento en Google Calendar (best-effort)
@@ -127,23 +113,10 @@ export async function onRequestPut({ request, env }) {
   if (cambiaHorario || cambiaBarbero) {
     const serviciosMap = await getServicios(env, bIdFinal);
     const duracion = serviciosMap[servicio] ?? SLOT_DURATION;
-    const [hNew, mNew] = horaFinal.split(':').map(Number);
-    const newStart = hNew * 60 + mNew;
-    const newEnd   = newStart + duracion;
 
-    const { results: existentes } = await env.barberia_db.prepare(
-      'SELECT mensaje, servicio FROM reservas WHERE mensaje LIKE ? AND barbero = ? AND id != ?'
-    ).bind(`${fechaFinal} %`, cfgFinal.nombre, id).all();
-
-    for (const r of existentes) {
-      const rHora = r.mensaje?.split(' ')[1];
-      if (!rHora) continue;
-      const [rh, rm] = rHora.split(':').map(Number);
-      const rStart = rh * 60 + rm;
-      const rEnd   = rStart + (serviciosMap[r.servicio] ?? SLOT_DURATION);
-      if (newStart < rEnd && newEnd > rStart) {
-        return json({ error: `Ese horario se superpone con un turno existente (${rHora} · ${r.servicio})` }, 409);
-      }
+    const { overlap: ov2, conflicto: c2 } = await checkOverlap(env, cfgFinal.nombre, fechaFinal, horaFinal, duracion, serviciosMap, reserva.mensaje);
+    if (ov2) {
+      return json({ error: `Ese horario se superpone con un turno existente (${c2})` }, 409);
     }
 
     // Calendar: eliminar el evento anterior, crear uno nuevo
