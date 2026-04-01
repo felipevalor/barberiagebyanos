@@ -6,6 +6,8 @@ import { initCustomCursor, initHamburgerMenu, initNavScroll, initScrollReveal, i
 import { renderCatalogo, renderPromos, updateServicioDropdown } from './catalogo.js';
 import { initCalendarPicker, buildGcalUrl, fetchD1BusySlots } from './calendar-picker.js';
 import { escapeHtml } from './ui-utils.js';
+import { initReservaForm, setBarberos, BARBEROS } from './reserva.js';
+import { DEFAULT_SCHEDULE, SLOT_DURATION } from './config.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // Iniciar fetches sin bloquear — las animaciones arrancan de inmediato
@@ -24,7 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Esperar barberos solo antes de las funciones que los necesitan
     try {
         const r = await barberosFetch;
-        if (r?.ok) BARBEROS = await r.json();
+        if (r?.ok) setBarberos(await r.json());
     } catch { /* usa fallback hardcodeado */ }
 
     // Render catálogo + precios iniciales en el dropdown de reserva
@@ -96,110 +98,6 @@ function initCustomSelect() {
   document.addEventListener('click', (e) => {
     if (!select.contains(e.target)) close();
   });
-}
-
-/**
- * Google Calendar Config
- */
-const SLOT_DURATION = 30; // minutos
-const TIMEZONE = 'America/Argentina/Buenos_Aires';
-
-const DEFAULT_SCHEDULE = {
-  1: { start: 9, end: 20 },
-  2: { start: 9, end: 20 },
-  3: { start: 9, end: 20 },
-  4: { start: 9, end: 20 },
-  5: { start: 9, end: 20 },
-  6: { start: 9, end: 17 },
-};
-
-const SERVICIOS = {
-  'Corte':             { duracion: 30 },
-  'Corte + Barba':     { duracion: 45 },
-  'Barba':             { duracion: 15 },
-  'Afeitado':          { duracion: 15 },
-  'Niños 10-13 años':  { duracion: 30 },
-  'Niños 0-9 años':    { duracion: 30 },
-};
-
-/**
- * Reserva Form Logic
- */
-// Poblado en DOMContentLoaded desde /api/barberos; fallback a hardcodeado si la API falla
-let BARBEROS = [
-  { id: 'gebyano', nombre: 'Gebyano', tel: '5493416021009', disponible: false, calendarId: null,                      schedule: DEFAULT_SCHEDULE },
-  { id: 'lobo',    nombre: 'Lobo',    tel: '5493412754502', disponible: true,  calendarId: null,                      schedule: DEFAULT_SCHEDULE },
-  { id: 'felipe',  nombre: 'Felipe',  tel: '5493416513207', disponible: true,  calendarId: 'felipevalor7@gmail.com',  schedule: DEFAULT_SCHEDULE },
-  { id: 'lisandro', nombre: 'Lisandro', tel: '5493412751752', disponible: true, calendarId: 'blascolisandro@gmail.com', schedule: DEFAULT_SCHEDULE },
-  { id: 'ns',      nombre: 'NS',      tel: null,            disponible: false, calendarId: null,                      schedule: null },
-  { id: 'bql',     nombre: 'BQL',     tel: null,            disponible: false, calendarId: null,                      schedule: null }
-];
-
-function initReservaForm() {
-  // Pre-completar nombre desde cookie si existe
-  const cookieMatch = document.cookie.match(/gb_nombre=([^;]+)/);
-  if (cookieMatch) {
-    const input = document.getElementById('reserva-nombre');
-    if (input && !input.value) input.value = decodeURIComponent(cookieMatch[1]);
-  }
-
-  const ESPECIALIDADES = {
-    gebyano: 'Degradés y estilos',
-    lobo:    'Clásicos y barba',
-    felipe:  'Degradés y barba',
-    ns:      'Próximamente',
-    bql:     'Próximamente',
-  };
-
-  const form = document.getElementById('reserva-form');
-  const grid = document.getElementById('barberos-grid');
-  const btn  = document.getElementById('reserva-btn');
-  if (!form || !grid || !btn) return;
-
-  // Renderizar cards de barberos
-  grid.innerHTML = '';
-  grid.setAttribute('role', 'radiogroup');
-  grid.setAttribute('aria-label', 'Barbero');
-  BARBEROS.forEach(b => {
-    const card = document.createElement('div');
-    card.className = 'barbero-card' + (!b.disponible ? ' barbero-no-disponible' : '');
-    card.setAttribute('role', 'radio');
-    card.setAttribute('aria-checked', 'false');
-    card.setAttribute('aria-disabled', b.disponible ? 'false' : 'true');
-    card.setAttribute('tabindex', b.disponible ? '0' : '-1');
-    const inicial = b.nombre.charAt(0).toUpperCase();
-    const especialidad = ESPECIALIDADES[b.id] || '';
-    card.innerHTML = `
-      <div class="barbero-avatar">${inicial}</div>
-      <span class="barbero-nombre">${b.nombre}</span>
-      ${b.disponible
-        ? `<span class="barbero-especialidad">${especialidad}</span>`
-        : '<span class="barbero-badge">Próximamente</span>'
-      }
-    `;
-
-    if (b.disponible) {
-      const select = () => {
-        grid.querySelectorAll('.barbero-card').forEach(c => {
-          c.classList.remove('selected');
-          c.setAttribute('aria-checked', 'false');
-        });
-        card.classList.add('selected');
-        card.setAttribute('aria-checked', 'true');
-        document.dispatchEvent(new CustomEvent('barberoSeleccionado', { detail: b }));
-      };
-      card.addEventListener('click', select);
-      card.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(); }
-      });
-    }
-
-    grid.appendChild(card);
-  });
-
-  // El botón submit es manejado por initCalendarPicker()
-  // Prevenir submit nativo del form
-  form.addEventListener('submit', (e) => e.preventDefault());
 }
 
 // ── Mi turno ──────────────────────────────────────────────────────────────────
