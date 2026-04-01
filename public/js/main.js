@@ -753,6 +753,11 @@ async function initCalendarPicker() {
         return;
       }
 
+      // Guardar cancel_token en cookie (90 días)
+      if (data.cancel_token) {
+        document.cookie = `gb_ct=${encodeURIComponent(data.cancel_token)}; max-age=${60*60*24*90}; SameSite=Lax; Secure; Path=/`;
+      }
+
       // Mostrar pantalla de confirmación
       const duracionConfirm = serviciosCache.find(s => s.nombre === servicio)?.duracion_min || SERVICIOS[servicio]?.duracion || 30;
       showConfirmacion({ ...(data.turno || { nombre, telefono, servicio, barbero: selectedBarbero.nombre, fecha, hora: selectedSlot }), duracion: duracionConfirm });
@@ -928,10 +933,25 @@ function initMiTurno() {
   async function cancelarTurno(t) {
     const extra = document.getElementById('mi-turno-extra');
     extra.innerHTML = '<div class="mi-turno-loading">Cancelando...</div>';
+
+    const ctCookie  = document.cookie.match(/gb_ct=([^;]+)/);
+    const cancelToken = ctCookie ? decodeURIComponent(ctCookie[1]) : '';
+    const telCookie = document.cookie.match(/gb_tel=([^;]+)/);
+    const tel       = telCookie ? decodeURIComponent(telCookie[1]) : '';
+
+    let url = `/api/mi-turno?nombre=${encodeURIComponent(t.nombre)}&mensaje=${encodeURIComponent(t.mensaje)}`;
+    if (cancelToken) url += `&cancel_token=${encodeURIComponent(cancelToken)}`;
+    else if (tel)    url += `&telefono=${encodeURIComponent(tel)}`;
+
     try {
-      const res = await fetch(`/api/mi-turno?nombre=${encodeURIComponent(t.nombre)}&mensaje=${encodeURIComponent(t.mensaje)}`, { method: 'DELETE' });
+      const res = await fetch(url, { method: 'DELETE' });
+      if (res.status === 403) {
+        extra.innerHTML = '<div class="mi-turno-none">No autorizado. Intentá desde el dispositivo donde hiciste la reserva.</div>';
+        return;
+      }
       if (!res.ok) throw new Error();
       result.innerHTML = '<div class="mi-turno-none">Tu turno fue cancelado.</div>';
+      document.cookie = 'gb_ct=; max-age=0; Path=/';
     } catch {
       extra.innerHTML = '<div class="mi-turno-none">Error al cancelar. Intentá de nuevo.</div>';
     }
@@ -1063,11 +1083,22 @@ function initMiTurno() {
   async function submitEdit(t, newFecha, newHora) {
     const footerEl = document.getElementById('mt-edit-footer');
     if (footerEl) footerEl.innerHTML = '<div class="mi-turno-loading">Guardando...</div>';
+
+    const ctCookie2  = document.cookie.match(/gb_ct=([^;]+)/);
+    const telCookie2 = document.cookie.match(/gb_tel=([^;]+)/);
+
     try {
       const res = await fetch('/api/mi-turno', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre: t.nombre, old_mensaje: t.mensaje, new_fecha: newFecha, new_hora: newHora }),
+        body: JSON.stringify({
+          nombre:       t.nombre,
+          old_mensaje:  t.mensaje,
+          new_fecha:    newFecha,
+          new_hora:     newHora,
+          cancel_token: ctCookie2  ? decodeURIComponent(ctCookie2[1])  : undefined,
+          telefono:     telCookie2 ? decodeURIComponent(telCookie2[1]) : undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error al modificar. Intentá de nuevo.');
