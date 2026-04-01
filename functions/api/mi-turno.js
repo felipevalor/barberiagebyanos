@@ -52,18 +52,31 @@ export async function onRequestGet({ request, env }) {
 }
 
 export async function onRequestDelete({ request, env, waitUntil }) {
-  const url     = new URL(request.url);
-  const nombre  = url.searchParams.get('nombre')?.trim();
-  const mensaje = url.searchParams.get('mensaje')?.trim();
+  const url         = new URL(request.url);
+  const nombre      = url.searchParams.get('nombre')?.trim();
+  const mensaje     = url.searchParams.get('mensaje')?.trim();
+  const cancelToken = url.searchParams.get('cancel_token')?.trim();
+  const telefono    = url.searchParams.get('telefono')?.trim();
 
   if (!nombre || !mensaje) return json({ error: 'Datos incompletos' }, 400);
 
-  // Obtener datos antes de borrar para poder notificar y limpiar GCal
+  // Obtener turno para verificar token o teléfono
   const turno = await env.barberia_db.prepare(
-    'SELECT servicio, barbero, calendar_event_id FROM reservas WHERE LOWER(nombre) = LOWER(?) AND mensaje = ?'
+    'SELECT servicio, barbero, calendar_event_id, cancel_token, telefono FROM reservas WHERE LOWER(nombre) = LOWER(?) AND mensaje = ?'
   ).bind(nombre, mensaje).first();
 
   if (!turno) return json({ error: 'Turno no encontrado' }, 404);
+
+  // Autenticar: cancel_token válido O teléfono coincide (backward compat con reservas sin token)
+  const tokenValido = cancelToken && turno.cancel_token && cancelToken === turno.cancel_token;
+  const telNorm     = telefono ? telefono.replace(/\D/g, '') : '';
+  const dbTelNorm   = turno.telefono ? turno.telefono.replace(/\D/g, '') : '';
+  const telValido   = telNorm.length >= 8 && dbTelNorm && dbTelNorm.endsWith(telNorm.slice(-8));
+  const sinToken    = !turno.cancel_token; // reserva antigua, sin token
+
+  if (!tokenValido && !(sinToken && telValido)) {
+    return json({ error: 'No autorizado para cancelar este turno' }, 403);
+  }
 
   await env.barberia_db.prepare(
     'DELETE FROM reservas WHERE LOWER(nombre) = LOWER(?) AND mensaje = ?'
@@ -73,7 +86,6 @@ export async function onRequestDelete({ request, env, waitUntil }) {
   const bId   = barberoIdByNombre(turno.barbero);
   const calId = bId ? BARBEROS_CONFIG[bId]?.calendarId : null;
 
-  // Calendar delete + WA en background
   waitUntil(Promise.all([
     (async () => {
       if (!calId || !turno.calendar_event_id || !env.GOOGLE_SERVICE_ACCOUNT) return;
@@ -101,10 +113,22 @@ export async function onRequestPut({ request, env, waitUntil }) {
 
   // Obtener el barbero, servicio y event id del turno existente
   const existing = await env.barberia_db.prepare(
-    'SELECT barbero, servicio, calendar_event_id FROM reservas WHERE LOWER(nombre) = LOWER(?) AND mensaje = ?'
+    'SELECT barbero, servicio, calendar_event_id, cancel_token, telefono FROM reservas WHERE LOWER(nombre) = LOWER(?) AND mensaje = ?'
   ).bind(nombre, old_mensaje).first();
 
   if (!existing) return json({ error: 'Turno no encontrado' }, 404);
+
+  // Autenticar: cancel_token válido O teléfono coincide (backward compat)
+  const { cancel_token: bodyToken, telefono: bodyTel } = body;
+  const tokenValido = bodyToken && existing.cancel_token && bodyToken === existing.cancel_token;
+  const telNorm     = bodyTel ? bodyTel.replace(/\D/g, '') : '';
+  const dbTelNorm   = existing.telefono ? existing.telefono.replace(/\D/g, '') : '';
+  const telValido   = telNorm.length >= 8 && dbTelNorm && dbTelNorm.endsWith(telNorm.slice(-8));
+  const sinToken    = !existing.cancel_token;
+
+  if (!tokenValido && !(sinToken && telValido)) {
+    return json({ error: 'No autorizado para modificar este turno' }, 403);
+  }
 
   // Verificar que el nuevo horario no esté ocupado
   const durMin = SERVICIOS_DUR[existing.servicio] || 30;
