@@ -1,17 +1,12 @@
-import { getToken } from './auth.js';
+import { getSession } from './_session.js';
 import { DEFAULT_SCHEDULE, FERIADOS, SLOT_DURATION } from './_gcal.js';
 
 // Argentina = UTC-3, sin cambio de horario
 const ARG_OFFSET_MS = -3 * 60 * 60 * 1000;
 
 export async function onRequestGet({ request, env }) {
-  const token = getToken(request);
-  if (!token) return json({ error: 'No autorizado' }, 401);
-
-  const session = await env.barberia_db.prepare(
-    "SELECT barbero_id, role FROM admin_sessions WHERE token = ? AND expires_at > datetime('now')"
-  ).bind(token).first();
-  if (!session) return json({ error: 'Sesión inválida' }, 401);
+  const session = await getSession(request, env);
+  if (!session) return json({ error: 'No autorizado' }, 401);
 
   const isOwner   = session.role === 'owner';
   const filtroUrl = new URL(request.url).searchParams.get('barbero'); // owner puede filtrar

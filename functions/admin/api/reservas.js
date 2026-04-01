@@ -1,14 +1,8 @@
-import { getToken } from './auth.js';
+import { getSession } from './_session.js';
 
 export async function onRequestGet({ request, env }) {
-  const token = getToken(request);
-  if (!token) return json({ error: 'No autorizado' }, 401);
-
-  const session = await env.barberia_db.prepare(
-    "SELECT barbero_id, role FROM admin_sessions WHERE token = ? AND expires_at > datetime('now')"
-  ).bind(token).first();
-
-  if (!session) return json({ error: 'Sesión inválida' }, 401);
+  const session = await getSession(request, env);
+  if (!session) return json({ error: 'No autorizado' }, 401);
 
   const url    = new URL(request.url);
   const fecha  = url.searchParams.get('fecha');     // "13/3/2026"
