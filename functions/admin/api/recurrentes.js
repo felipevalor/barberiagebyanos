@@ -19,26 +19,17 @@ export async function onRequestGet({ request, env }) {
     'SELECT * FROM clientes_recurrentes WHERE barbero_id = ? ORDER BY nombre ASC'
   ).bind(bId).all();
 
-  // Último turno de cada cliente en una sola query
-  const cfg = BARBEROS_CONFIG[bId];
-  // Limitación conocida: si dos clientes recurrentes del mismo barbero comparten
-  // nombre exacto, su historial se mezcla. Fix real requiere FK cliente_id en reservas.
-  const { results: historial } = await env.barberia_db.prepare(
-    `SELECT nombre, MAX(fecha) as ultimo_turno FROM reservas WHERE barbero = ? GROUP BY nombre`
-  ).bind(cfg?.nombre || '').all();
-
-  const ultimoMap = {};
-  for (const h of historial) ultimoMap[h.nombre.toLowerCase()] = h.ultimo_turno;
-
   const hoy = new Date();
   const schedule = await getSchedule(bId, env);
 
   const data = clientes.map(c => {
-    const ultimo = ultimoMap[c.nombre.toLowerCase()];
     let dt;
-    if (ultimo) {
-      const [d, m, y] = ultimo.split('/').map(Number);
+    let ultimoStr = null;
+    if (c.ultimo_turno_fecha_iso) {
+      // Almacenado nativamente como YYYY-MM-DD
+      const [y, m, d] = c.ultimo_turno_fecha_iso.split('-').map(Number);
       dt = new Date(y, m - 1, d);
+      ultimoStr = `${d}/${m}/${y}`;
       dt.setDate(dt.getDate() + c.frecuencia_dias);
       if (dt < hoy) dt = new Date(hoy);
     } else {
@@ -46,7 +37,7 @@ export async function onRequestGet({ request, env }) {
     }
     // Advance to next working day if needed (max 7 iterations to avoid infinite loop)
     for (let i = 0; i < 7 && !schedule[dt.getDay()]; i++) dt.setDate(dt.getDate() + 1);
-    return { ...c, ultimo_turno: ultimo || null, proximo_turno: formatFecha(dt) };
+    return { ...c, ultimo_turno: ultimoStr, proximo_turno: formatFecha(dt) };
   });
 
   return json({ clientes: data });
@@ -63,10 +54,14 @@ export async function onRequestPost({ request, env }) {
   if (!servicio)        return json({ error: 'El servicio es obligatorio' }, 400);
   if (!frecuencia_dias || frecuencia_dias < 1) return json({ error: 'Frecuencia inválida' }, 400);
 
+  // Intentar atarlo a un cliente_id
+  const cMatch = await env.barberia_db.prepare('SELECT id FROM clientes WHERE LOWER(nombre) = ? LIMIT 1').bind(nombre.trim().toLowerCase()).first();
+  const clienteId = cMatch?.id || null;
+
   await env.barberia_db.prepare(
-    `INSERT INTO clientes_recurrentes (barbero_id, nombre, servicio, frecuencia_dias, hora_preferida, precio_especial, notas, activo, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)`
-  ).bind(bId, nombre.trim(), servicio, frecuencia_dias, hora_preferida || null, precio_especial || null, notas || null, new Date().toISOString()).run();
+    `INSERT INTO clientes_recurrentes (barbero_id, nombre, servicio, frecuencia_dias, hora_preferida, precio_especial, notas, activo, created_at, cliente_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`
+  ).bind(bId, nombre.trim(), servicio, frecuencia_dias, hora_preferida || null, precio_especial || null, notas || null, new Date().toISOString(), clienteId).run();
 
   return json({ ok: true });
 }

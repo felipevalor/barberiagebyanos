@@ -507,6 +507,63 @@
       <div class="loading">Cargando...</div>
     </div>
 
+    <!-- ── AGREGAR NUEVO ── -->
+    <div class="add-section" id="add-section-barberos" style="display:none">
+      <button class="btn-add" id="btn-add-new">
+        <svg viewBox="0 0 24 24">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+        Agregar barbero
+      </button>
+      <div class="add-form" id="add-form">
+        <div class="add-form-title">Nuevo barbero</div>
+        <div class="edit-grid">
+          <div class="edit-group">
+            <label class="edit-label">ID único</label>
+            <input class="edit-input" id="new-id" placeholder="ej: marcos" autocomplete="off">
+            <div class="edit-hint">Minúsculas, sin espacios. No se puede cambiar después.</div>
+          </div>
+          <div class="edit-group">
+            <label class="edit-label">Nombre</label>
+            <input class="edit-input" id="new-nombre" placeholder="ej: Marcos">
+          </div>
+          <div class="edit-group">
+            <label class="edit-label">Teléfono WA</label>
+            <input class="edit-input" id="new-tel" placeholder="+5493415551234">
+          </div>
+          <div class="edit-group">
+            <label class="edit-label">Calendar ID</label>
+            <input class="edit-input" id="new-cal" placeholder="mail@gmail.com">
+            <div class="edit-hint">Email del calendario de Google que compartió el barbero.</div>
+          </div>
+          <div class="edit-group">
+            <label class="edit-label">Orden</label>
+            <input class="edit-input" id="new-orden" type="number" value="0" min="0">
+          </div>
+          <div class="edit-group" style="align-self:end">
+            <div class="toggle-row">
+              <label class="toggle">
+                <input type="checkbox" id="new-activo" checked>
+                <span class="toggle-track"></span>
+              </label>
+              <span class="toggle-row-label">Activo</span>
+            </div>
+          </div>
+          <div class="edit-group" style="grid-column:1/-1">
+            <label class="edit-label">Contraseña de acceso admin</label>
+            <input class="edit-input" id="new-password" type="password" placeholder="Dejar vacío si no necesita acceso al panel" autocomplete="new-password">
+            <div class="edit-hint">Si se define, el barbero podrá ingresar al panel con esta contraseña.</div>
+          </div>
+        </div>
+        <div class="edit-actions">
+          <button class="btn-save" id="btn-save-new">Guardar</button>
+          <button class="btn-delete" id="btn-cancel-new" style="color:var(--muted)">Cancelar</button>
+          <span class="feedback" id="new-feedback"></span>
+        </div>
+      </div>
+    </div>
+
     <!-- ── CATÁLOGO ── -->
     <hr class="section-sep" id="sep-catalogo" style="display:none">
     <div id="catalogo-section" style="display:none">
@@ -602,63 +659,6 @@
           <button class="btn-save" id="btn-save-promo">Guardar promo</button>
           <button class="btn-delete" id="btn-cancel-promo" style="color:var(--muted)">Cancelar</button>
           <span class="feedback" id="promo-feedback"></span>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── AGREGAR NUEVO ── -->
-    <div class="add-section" id="add-section-barberos" style="display:none">
-      <button class="btn-add" id="btn-add-new">
-        <svg viewBox="0 0 24 24">
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-        Agregar barbero
-      </button>
-      <div class="add-form" id="add-form">
-        <div class="add-form-title">Nuevo barbero</div>
-        <div class="edit-grid">
-          <div class="edit-group">
-            <label class="edit-label">ID único</label>
-            <input class="edit-input" id="new-id" placeholder="ej: marcos" autocomplete="off">
-            <div class="edit-hint">Minúsculas, sin espacios. No se puede cambiar después.</div>
-          </div>
-          <div class="edit-group">
-            <label class="edit-label">Nombre</label>
-            <input class="edit-input" id="new-nombre" placeholder="ej: Marcos">
-          </div>
-          <div class="edit-group">
-            <label class="edit-label">Teléfono WA</label>
-            <input class="edit-input" id="new-tel" placeholder="+5493415551234">
-          </div>
-          <div class="edit-group">
-            <label class="edit-label">Calendar ID</label>
-            <input class="edit-input" id="new-cal" placeholder="mail@gmail.com">
-            <div class="edit-hint">Email del calendario de Google que compartió el barbero.</div>
-          </div>
-          <div class="edit-group">
-            <label class="edit-label">Orden</label>
-            <input class="edit-input" id="new-orden" type="number" value="0" min="0">
-          </div>
-          <div class="edit-group" style="align-self:end">
-            <div class="toggle-row">
-              <label class="toggle">
-                <input type="checkbox" id="new-activo" checked>
-                <span class="toggle-track"></span>
-              </label>
-              <span class="toggle-row-label">Activo</span>
-            </div>
-          </div>
-          <div class="edit-group" style="grid-column:1/-1">
-            <label class="edit-label">Contraseña de acceso admin</label>
-            <input class="edit-input" id="new-password" type="password" placeholder="Dejar vacío si no necesita acceso al panel" autocomplete="new-password">
-            <div class="edit-hint">Si se define, el barbero podrá ingresar al panel con esta contraseña.</div>
-          </div>
-        </div>
-        <div class="edit-actions">
-          <button class="btn-save" id="btn-save-new">Guardar</button>
-          <button class="btn-delete" id="btn-cancel-new" style="color:var(--muted)">Cancelar</button>
-          <span class="feedback" id="new-feedback"></span>
         </div>
       </div>
     </div>

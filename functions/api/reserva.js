@@ -46,45 +46,64 @@ export async function onRequestPost({ request, env, waitUntil }) {
       return res({ success: false, error: 'Ese horario ya fue tomado. Elegí otro.' }, 409, request);
     }
 
+    // ── Upsert en clientes (sincrónicamente para tener el ID) ─────────────────────────
+    let clienteId = null;
+    const telNorm = normalizeTel(telefono);
+    const now = new Date().toISOString();
+    try {
+      const existing = await env.barberia_db.prepare(
+        'SELECT id FROM clientes WHERE telefono = ?'
+      ).bind(telNorm).first();
+      
+      if (existing) {
+        clienteId = existing.id;
+        await env.barberia_db.prepare(
+          'UPDATE clientes SET nombre = ?, updated_at = ? WHERE id = ?'
+        ).bind(nombre.trim(), now, clienteId).run();
+      } else {
+        const resCliente = await env.barberia_db.prepare(
+          'INSERT INTO clientes (nombre, telefono, notas, created_at, updated_at) VALUES (?, ?, NULL, ?, ?)'
+        ).bind(nombre.trim(), telNorm, now, now).run();
+        clienteId = resCliente.meta?.last_row_id;
+      }
+    } catch (e) {
+      console.error('Clientes upsert error:', e);
+    }
+
+    // Transformar fecha DD/MM/YYYY a YYYY-MM-DD
+    const [d, m, y] = fecha.split('/').map(Number);
+    const fechaISO = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+
     // ── Guardar en D1 (sin calendar_event_id por ahora) ──────────────────────
     const mensaje = `${fecha} ${hora}`;
     const calId   = calendarId || cfg?.calendarId;
     const cancelToken = crypto.randomUUID();
     await env.barberia_db.prepare(
-      `INSERT INTO reservas (nombre, telefono, servicio, barbero, fecha, mensaje, calendar_event_id, cancel_token, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?)`
+      `INSERT INTO reservas (nombre, telefono, servicio, barbero, fecha, mensaje, calendar_event_id, cancel_token, created_at, cliente_id, fecha_iso)
+       VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?)`
     ).bind(
       nombre.trim(),
-      normalizeTel(telefono),
+      telNorm,
       servicio,
       nombreBarbero,
       fecha,
       mensaje,
       cancelToken,
-      new Date().toISOString()
+      now,
+      clienteId,
+      fechaISO
     ).run();
 
-    // ── Upsert en clientes (best-effort, no bloquea) ─────────────────────────
-    const telNorm = normalizeTel(telefono);
-    const now = new Date().toISOString();
-    waitUntil(
-      (async () => {
+    // ── Actualizar Recurrentes (background) ──────────────────────────────
+    if (clienteId) {
+      waitUntil((async () => {
         try {
-          const existing = await env.barberia_db.prepare(
-            'SELECT id FROM clientes WHERE telefono = ?'
-          ).bind(telNorm).first();
-          if (existing) {
-            await env.barberia_db.prepare(
-              'UPDATE clientes SET nombre = ?, updated_at = ? WHERE id = ?'
-            ).bind(nombre.trim(), now, existing.id).run();
-          } else {
-            await env.barberia_db.prepare(
-              'INSERT INTO clientes (nombre, telefono, notas, created_at, updated_at) VALUES (?, ?, NULL, ?, ?)'
-            ).bind(nombre.trim(), telNorm, now, now).run();
-          }
-        } catch (e) { console.error('Clientes upsert error:', e); }
-      })()
-    );
+          await env.barberia_db.prepare(
+            'UPDATE clientes_recurrentes SET ultimo_turno_fecha_iso = ? WHERE cliente_id = ?'
+          ).bind(fechaISO, clienteId).run();
+        } catch (e) { console.error('Recurrentes update error:', e); }
+      })());
+    }
 
     // ── Calendar + WA en background (no bloquean la respuesta) ───────────────
     waitUntil(Promise.all([

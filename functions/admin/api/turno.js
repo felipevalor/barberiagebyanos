@@ -41,20 +41,59 @@ export async function onRequestPost({ request, env }) {
     }
   }
 
+  // Transformar fecha DD/MM/YYYY a YYYY-MM-DD
+  const [d, m, y] = fecha.split('/').map(Number);
+  const fechaISO = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+
+  // Upsert cliente
+  let clienteId = null;
+  const telNorm = normalizeTel(telefono);
+  const now = new Date().toISOString();
+  try {
+    const existing = await env.barberia_db.prepare(
+      'SELECT id FROM clientes WHERE telefono = ?'
+    ).bind(telNorm).first();
+    
+    if (existing) {
+      clienteId = existing.id;
+      await env.barberia_db.prepare(
+        'UPDATE clientes SET nombre = ?, updated_at = ? WHERE id = ?'
+      ).bind(nombre.trim(), now, clienteId).run();
+    } else {
+      const resCliente = await env.barberia_db.prepare(
+        'INSERT INTO clientes (nombre, telefono, notas, created_at, updated_at) VALUES (?, ?, NULL, ?, ?)'
+      ).bind(nombre.trim(), telNorm, now, now).run();
+      clienteId = resCliente.meta?.last_row_id;
+    }
+  } catch (e) { console.error('Clientes upsert error:', e); }
+
   try {
     const result = await env.barberia_db.prepare(
-      `INSERT INTO reservas (nombre, telefono, servicio, barbero, fecha, mensaje, calendar_event_id, source, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'admin', ?)`
+      `INSERT INTO reservas (nombre, telefono, servicio, barbero, fecha, mensaje, calendar_event_id, source, created_at, cliente_id, fecha_iso)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'admin', ?, ?, ?)`
     ).bind(
       nombre.trim(),
-      normalizeTel(telefono),
+      telNorm,
       servicio,
       cfg.nombre,
       fecha,
       `${fecha} ${hora}`,
       calendarEventId,
-      new Date().toISOString()
+      now,
+      clienteId,
+      fechaISO
     ).run();
+    
+    // Background update recurrentes
+    if (clienteId) {
+      env.waitUntil((async () => {
+        try {
+          await env.barberia_db.prepare(
+            'UPDATE clientes_recurrentes SET ultimo_turno_fecha_iso = ? WHERE cliente_id = ?'
+          ).bind(fechaISO, clienteId).run();
+        } catch (e) { console.error('Recurrentes update error:', e); }
+      })());
+    }
 
     return json({ success: true, id: result.meta?.last_row_id });
   } catch (e) {
@@ -142,9 +181,12 @@ export async function onRequestPut({ request, env }) {
       } catch (e) { console.error('Calendar create error:', e); }
     }
 
+    const [df, mf, yf] = fechaFinal.split('/').map(Number);
+    const fechaISO = `${yf}-${String(mf).padStart(2, '0')}-${String(df).padStart(2, '0')}`;
+
     await env.barberia_db.prepare(
-      'UPDATE reservas SET nombre = ?, telefono = ?, servicio = ?, barbero = ?, fecha = ?, mensaje = ?, calendar_event_id = ? WHERE id = ?'
-    ).bind(nombre.trim(), normalizeTel(telefono), servicio, cfgFinal.nombre, fechaFinal, mensajeFinal, newCalendarEventId, id).run();
+      'UPDATE reservas SET nombre = ?, telefono = ?, servicio = ?, barbero = ?, fecha = ?, mensaje = ?, calendar_event_id = ?, fecha_iso = ? WHERE id = ?'
+    ).bind(nombre.trim(), normalizeTel(telefono), servicio, cfgFinal.nombre, fechaFinal, mensajeFinal, newCalendarEventId, fechaISO, id).run();
 
   } else {
     // Solo nombre / servicio: actualizar D1 y el título del evento en Calendar
