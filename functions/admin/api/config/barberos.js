@@ -5,6 +5,11 @@
 
 import { getToken } from '../auth.js';
 
+async function sha256(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 async function requireOwner(request, env) {
   const token = getToken(request);
   if (!token) return null;
@@ -28,14 +33,16 @@ export async function onRequestGet({ request, env }) {
 export async function onRequestPost({ request, env }) {
   if (!await requireOwner(request, env)) return json({ error: 'No autorizado' }, 401);
 
-  const { id, nombre, tel, calendar_id, activo = 1, orden = 0 } = await request.json();
+  const { id, nombre, tel, calendar_id, activo = 1, orden = 0, password } = await request.json();
   if (!id?.trim() || !nombre?.trim()) return json({ error: 'id y nombre son obligatorios' }, 400);
+
+  const passwordHash = password ? await sha256(password) : null;
 
   try {
     // rol siempre 'barbero' — owners no pueden crear otros owners desde la UI
     await env.barberia_db.prepare(
-      'INSERT INTO barberos_config (id, nombre, tel, calendar_id, activo, orden, rol, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-    ).bind(id.trim(), nombre.trim(), tel || null, calendar_id || null, activo ? 1 : 0, orden, 'barbero', new Date().toISOString()).run();
+      'INSERT INTO barberos_config (id, nombre, tel, calendar_id, activo, orden, rol, password_hash, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).bind(id.trim(), nombre.trim(), tel || null, calendar_id || null, activo ? 1 : 0, orden, 'barbero', passwordHash, new Date().toISOString()).run();
   } catch (e) {
     if (e?.message?.includes('UNIQUE')) return json({ error: `Ya existe un barbero con id "${id}"` }, 409);
     return json({ error: 'Error interno' }, 500);
@@ -47,7 +54,7 @@ export async function onRequestPost({ request, env }) {
 export async function onRequestPut({ request, env }) {
   if (!await requireOwner(request, env)) return json({ error: 'No autorizado' }, 401);
 
-  const { id, nombre, tel, calendar_id, activo, orden } = await request.json();
+  const { id, nombre, tel, calendar_id, activo, orden, new_password } = await request.json();
   // nota: campo 'rol' se ignora intencionalmente — no es editable desde la UI
   if (!id) return json({ error: 'Falta id' }, 400);
   if (!nombre?.trim()) return json({ error: 'Falta nombre' }, 400);
@@ -61,9 +68,16 @@ export async function onRequestPut({ request, env }) {
     if (!target) return json({ error: `Barbero "${id}" no encontrado` }, 404);
     if (target.rol === 'owner') return json({ error: 'No se puede modificar un administrador' }, 403);
 
-    await env.barberia_db.prepare(
-      'UPDATE barberos_config SET nombre = ?, tel = ?, calendar_id = ?, activo = ?, orden = ? WHERE id = ?'
-    ).bind(nombre.trim(), tel || null, calendar_id || null, activo ? 1 : 0, orden ?? 0, id).run();
+    if (new_password) {
+      const hash = await sha256(new_password);
+      await env.barberia_db.prepare(
+        'UPDATE barberos_config SET nombre = ?, tel = ?, calendar_id = ?, activo = ?, orden = ?, password_hash = ? WHERE id = ?'
+      ).bind(nombre.trim(), tel || null, calendar_id || null, activo ? 1 : 0, orden ?? 0, hash, id).run();
+    } else {
+      await env.barberia_db.prepare(
+        'UPDATE barberos_config SET nombre = ?, tel = ?, calendar_id = ?, activo = ?, orden = ? WHERE id = ?'
+      ).bind(nombre.trim(), tel || null, calendar_id || null, activo ? 1 : 0, orden ?? 0, id).run();
+    }
   } catch (e) {
     if (e?.message?.includes('403')) throw e;
     return json({ error: 'Error interno' }, 500);

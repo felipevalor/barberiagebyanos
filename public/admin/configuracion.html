@@ -649,6 +649,11 @@
               <span class="toggle-row-label">Activo</span>
             </div>
           </div>
+          <div class="edit-group" style="grid-column:1/-1">
+            <label class="edit-label">Contraseña de acceso admin</label>
+            <input class="edit-input" id="new-password" type="password" placeholder="Dejar vacío si no necesita acceso al panel" autocomplete="new-password">
+            <div class="edit-hint">Si se define, el barbero podrá ingresar al panel con esta contraseña.</div>
+          </div>
         </div>
         <div class="edit-actions">
           <button class="btn-save" id="btn-save-new">Guardar</button>
@@ -765,6 +770,11 @@
               </div>
             </div>
           </div>
+          ${isOwner ? '' : `
+          <div class="edit-group" style="grid-column:1/-1">
+            <label class="edit-label">Nueva contraseña</label>
+            <input class="edit-input edit-password" type="password" placeholder="Dejar vacío para no cambiar" autocomplete="new-password">
+          </div>`}
           <div class="edit-actions">
             ${isOwner
           ? '<span style="font-size:0.78rem;color:var(--muted)">🔒 Entrada de administrador — no editable</span>'
@@ -792,6 +802,7 @@
       const feedback = card.querySelector('.edit-feedback');
       const nombre = card.querySelector('.edit-nombre').value.trim();
       const tel = card.querySelector('.edit-tel').value.trim();
+      const new_password = card.querySelector('.edit-password')?.value.trim() || null;
       const cal = card.querySelector('.edit-cal').value.trim();
       const activo = card.querySelector('.edit-activo').checked;
       const orden = parseInt(card.querySelector('.edit-orden').value) || 0;
@@ -805,12 +816,12 @@
         const res = await fetch(API, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, nombre, tel: tel || null, calendar_id: cal || null, activo, orden }),
+          body: JSON.stringify({ id, nombre, tel: tel || null, calendar_id: cal || null, activo, orden, new_password }),
         });
         const data = await res.json();
         if (!res.ok) { showFeedback(feedback, data.error || 'Error al guardar.', true); return; }
 
-        showFeedback(feedback, 'Guardado', false);
+        showFeedback(feedback, new_password ? 'Guardado (contraseña actualizada)' : 'Guardado', false);
         // Actualizar badge
         const badge = card.querySelector('.badge');
         badge.className = 'badge ' + (activo ? 'badge-active' : 'badge-inactive');
@@ -865,6 +876,7 @@
       const cal = document.getElementById('new-cal').value.trim();
       const activo = document.getElementById('new-activo').checked;
       const orden = parseInt(document.getElementById('new-orden').value) || 0;
+      const password = document.getElementById('new-password').value.trim() || null;
 
       if (!id) { showFeedback(feedback, 'El ID es obligatorio.', true); return; }
       if (!nombre) { showFeedback(feedback, 'El nombre es obligatorio.', true); return; }
@@ -876,7 +888,7 @@
         const res = await fetch(API, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, nombre, tel: tel || null, calendar_id: cal || null, activo, orden }),
+          body: JSON.stringify({ id, nombre, tel: tel || null, calendar_id: cal || null, activo, orden, password }),
         });
         const data = await res.json();
         if (!res.ok) { showFeedback(feedback, data.error || 'Error al guardar.', true); return; }
@@ -895,7 +907,7 @@
     });
 
     function clearAddForm() {
-      ['new-id', 'new-nombre', 'new-tel', 'new-cal'].forEach(id => document.getElementById(id).value = '');
+      ['new-id', 'new-nombre', 'new-tel', 'new-cal', 'new-password'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('new-orden').value = '0';
       document.getElementById('new-activo').checked = true;
       const f = document.getElementById('new-feedback');

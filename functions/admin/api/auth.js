@@ -93,9 +93,25 @@ export async function onRequestPost({ request, env }) {
   const { barbero_id, password } = await request.json();
 
   // ── Verificación de contraseña (SHA-256) ─────────────────────────────────────
-  // ADMIN_PASSWORDS debe tener hashes SHA-256: { "id": "sha256hex(password)" }
-  const passwords = JSON.parse(env.ADMIN_PASSWORDS || '{}');
-  const stored    = passwords[barbero_id];
+  // Fuente primaria: columna password_hash en barberos_config (D1).
+  // Fallback: env.ADMIN_PASSWORDS (JSON con hashes) para compatibilidad con
+  // entradas anteriores a la migración 023.
+  let stored = null;
+
+  try {
+    const row = await env.barberia_db.prepare(
+      'SELECT password_hash FROM barberos_config WHERE id = ?'
+    ).bind(barbero_id).first();
+    stored = row?.password_hash ?? null;
+  } catch { /* D1 no disponible — continúa con fallback */ }
+
+  if (!stored) {
+    // Fallback a env.ADMIN_PASSWORDS
+    try {
+      const passwords = JSON.parse(env.ADMIN_PASSWORDS || '{}');
+      stored = passwords[barbero_id] ?? null;
+    } catch { /* env var mal formateada */ }
+  }
 
   if (!stored) {
     await recordFailedAttempt(ip, env);
@@ -103,7 +119,6 @@ export async function onRequestPost({ request, env }) {
   }
 
   // El valor almacenado DEBE ser un hash SHA-256 (64 chars hex).
-  // Texto plano no está soportado — rechazar si el formato no es válido.
   if (!/^[0-9a-f]{64}$/.test(stored)) {
     return json({ error: 'Configuración de credenciales inválida' }, 500);
   }
